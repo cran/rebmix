@@ -1,0 +1,3 @@
+useDynLib(rebmix)
+
+export(RNGMIX, REBMIX, plot.REBMIX)

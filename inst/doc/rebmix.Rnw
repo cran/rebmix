@@ -1,0 +1,984 @@
+\documentclass[nojss]{jss}
+%% need no \usepackage{Sweave.sty}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% almost as usual
+\author{Marko Nagode\\University of Ljubljana}
+
+\title{\pkg{rebmix}: An \proglang{R} Package for Normal, Lognormal and Weibull Finite Mixture Models}
+
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Marko Nagode} %% comma-separated
+\Plaintitle{rebmix: An R Package for Normal, Lognormal and Weibull Finite Mixture Models} %% without formatting
+\Shorttitle{\pkg{rebmix}: An \proglang{R} Package for Finite Mixture Models} %% a short title (if necessary)
+
+%% an abstract and keywords
+\Abstract{
+The \pkg{rebmix} package for \proglang{R} provides functions for random univariate and multivariate finite mixture generation, number of components, component weights and component parameters estimation and plotting of the finite mixtures. It relies on the REBMIX algorithm that requires preprocessing, information criterion and conditionally independent normal, lognormal or Weibull component densities. The rest is accomplished by the algorithm optimizing the component parameters, mixing weights and number of components successively based on the boundary conditions, such as the maximum number of components, total of positive relative deviations, number of classes or nearest neighbours. The algorithm is robust and time efficient and is insensitive to the number of components and random variables. It results in slightly worse estimates than the EM algorithm and can be used either to assess the initial set of the unknown parameters and number of components for the EM algorithm or as a standalone procedure that is a good compromise between the nonparametric and parametric methods to the finite mixture estimation. The datasets analysed are the galaxy, iris, wine, complex 1 and simulated 1.
+}
+\Keywords{finite mixture, lognormal distribution, normal distribution, parameter estimation, \proglang{R} software, REBMIX algorithm, Weibull distribution}
+\Plainkeywords{finite mixture, lognormal distribution, normal distribution, parameter estimation, R software, REBMIX algorithm, Weibull distribution}
+%% without formatting
+%% at least one keyword must be supplied
+
+%% publication information
+%% NOTE: Typically, this can be left commented and will be filled out by the technical editor
+%% \Volume{13}
+%% \Issue{9}
+%% \Month{September}
+%% \Year{2004}
+%% \Submitdate{2004-09-29}
+%% \Acceptdate{2004-09-29}
+
+%% The address of (at least) one author should be given
+%% in the following format:
+\Address{
+  Marko Nagode\\
+  Faculty of Mechanical Engineering\\
+  A\v{s}ker\v{c}eva 6\\
+  1000 Ljubljana, Slovenia\\
+  E-mail: \email{Marko.Nagode@fs.uni-lj.si}\\
+  URL: \url{http://www.fs.uni-lj.si/}
+}
+%% It is also possible to add a telephone and fax number
+%% before the e-mail in the following format:
+%% Telephone: +43/1/31336-5053
+%% Fax: +43/1/31336-734
+
+%% for those who use Sweave please include the following line (with % symbols):
+%% need no \usepackage{Sweave.sty}
+
+%% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{bm}
+\usepackage{upgreek}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{thumbpdf}
+\begin{document}
+\SweaveOpts{engine = R, eps = FALSE}
+%\VignetteIndexEntry{rebmix: An R Package for Normal, Lognormal and Weibull Finite Mixture Models}
+%\VignetteKeywords{finite mixture, lognormal distribution, normal distribution, parameter estimation, R software, REBMIX algorithm, Weibull distribution}
+%\VignettePackage{rebmix}
+\section[Introduction]{Introduction}\label{sec:introduction}
+Finite mixture models are used increasingly to model the distributions of a wide variety of random phenomena. For the multivariate data of continuous nature, attention is paid to the use of multivariate normal components because of their computational convenience \citep{McLachlan_1999, Ingrassia_Rocci_2007, Fruhwirth-Schnatter_2006}. However, in fatigue and reliability analyses, lognormal and Weibull distributions are preferred due to their flexibility and their definition for continuous positive random variables only \citep{Majeske_2003, Sultan_2007, Touw_2009}.
+
+The finite mixture models have seen a real boost in popularity over the last decade due to the tremendous increase in available computing
+power. These models can be applied to data where observations originate from various groups and the group affiliations are not known,
+and on the other hand to provide approximations for multimodal distributions \cite{Leisch_2004}. Some of the latest models can be found also in \citet{Dijk_2009, Benaglia_2009, Grun_Leisch_2008, Fraley_2007, McLachlan_and_Peel_2000}.
+
+The REBMIX algorithm origins in \citet{Nagode_1998}. Later on it has evolved \citep{Nagode_2000,Nagode_2001,Nagode_2006}, but its kernel has remained almost unchanged. Presently \citep{Nagode_Fajdiga_2011a,Nagode_Fajdiga_2011b} it stands for a robust, time efficient tool that can be used either to assess the initial set of unknown parameters and the number of components for, e.g., the EM algorithm \citep{Bucar_2004} or as a standalone procedure that is a good compromise between the nonparametric and parametric methods to the finite mixture estimation.
+
+The \pkg{rebmix} implementation of REBMIX extends the set of algorithms available for random univariate and multivariate finite mixture generation, number of components, component weights and component parameters estimation and plotting of the finite mixtures in the \proglang{R} language and environment for statistical computing \citep{R_2011}.
+
+The outline of the paper is as follows: Section \ref{sec:algorithm} presents the algorithm. Section \ref{sec:examples} analyses the performance of the approach by studying the galaxy, iris, wine, complex 1 and simulated 1 datasets. Section \ref{sec:conclusions_future_work} lists the conclusions and future work.
+\section[Algorithm]{Algorithm}\label{sec:algorithm}
+Let $\bm{y}_{1}, \ldots, \bm{y}_{n}$ be an observed $d$~dimensional dataset of size $n$ of continuous vector observations $\bm{y}_{j}$. Each observation is assumed to follow predictive mixture density
+\begin{equation}
+f(\bm{y} | c, \bm{w}, \bm{\Theta}) = \sum_{l = 1}^{c} w_{l} f(\bm{y} | \bm{\theta}_{l})
+\end{equation}
+with conditionally independent component densities
+\begin{equation}\label{eq:3}
+f(\bm{y} | \bm{\theta}_{l}) = \prod_{i = 1}^{d} f(y_{i} | \bm{\theta}_{il})
+\end{equation}
+indexed by vector parameter $\bm{\theta}_{l}$. The objective of the analysis is the inference about the unknowns: the number $c$ of components, component weights $w_{l}$ summing to 1 and component parameters $\bm{\theta}_{l}$.
+\subsection[Preprocessing of observations]{Preprocessing of observations}\label{subsec:preprocessing_of_observations}
+The algorithm requires the preprocessing of observations. By the histogram approach, the dataset is counted into a finite number of nonoverlapping, equally sized and regularly distributed bins. Assuming that bin means $\bm{y}_{j} = (y_{1j}, \ldots, y_{dj})^{\top}$ are given by
+\begin{equation}
+y_{ij} = y_{i0} + \textrm{'An arbitrary integer'} \times h_{ij}, \ i = 1, \ldots, d
+\end{equation}
+the fraction of observations $k_{j}$ for $j = 1, \ldots, k$ falling into volume $V_{j}$ is counted out, where $y_{i0}$ stands for an arbitrary origin and $k$ depicts the total number of bins. Similarly, if the Parzen window is employed, the fraction of observations falling into $V_{j}$ centered on observation $\bm{y}_{j}$ is obtained. In both cases, the volume is taken to be a hypersquare with the sides of length $h_{ij}$. This yields $V_{j} = \prod_{i = 1}^{d} h_{ij}$. Moreover, $h_{ij} = h_{i}$ and $V_{j} = V$. If the $k$-nearest neighbour approach is used, the fraction of observations falling into normalized hypersphere $V_{j} = \pi^{d/2} R_{j}^{d} / \Gamma (1 + d / 2)$ of radius $R_{j}$ centered on observation $\bm{y}_{j}$ contains $k_{j} = k$ observations.
+
+The class widths for the histogram and Parzen window
+\begin{eqnarray}
+h_{i} = \frac{y_{i\mathrm{max}} - y_{i\mathrm{min}}}{k} \nonumber
+\end{eqnarray}
+depend on the minimum $y_{i\mathrm{min}} = \operatorname{min} {y}_{ij}$ and maximum $y_{i\mathrm{max}} = \operatorname{max} {y}_{ij}$ observations. For the histogram preprocessing origin is preset to
+\begin{eqnarray}
+y_{i0} = y_{i\mathrm{min}} + \frac{h_{i}}{2} \nonumber
+\end{eqnarray}
+The $k - 1$ nearest neighbours are searched around $\bm{y}_{j}$ based on the normalized Euclidean distance
+\begin{eqnarray}
+R = \operatorname{max} \left \{R_{\mathrm{min}}, \sqrt{\sum_{i=1}^{d}\left( \frac{y_{ik} - y_{ij}}{h_{i}} \right)^{2}} \right \} \textrm{ for } k \neq j, \textrm{ where } h_{i} = y_{i\mathrm{max}} - y_{i\mathrm{min}} \nonumber
+\end{eqnarray}
+Minimum radius $0 < R_{\mathrm{min}} \leq 1$. It is advisable to keep it very close to zero. The recommended value is $0.001$.
+\subsection[Global mode detection]{Global mode detection}\label{subsec:global_mode_detection}
+The global mode coincides with $\bm{y}_{m}$, where empirical density $f_{lj}$ takes on maximum value
+\begin{equation}
+m = \operatorname{arg} \operatorname{max} f_{lj} \rightarrow (\bm{y}_{m}, f_{lm})
+\end{equation}
+If observations are binned into the histogram, then
+\begin{equation}
+f_{lj} = \frac{k_{lj}}{n_{l}} \frac{1}{V_{j}}, \ j = 1, \ldots, k
+\end{equation}
+where frequencies $k_{lj}$ are all set to $k_{j}$ initially and total number of observations in class $l$ is
+\begin{eqnarray}
+n_{l} = \sum_{j = 1}^{k} k_{lj} \nonumber
+\end{eqnarray}
+If the Parzen window or $k$-nearest neighbour approach is applied,
+\begin{equation}
+f_{lj} = \frac{k_{lj}}{n_{l}} \frac{k_{j}}{V_{j}}, \ j = 1, \ldots, n
+\end{equation}
+Frequencies $k_{lj}$ are all set to $1$ initially, $n_{l} = \sum_{j = 1}^{n} k_{lj}$ and component weight $w_{l} = n_{l} / n$. Moreover, the $l$th component conditional empirical density at the global mode for the histogram approach
+\begin{equation}
+f_{i | \hat{i}.lm} = \frac{k_{lm}}{\sum_{j = 1,\; y_{\hat{i}j} = y_{\hat{i}m}}^{k} k_{lj}} \frac{1}{h_{im}} = \frac{k_{lm}}{k_{i | \hat{i}.lm}} \frac{1}{h_{im}}
+\end{equation}
+is required, where index $\hat{i} = 1, \ldots, i - 1, i + 1, \ldots, d$. If $d = 1$, then $k_{i | \hat{i}.lm} = n_{l}$ and $f_{i | \hat{i}.lm} = f_{lm}$. For the Parzen window and $k$-nearest neighbour approach
+\begin{equation}
+f_{i | \hat{i}.lm} = \frac{k_{lm}}{\sum_{j = 1,\; y_{\hat{i}j} = y_{\hat{i}m}}^{n} k_{lj}} \frac{k_{m}}{h_{im}} = \frac{k_{lm}}{k_{i | \hat{i}.lm}} \frac{k_{m}}{h_{im}}
+\end{equation}
+\subsection[Clustering of observations]{Clustering of observations}\label{subsec:clustering_of_observations}
+The clustering of observations is an iterative procedure of identifying the observations belonging to the $l$th component. The deviations between $k_{lj}$ and the predictive component frequencies for the histogram approach are given by
+\begin{equation}
+e_{lj} = k_{lj} - n_{l} f(\bm{y}_{j} | \bm{\theta}_{l}) V_{j}
+\end{equation}
+However, for the Parzen window and $k$-nearest neighbour approach
+\begin{equation}\label{eq:7}
+e_{lj} = k_{lj} - n_{l} f(\bm{y}_{j} | \bm{\theta}_{l}) V_{j} / k_{j}
+\end{equation}
+To identify the most deviating observations, relative positive deviations $\varepsilon_{lj} = e_{lj} / k_{lj}$
+and maximum positive relative deviation $\varepsilon_{l\mathrm{max}}$ are calculated. Total of the positive and negative deviations
+\begin{eqnarray}
+e_{l\mathrm{p}} = \sum_{j = 1,\; e_{lj} > 0}^{k} e_{lj} \textrm{ and } e_{l\mathrm{n}} = \sum_{j = 1,\; e_{lj} < 0}^{k} \operatorname{max} \{e_{lj}, -r_{j}\} \nonumber
+\end{eqnarray}
+where $r_{j}$ stand for the residual frequencies. If index $k$ is replaced by $n$ the equation can be used with the Parzen window and $k$-nearest neighbour approach, too. Total of the positive relative deviations of the $l$th component is then
+\begin{equation}
+D_{l} = \frac{e_{l\mathrm{p}}}{n_{l}}
+\end{equation}
+where $0 \leq D_{l} \leq 1$. The observations that inequality $\varepsilon_{lj} > \varepsilon_{l\mathrm{max}} (1 - a_{\mathrm{r}})$ holds for are not assumed to belong to the $l$th component and therefore move to the residue. Number of iterations $I$ depends on acceleration rate $0 < a_{\mathrm{r}} \leq 1$. It is best to keep $a_{\mathrm{r}}$ close to zero. The recommended value is $0.1$. On the contrary, the observations where $e_{lj} < 0$ are transferred back to the $l$th component. The clustering of observations continues with the renewed rough parameter and component weight estimation until
+\begin{equation}
+D_{l} \leq \frac{D_{\mathrm{min}}}{w_{l}}
+\end{equation}
+Constant $0 < D_{\mathrm{min}} \leq 1$ is optimized by the information criterion. The clustering of observations ends with the enhanced component parameter estimation.
+\subsection[Rough component parameter estimation]{Rough component parameter estimation}\label{subsec:rough_component_parameter_estimation}
+The clustering of observations depends on the rough component parameters. Proper extraction of observations belonging to the $l$th component is assured by the restraints that prevent the component from its flowing away from the global mode, as at least one component is supposed to be in the vicinity. The first restraint ensures the equivalence of the probability densities at $\bm{y}_{m}$
+\begin{equation}\label{eq:1}
+f_{lm} = f(\bm{y} = \bm{y}_{m} | \bm{\theta}_{l})
+\end{equation}
+The second restraint makes the global mode of component density coincide with $\bm{y}_{m}$
+\begin{equation}\label{eq:2}
+\frac{\partial f(\bm{y} = \bm{y}_{m} | \bm{\theta}_{l})}{\partial \bm{y}} = 0
+\end{equation}
+Total number of unknown parameters $\bm{\theta}_{l} = (\bm{\theta}_{1l}, \ldots, \bm{\theta}_{dl})^{\top}$ is greater than the available number of restraints (\ref{eq:1}) and (\ref{eq:2}). Therefore additional restraints are required. They are obtained from the equivalence of component conditional empirical densities \citep{Nagode_2006}
+\begin{equation}\label{eq:4}
+\varepsilon f_{i | \hat{i} . lm} = f(y_{i} = y_{im} | \bm{\theta}_{il}) = f_{i | \hat{i} . l\mathrm{max}}, \ i = 1, \ldots, d
+\end{equation}
+Allowing for the independence of components (\ref{eq:3}), the left hand side of restraint (\ref{eq:1}) can be rewritten as
+\begin{eqnarray}
+f_{lm} = \prod_{i = 1}^{d} \varepsilon f_{i | \hat{i} . lm} \nonumber
+\end{eqnarray}
+where
+\begin{equation}
+\varepsilon = \mathrm{min} \left \{1, \left ( \frac{f_{lm}}{\prod_{i = 1}^{d} f_{i | \hat{i} . lm}} \right )^{\frac{1}{d}} \right \}
+\end{equation}
+The left hand side of restraint (\ref{eq:4}) is thus multiplied by $\varepsilon$ to satisfy restraint (\ref{eq:1}), where (\ref{eq:2}) and (\ref{eq:4}) stand for the rigid restraints resulting in rough normal component parameters
+\begin{equation}\label{eq:5}
+\mu_{il} = y_{im} \textrm{ and } \sigma_{il} = \frac{1}{\sqrt{2 \pi} \varepsilon f_{i | \hat{i}.lm}}
+\end{equation}
+For lognormal and Weibull parametric families see \cite{Nagode_Fajdiga_2011a, Nagode_Fajdiga_2011b}, where also loose restraints are introduced. The rigid restraints become loose if $y_{im}$ and $f_{i | \hat{i}.lm}$ of (\ref{eq:5}) are supposed to be bounded by
+\begin{equation}
+y_{im} - a h_{im} \leq y_{im} \leq y_{im} + a h_{im} \textrm{ and } f_{i | \hat{i} . l \mathrm{min}} \leq f_{i | \hat{i} . lm} \leq f_{i | \hat{i} . l \mathrm{max}}
+\end{equation}
+Constant $a$ is one for the histogram approach, except for the distributions with $y_{i} \geq 0$ and $y_{im} < h_{im}$, where $a = y_{im} / h_{im}$. For the Parzen window and $k$-nearest neighbour $a = y_{im} / 2 h_{im}$ for the distributions with $y_{i} \geq 0$ and $y_{im} < h_{im} / 2$, otherwise $a = 1 / 2$. The observations at $f_{i | \hat{i} . l \mathrm{min}}$ are supposed to follow a uniform distribution
+\begin{eqnarray}
+f_{i | \hat{i} . l \mathrm{min}} = \frac{1}{y_{i | \hat{i} . l \mathrm{max}} - y_{i | \hat{i} . l \mathrm{min}}} \nonumber
+\end{eqnarray}
+where $y_{i | \hat{i} . l \mathrm{max}} = \operatorname{max} y_{i | \hat{i} . l m}$ and $y_{i | \hat{i} . l \mathrm{min}} = \operatorname{min} y_{i | \hat{i} . l m}$. Optimal $y_{im}$ and $f_{i | \hat{i}.lm}$ are obtained by minimizing the maximum relative positive deviation
+\begin{eqnarray}
+\operatorname{min} \underset{j = 1, \ldots, k \textrm{ or } n | \varepsilon_{lj} > 0,\; 0.001 < F(y_{ij} | \bm{\theta}_{il}) < 0.999}{\operatorname{max}} \varepsilon_{lj} \rightarrow (y_{im}, f_{i | \hat{i} . l \mathrm{m}}) \nonumber
+\end{eqnarray}
+as explained thoroughly by \cite{Nagode_Fajdiga_2011a, Nagode_Fajdiga_2011b}. The loose restraints prevent superfluous component occurrence if their modes collide considerably.
+\subsection[Enhanced component parameter estimation]{Enhanced component parameter estimation}\label{subsec:enhanced_component_parameter_estimation}
+Maximum likelihood is applied to get enhanced component parameters. When the histogram is applied, enhanced normal component parameters are given by
+\begin{equation}
+\mu_{il} = \frac{1}{n_{l}} \sum_{j = 1}^{k} k_{lj} y_{ij} \textrm{ and } \sigma_{il}^{2} = \frac{1}{n_{l}} \sum_{j = 1}^{k} k_{lj} y_{ij}^{2} - \mu_{il}^{2}
+\end{equation}
+Index $k$ should be replaced by $n$ if the Parzen window or $k$-nearest neighbour approach is used.
+\subsection[Component mean and variance calculation]{Component mean and variance calculation}\label{subsec:component_mean_and_variance_calculation}
+Component means and variances of the normal distribution are calculated to enable the classification of the remaining observations
+\begin{equation}\label{eq:6}
+m_{il} = \mu_{il} \textrm{ and } V_{il} = \sigma_{il}^{2} + \mu_{il}^{2}
+\end{equation}
+\subsection[Bayes classification of the remaining observations]{Bayes classification of the remaining observations}\label{subsec:bayes_classification_of_the_remaining observations}
+With the increase of the number of components, the number $n_{l}$ of the remaining observations decreases. When the component weight attains the minimum weight
+\begin{equation}
+w_{l} \leq w_{\mathrm{min}} = 2 l D_{\mathrm{min}}
+\end{equation}
+The classification of the remaining observations is accomplished by the Bayes decision rule \citep{Duda_and_Hart_1973}
+\begin{gather}
+l = \operatorname{arg} \operatorname{max} w_{l} f(\bm{y}_{j} | \bm{\theta}_{l}) \nonumber \\
+w_{l} = w_{l} + \frac{k_{lj}}{n} \textrm{, } m_{il} = m_{il} + \frac{k_{lj} (y_{ij} - m_{il})}{n w_{l}} \textrm{ and } V_{il} = V_{il} + \frac{k_{lj} (y_{ij}^{2} - V_{il})}{n w_{l}}
+\end{gather}
+where $k_{lj}$ is added to the $l$th class and the component weight, the component mean as well as the component variance are recalculated \citep{Bishop_1995}. Once all $k$ bin means or all $n$ observations are processed, the mixture parameters are gained by inverting (\ref{eq:6}).
+\subsection[Algorithm flow]{Algorithm flow}\label{subsec:algorithm_flow}
+The REBMIX is an iterative numerical procedure listed in Algorithm~\ref{alg:rebmix}. It requires nine input parameters, whereby the last three should advisably be fixed. It consists of three main loops: the inner $9 \rightarrow 37$, the middle $6 \rightarrow 41$ and the outer loop $4 \rightarrow 47$. The numbers are line indices. In line 2 the observations are preprocessed, as described in Section~\ref{subsec:preprocessing_of_observations}. In line 3, constants $D_{\mathrm{min}}$, information criterion $\mathrm{IC_{opt}}$ and frequencies $k_{lj}$ are initiated. Next, the outer loop begins. Line 5 presumes that the mixture consists of one component, then the number $r$ of observations to separate is set to $n$ and $n_{l}$ to $n$. If ratio $n_{l} / n$ is greater than the minimum weight introduced in Section~\ref{subsec:bayes_classification_of_the_remaining observations}, the middle loop enters. Otherwise, the finite mixture parameter estimation for $k \in K$ is completed.
+
+In lines 7 and 8, global mode argument $m$ is detected as explained in Section~\ref{subsec:global_mode_detection}, component weight $w_{l}$ is calculated and frequencies $r_{j}$ are all set to zero. If iteration number $I \leq I_{\mathrm{max}}$, the inner loop enters, otherwise in line 38 the component mean and variance are calculated (in Section~\ref{subsec:component_mean_and_variance_calculation}). Next, number of components $c$ is set to $l$, number of observations $r$ is decreased by $n_{l}$, $l$ is incremented, number $r$ of the remaining observations joins $n_{l}$,
+residue frequencies $r_{j}$ are all moved to $k_{lj}$, and the Stop criterion is determined.
+
+The inner loop is divided into three sections. In line 10 the component parameters are estimated roughly (in Section~\ref{subsec:rough_component_parameter_estimation}). In the second section $11 \rightarrow 23$, total of positive relative deviations $D_{l}$ and maximum relative deviation $\varepsilon_{l\mathrm{max}}$ are calculated. The number of iterations
+depends on acceleration rate $a_\mathrm{r}$. In the third section $24 \rightarrow 35$, the maximum and negative deviations are transferred between frequencies $k_{lj}$ and residue $r_{j}$. This way deviations $e_{lj}$ are reduced gradually. The negative value of $e_{lj}$ can never be higher
+than residue value $r_{j}$. If this is not true, deviation $e_{lj}$ is corrected, as listed in line 19. When the condition in line 24 is not fulfilled, the enhanced component parameter estimation is carried out (in Section~\ref{subsec:enhanced_component_parameter_estimation}) and the inner loop ends.
+
+The enhanced component parameter estimation may fail. In this instance, the component parameters are reset to the state just before the failure occurred. In line 42 the remaining observations are classified by the Bayes decision rule, as depicted in Section~\ref{subsec:bayes_classification_of_the_remaining observations}. Further on, the information criterion, e.g., \citet{Akaike_1974}
+\begin{equation}
+\mathrm{IC} = -2 \operatorname{log} L(c, \bm{w}, \bm{\Theta}) + 2 M
+\end{equation}
+is calculated, whereas the number of free parameters for the univariate normal, lognormal or Weibull mixture can be written as
+\begin{equation}
+M = 2 c + c - 1
+\end{equation}
+The log likelihood function for the binned observations is given by
+\begin{equation}
+\operatorname{log} L(c, \bm{w}, \bm{\Theta}) = \sum_{j = 1}^{k} k_{j} \operatorname{log} f(\bm{y}_{j} | c, \bm{w}, \bm{\Theta})
+\end{equation}
+Otherwise,
+\begin{equation}
+\operatorname{log} L(c, \bm{w}, \bm{\Theta}) = \sum_{j = 1}^{n} \operatorname{log} f(\bm{y}_{j} | c, \bm{w}, \bm{\Theta})
+\end{equation}
+This way global optimum $\mathrm{IC_{opt}}$ corresponding to the optimal number $c_{\mathrm{opt}}$ of components, weights $\bm{w}_{\mathrm{opt}}$ and parameters $\bm{\Theta}_{\mathrm{opt}}$ can always be found. In line 46, $D_{\mathrm{min}}$ is decreased in such a way that total of positive relative deviations
+\begin{eqnarray}
+D = c D_{{\mathrm{min}}}^{{\mathrm{old}}} = (c + 1) D_{{\mathrm{min}}}^{{\mathrm{new}}} \nonumber
+\end{eqnarray}
+for $c$ and $c + 1$ components is preserved. When line 47 is fulfilled, the procedure stops. If index $k$ in Algorithm~\ref{alg:rebmix} is replaced by $n$ and line 15 is replaced by (\ref{eq:7}) the algorithm, presented for the histogram approach, can also be used with the Parzen window and $k$-nearest neighbour.
+\algsetup{
+linenosize = \footnotesize, linenodelimiter = :
+}
+\begin{algorithm}
+\caption{REBMIX}\label{alg:rebmix}
+\begin{algorithmic}[1]
+\footnotesize
+\REQUIRE Preprocessing, $D$, $c_{\mathrm{max}}$, Information criterion, Parametric family, $K$, $R_\mathrm{min}$, $a_\mathrm{r}$ and Restraints.
+\ENSURE Preprocessing is one of histogram, Parzen window or $k$-nearest neighbour, $0 < D \leq 1$, $c_{\mathrm{max}} \in \mathbb{N}$, Information criterion is one of AIC, AIC3, AIC4, AICc, BIC, CAIC, HQC, MDL2, MDL5, AWE, CLC, ICL, PC or ICL-BIC, Parametric family is one of normal, lognormal or Weibull, $K \subset \mathbb{N}$, $R_\mathrm{min} = 0.001$, $a_\mathrm{r} = 0.1$ and Restraints are loose.
+\FORALL {$k$ such that $k \in K$}
+\STATE Preprocessing of observations
+\STATE $D_{\mathrm{min}} \leftarrow 0.025$, $\mathrm{IC_{opt}} \leftarrow \infty$, $k_{lj} \leftarrow k_{j}$ for $j = 1$ to $k$
+\REPEAT
+\STATE $l \leftarrow 1$, $r \leftarrow n$, $n_{l} \leftarrow n$
+\WHILE{$n_{l} / n > 2 l D_{\mathrm{min}}$}
+\STATE Global mode detection
+\STATE $I \leftarrow 1$, $w_{l} \leftarrow n_{l} / n$, $r_{j} \leftarrow 0$ for $j = 1$ to $k$
+\WHILE{$I \leq I_\mathrm{max}$}
+\STATE Rough component parameter estimation
+\STATE $e_{l\mathrm{p}} \leftarrow 0$, $e_{l\mathrm{n}} \leftarrow 0$, $e_{l\mathrm{max}} \leftarrow 0$
+\FOR{$j = 1$ \TO $k$}
+\STATE $e_{lj} \leftarrow 0$, $\varepsilon_{lj} \leftarrow 0$
+\IF{$k_{lj} > 0$ \OR $r_{j} > 0$}
+\STATE $e_{lj} \leftarrow k_{lj} - n_{l} f(\bm{y}_{j} | \bm{\theta}_{l}) V_{j}$
+\IF{$e_{lj} > 0$}
+\STATE $\varepsilon_{lj} \leftarrow e_{lj} / k_{lj}$, $\varepsilon_{l\mathrm{max}} \leftarrow \mathrm{max}\{\varepsilon_{l\mathrm{max}}, \varepsilon_{lj}\}$, $e_{l\mathrm{p}} \leftarrow e_{l\mathrm{p}} + e_{lj}$
+\ELSE
+\STATE $e_{lj} \leftarrow \mathrm{max}\{e_{lj}, -r_{j}\} $, $e_{l\mathrm{n}} \leftarrow e_{l\mathrm{n}} - e_{lj}$
+\ENDIF
+\ENDIF
+\ENDFOR
+\STATE $D_{l} \leftarrow e_{l\mathrm{p}} / n_{l}$, $\varepsilon_{l\mathrm{max}} \leftarrow \varepsilon_{l\mathrm{max}} (1 - a_{\mathrm{r}})$
+\IF{$D_{l} > D_{\mathrm{min}} / w_{l}$}
+\FORALL{$j$ such that $1 \leq j \leq k$ \AND $\varepsilon_{lj} > \varepsilon_{l\mathrm{max}}$}
+\STATE $k_{lj} \leftarrow k_{lj} - e_{lj}$, $r_{j} \leftarrow r_{j} + e_{lj}$, $n_{l} \leftarrow n_{l} - e_{lj}$
+\ENDFOR
+\STATE $e_{l\mathrm{p}} \leftarrow e_{l\mathrm{p}} / D_{l} - n_{l}$, $f \leftarrow e_{l\mathrm{p}} / e_{l\mathrm{n}}$ if $e_{l\mathrm{n}} > e_{l\mathrm{p}}$ otherwise $f \leftarrow 1$
+\FORALL{$j$ such that $1 \leq j \leq k$ \AND $e_{lj} < 0$}
+\STATE $e_{lj} \leftarrow f e_{lj}$, $k_{lj} \leftarrow k_{lj} - e_{lj}$, $r_{j} \leftarrow r_{j} + e_{lj}$, $n_{l} \leftarrow n_{l} - e_{lj}$
+\ENDFOR
+\STATE $w_{l} \leftarrow n_{l} / n$
+\ELSE
+\STATE Enhanced component parameter estimation, \textbf{break}
+\ENDIF
+\STATE $I \leftarrow I + 1$
+\ENDWHILE
+\STATE Component mean and variance calculation
+\STATE $c \leftarrow l$, $r \leftarrow r - n_{l}$, $l \leftarrow l + 1$, $n_{l} \leftarrow r$, $k_{lj} \leftarrow r_{j}$ for $j = 1$ to $k$
+\STATE $\mathrm{Stop} \leftarrow c \geq k$ \OR $c \geq c_{\mathrm{max}}$ \OR $c  D_{\mathrm{min}} < D$, \textbf{break} if $\mathrm{Stop} = \TRUE$
+\ENDWHILE
+\STATE Bayes classification of the remaining observations as well as log likelihood and information criterion calculation
+\IF{$\mathrm{IC} < \mathrm{IC_{opt}}$}
+\STATE $\operatorname{log} L \rightarrow \operatorname{log} L_{\mathrm{opt}}$, $\mathrm{IC} \rightarrow \mathrm{IC_{opt}}$, $c \rightarrow c_{\mathrm{opt}}$, $\bm{w} \rightarrow \bm{w}{_\mathrm{opt}}$, $\bm{\Theta} \rightarrow \bm{\Theta}_{\mathrm{opt}}$
+\ENDIF
+\STATE $D_{\mathrm{min}} \leftarrow c D_{\mathrm{min}} / (c + 1)$
+\UNTIL{$\mathrm{Stop} = \TRUE$}
+\ENDFOR
+\normalsize
+\end{algorithmic}
+\end{algorithm}
+\section[Examples]{Examples}\label{sec:examples}
+To illustrate the use of the REBMIX algorithm, two univariate and three multivariate samples are considered. The \pkg{rebmix} is loaded and the prompt before starting new page is set to \code{TRUE}.
+<<rebmix-code, split = FALSE, echo = FALSE>>=
+######################################################
+## R sources for reproducing the results in         ##
+##   Marko Nagode:                                  ##
+##   rebmix: An R Package for Normal, Lognormal and ##
+##   Weibull Finite Mixture Models                  ##
+######################################################
+
+options(prompt = "R> ", continue = "+  ", width = 70,
+  useFancyQuotes = FALSE, digits = 3)
+<<rebmix-code, split = FALSE>>=
+
+###################
+## Preliminaries ##
+###################
+
+## load package and set prompt before starting new page to TRUE.
+
+library("rebmix")
+devAskNewPage(ask = TRUE)
+@
+\subsection[Galaxy dataset]{Galaxy dataset}\label{subsec:galaxy_dataset}
+The dataset analysed in \citet{Roeder_1990} contains the measurements of the velocities of $82$ galaxies diverging away from our own galaxy. The multimodality of the velocities may indicate the presence of super clusters of galaxies surrounded by large voids, each mode representing a cluster as it moves away at its own speed \citep[gives more background]{Roeder_1990}. \citet{Richardson_Green_1997} concluded from their approach that the number of components ranged from $5$ to $7$, while \citet{McLachlan_and_Peel_1997} provided the support for six components. \citet{Stephens_2000} reported that three components were optimal for the mixture of normal and four for the mixture of $t$~distributions.
+
+The galaxy dataset is loaded and written as tab delimited ASCII file in \code{galaxy.txt}.
+<<rebmix-code, split = FALSE>>=
+
+####################
+## Galaxy dataset ##
+####################
+
+## Load galaxy dataset.
+
+data("galaxy")
+
+## Write dataset into the tab delimited ASCII file.
+
+write.table(galaxy, file = "galaxy.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+@
+The \code{REBMIX} object and \code{Table} are initialized.
+<<rebmix-code, split = FALSE>>=
+
+## Initialize REBMIX object.
+
+REBMIX <- array(list(NULL), c(3, 3, 3))
+
+## Initialize Table 1.
+
+Table <- NULL
+@
+Total of positive relative deviations \code{D} is set to $0.0025$, maximum number of components \code{cmax} to $12$. The influence of the Akaike \citep{Akaike_1974} information criterion AIC, the Bayesian \citep{Schwarz_1978} information criterion BIC and the classification likelihood criterion CLC \citep[see][]{Biernacki_Govaert_1997} for normal, lognormal and Weibull parametric families and the three preprocessing types on predictive number of components $c$ is studied. The optimal number of classes and nearest neighbours are searched within broad utmost limits \code{K}.
+<<rebmix-code, split = FALSE>>=
+
+## Estimate number of components, component weights and component parameters.
+
+Preprocessing <- c("histogram", "Parzen window", "k-nearest neighbour")
+InformationCriterion <- c("AIC", "BIC", "CLC")
+pdf <- c("normal", "lognormal", "Weibull")
+K <- list(7:20, 7:20, 2:10)
+@
+See \code{help("REBMIX")} in \pkg{rebmix} for details about specifying arguments for the REBMIX algorithm. For Table~\ref{table:galaxy} to be filled in function \code{REBMIX} is called $3 \times 3 \times 3 = 27$ times.
+<<rebmix-code, split = FALSE, results = hide>>=
+
+for (i in 1:3) {
+  for (j in 1:3) {
+    for (k in 1:3) {
+      REBMIX[[i, j, k]] <- REBMIX(Dataset = "galaxy.txt",
+        Preprocessing = Preprocessing[k],
+        D = 0.0025,
+        cmax = 12,
+        InformationCriterion = InformationCriterion[j],
+        pdf = pdf[i],
+        K = K[[k]])
+
+      ## Fill in Table 1.
+
+      if (is.null(Table))
+        Table <- REBMIX[[i, j, k]]$summary
+      else
+        Table <- merge(Table, REBMIX[[i, j, k]]$summary, all = TRUE, sort = FALSE)
+    }
+  }
+}
+@
+It returns an object of class \code{REBMIX}. Data frame \code{w} contains $c$ component weights $w_{l}$ summing to $1$, \code{Theta} stands for a $3\times d \times c$ data frame. The first, fourth, etc. rows contain $c$ parametric family types \code{pdfi}, one of normal, lognormal or Weibull. The second, fifth, etc. rows contain $c$ component parameters \code{theta1.i}, one of $\mu_{il}$ for normal and lognormal distributions or $\theta_{il}$ for Weibull distribution. The third, sixth, etc. rows contain $c$ component parameters \code{theta2.i}. One of $\sigma_{il}$ for normal and lognormal distributions or $\beta_{il}$ for Weibull distribution. In the \code{summary} data frame additional information about dataset, preprocessing, $D$, $c_{\mathrm{max}}$, information criterion type, $R_{\mathrm{max}}$, $a_{\mathrm{r}}$, restraints type, optimal $c$, optimal $k$, $y_{i0}$, optimal $h_{i}$, calculation time $t_{\mathrm{c}}$ in ms, information criterion $\mathrm{IC}$ and log likelihood
+$\operatorname{log} L$ is stored.
+<<rebmix-code, split = FALSE, echo = FALSE, results = hide>>=
+
+## Visualize Table 1.
+
+Table
+@
+\begin{figure}[tbh]
+\centering
+<<galaxy-fig, fig = TRUE, height = 2.5, width = 5.5, echo = FALSE>>=
+
+## Visualize Figure 1.
+
+plot(REBMIX[[2, 1, 2]], npts = 1000)
+@
+\caption{Galaxy dataset. Empirical densities (circles) and predictive lognormal mixture density (solid line).}\label{figure:galaxy}
+\end{figure}
+
+The \code{plot} method delivers a fitted finite mixture with the legend in Figure~\ref{figure:galaxy}. For the details about specifying arguments for the \code{plot} method see \code{help("plot.REBMIX")}. The maximum log likelihood resulting in $6$ components is obtained for the lognormal parametric family, the Parzen window preprocessing and the AIC (see Figure~\ref{figure:galaxy}), whereas most frequently four components appear in Table~\ref{table:galaxy}. Thus the \pkg{rebmix} leads to the number of components similar to \citet{Stephens_2000}. The two spurious components reported about by \citet{McLachlan_and_Peel_1997} can be identified by the algorithm, too. For the particular dataset only the AIC is appropriate. It gives $3$ to $6$ components. The BIC and CLC have turned out to be inappropriate.
+\begin{table}[tbh]
+\centering
+\footnotesize
+\begin{tabular}{cccccccccccccc}
+\hline
+\multirow{2}{*}{Preprocessing} & Information & \multicolumn{4}{c}{Normal} & \multicolumn{4}{c}{Lognormal} & \multicolumn{4}{c}{Weibull}\\
+&criterion&$c$&$k$&$\mathrm{IC}$&$\operatorname{log} L$&$c$&$k$&$\mathrm{IC}$&$\operatorname{log} L$&$c$&$k$&$\mathrm{IC}$&$\operatorname{log} L$\\
+\hline
+
+histogram&&
+\Sexpr{Table[["c"]][1]}&\Sexpr{Table[["k"]][1]}&\Sexpr{format(Table[["IC"]][1], digits = 3)}&\Sexpr{format(Table[["logL"]][1], digits = 3)}&
+\Sexpr{Table[["c"]][10]}&\Sexpr{Table[["k"]][10]}&\Sexpr{format(Table[["IC"]][10], digits = 3)}&\Sexpr{format(Table[["logL"]][10], digits = 3)}&
+\Sexpr{Table[["c"]][19]}&\Sexpr{Table[["k"]][19]}&\Sexpr{format(Table[["IC"]][19], digits = 3)}&\Sexpr{format(Table[["logL"]][19], digits = 3)}\\
+
+Parzen window&AIC&
+\Sexpr{Table[["c"]][2]}&\Sexpr{Table[["k"]][2]}&\Sexpr{format(Table[["IC"]][2], digits = 3)}&\Sexpr{format(Table[["logL"]][2], digits = 3)}&
+\Sexpr{Table[["c"]][11]}&\Sexpr{Table[["k"]][11]}&\Sexpr{format(Table[["IC"]][11], digits = 3)}&\Sexpr{format(Table[["logL"]][11], digits = 3)}&
+\Sexpr{Table[["c"]][20]}&\Sexpr{Table[["k"]][20]}&\Sexpr{format(Table[["IC"]][20], digits = 3)}&\Sexpr{format(Table[["logL"]][20], digits = 3)}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][3]}&\Sexpr{Table[["k"]][3]}&\Sexpr{format(Table[["IC"]][3], digits = 3)}&\Sexpr{format(Table[["logL"]][3], digits = 3)}&
+\Sexpr{Table[["c"]][12]}&\Sexpr{Table[["k"]][12]}&\Sexpr{format(Table[["IC"]][12], digits = 3)}&\Sexpr{format(Table[["logL"]][12], digits = 3)}&
+\Sexpr{Table[["c"]][21]}&\Sexpr{Table[["k"]][21]}&\Sexpr{format(Table[["IC"]][21], digits = 3)}&\Sexpr{format(Table[["logL"]][21], digits = 3)}\\
+
+histogram&&
+\Sexpr{Table[["c"]][4]}&\Sexpr{Table[["k"]][4]}&\Sexpr{format(Table[["IC"]][4], digits = 3)}&\Sexpr{format(Table[["logL"]][4], digits = 3)}&
+\Sexpr{Table[["c"]][13]}&\Sexpr{Table[["k"]][13]}&\Sexpr{format(Table[["IC"]][13], digits = 3)}&\Sexpr{format(Table[["logL"]][13], digits = 3)}&
+\Sexpr{Table[["c"]][22]}&\Sexpr{Table[["k"]][22]}&\Sexpr{format(Table[["IC"]][22], digits = 3)}&\Sexpr{format(Table[["logL"]][22], digits = 3)}\\
+
+Parzen window&BIC&
+\Sexpr{Table[["c"]][5]}&\Sexpr{Table[["k"]][5]}&\Sexpr{format(Table[["IC"]][5], digits = 3)}&\Sexpr{format(Table[["logL"]][5], digits = 3)}&
+\Sexpr{Table[["c"]][14]}&\Sexpr{Table[["k"]][14]}&\Sexpr{format(Table[["IC"]][14], digits = 3)}&\Sexpr{format(Table[["logL"]][14], digits = 3)}&
+\Sexpr{Table[["c"]][23]}&\Sexpr{Table[["k"]][23]}&\Sexpr{format(Table[["IC"]][23], digits = 3)}&\Sexpr{format(Table[["logL"]][23], digits = 3)}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][6]}&\Sexpr{Table[["k"]][6]}&\Sexpr{format(Table[["IC"]][6], digits = 3)}&\Sexpr{format(Table[["logL"]][6], digits = 3)}&
+\Sexpr{Table[["c"]][15]}&\Sexpr{Table[["k"]][15]}&\Sexpr{format(Table[["IC"]][15], digits = 3)}&\Sexpr{format(Table[["logL"]][15], digits = 3)}&
+\Sexpr{Table[["c"]][24]}&\Sexpr{Table[["k"]][24]}&\Sexpr{format(Table[["IC"]][24], digits = 3)}&\Sexpr{format(Table[["logL"]][24], digits = 3)}\\
+
+histogram&&
+\Sexpr{Table[["c"]][7]}&\Sexpr{Table[["k"]][7]}&\Sexpr{format(Table[["IC"]][7], digits = 3)}&\Sexpr{format(Table[["logL"]][7], digits = 3)}&
+\Sexpr{Table[["c"]][16]}&\Sexpr{Table[["k"]][16]}&\Sexpr{format(Table[["IC"]][16], digits = 3)}&\Sexpr{format(Table[["logL"]][16], digits = 3)}&
+\Sexpr{Table[["c"]][25]}&\Sexpr{Table[["k"]][25]}&\Sexpr{format(Table[["IC"]][25], digits = 3)}&\Sexpr{format(Table[["logL"]][25], digits = 3)}\\
+
+Parzen window&CLC&
+\Sexpr{Table[["c"]][8]}&\Sexpr{Table[["k"]][8]}&\Sexpr{format(Table[["IC"]][8], digits = 3)}&\Sexpr{format(Table[["logL"]][8], digits = 3)}&
+\Sexpr{Table[["c"]][17]}&\Sexpr{Table[["k"]][17]}&\Sexpr{format(Table[["IC"]][17], digits = 3)}&\Sexpr{format(Table[["logL"]][17], digits = 3)}&
+\Sexpr{Table[["c"]][26]}&\Sexpr{Table[["k"]][26]}&\Sexpr{format(Table[["IC"]][26], digits = 3)}&\Sexpr{format(Table[["logL"]][26], digits = 3)}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][9]}&\Sexpr{Table[["k"]][9]}&\Sexpr{format(Table[["IC"]][9], digits = 3)}&\Sexpr{format(Table[["logL"]][9], digits = 3)}&
+\Sexpr{Table[["c"]][18]}&\Sexpr{Table[["k"]][18]}&\Sexpr{format(Table[["IC"]][18], digits = 3)}&\Sexpr{format(Table[["logL"]][18], digits = 3)}&
+\Sexpr{Table[["c"]][27]}&\Sexpr{Table[["k"]][27]}&\Sexpr{format(Table[["IC"]][27], digits = 3)}&\Sexpr{format(Table[["logL"]][27], digits = 3)}\\
+\hline
+\end{tabular}
+\normalsize
+\caption{Number of component classes and nearest neighbours for galaxy dataset.}\label{table:galaxy}
+\end{table}
+\subsection[Iris dataset]{Iris dataset}\label{subsec:iris_dataset}
+The well known set of iris data, as collected originally by \cite{Anderson_1935} and first analysed by \cite{Fisher_1936}, is considered here.
+It is available at \cite{Asuncion_Newman_2007} consisting of the measurements of the length and width of both sepals and petals of $50$ plants for each of the three types of iris species setosa, versicolor and virginica.
+
+The iris dataset is loaded, split into three subsets for the three species and written as tab delimited ASCII files without the \code{Species} column in \code{iris.txt}, \code{iris1.txt}, \code{iris2.txt} and \code{iris3.txt}.
+<<rebmix-code, split = FALSE>>=
+
+##################
+## Iris dataset ##
+##################
+
+data("iris")
+
+## Split the iris dataset into three subsets for the three Species
+## and remove the Species column from the datasets.
+
+iriscolnames <- !(colnames(iris) %in% "Species")
+
+iris1 <- iris[iris$Species == "setosa", iriscolnames]
+iris2 <- iris[iris$Species == "versicolor", iriscolnames]
+iris3 <- iris[iris$Species == "virginica", iriscolnames]
+
+iris <- iris[ , iriscolnames]
+
+## Write the datasets without the Species information into the tab
+## delimited ASCII files.
+
+write.table(iris, file = "iris.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(iris1, file = "iris1.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(iris2, file = "iris2.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(iris3, file = "iris3.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+@
+The \code{REBMIX} object and \code{Table} are reinitialized.
+<<rebmix-code, split = FALSE>>=
+
+## Initialize REBMIX object.
+
+REBMIX <- array(list(NULL), c(6, 3))
+
+## Initialize Table 2.
+
+Table <- NULL
+@
+The three preprocessing types and six selection criteria AIC, AWE \citep{Banfield_Raftery_1993}, BIC, CLC, integrated classification likelihood criterion ICL as proposed by \citet{Biernacki_1998} implemented with $\alpha = 0.5$ and its approximation ICL-BIC for the normal parametric family are compared. The optimal number of classes and nearest neighbours are searched within broad utmost limits \code{K}.
+<<rebmix-code, split = FALSE>>=
+
+## Estimate number of components, component weights and component parameters.
+
+Preprocessing <- c("histogram", "Parzen window", "k-nearest neighbour")
+InformationCriterion <- c("AIC", "AWE", "BIC", "CLC", "ICL", "ICL-BIC")
+K <- list(6:25, 6:25, 3:13)
+@
+Argument \code{Dataset} points to the ASCII files. The \code{REBMIX} function is called $6 \times 3 = 18$ times. The number of components is assessed for the set as well as for the three subsets. The results of the analysis are listed in Table~\ref{table:iris}.
+<<rebmix-code, split = FALSE, results = hide>>=
+
+for (i in 1:6) {
+  for (j in 1:3) {
+    REBMIX[[i, j]] <- REBMIX(Dataset = c("iris.txt", "iris1.txt", "iris2.txt", "iris3.txt"),
+      Preprocessing = Preprocessing[j],
+      InformationCriterion = InformationCriterion[i],
+      pdf = rep("normal", 4),
+      K = K[[j]])
+
+    ## Fill in Table 2.
+
+    if (is.null(Table))
+      Table <- REBMIX[[i, j]]$summary
+    else
+      Table <- merge(Table, REBMIX[[i, j]]$summary, all = TRUE, sort = FALSE)
+  }
+}
+@
+<<rebmix-code, split = FALSE, echo = FALSE, results = hide>>=
+
+## Visualize Table 2.
+
+Table
+@
+\begin{table}[tbh]
+\centering
+\footnotesize
+\begin{tabular}{ccccccccc}
+\hline
+\multirow{2}{*}{Preprocessing} & Information & \multirow{2}{*}{$c$} & \multirow{2}{*}{$k$} & \multirow{2}{*}{$\mathrm{IC}$} & \multirow{2}{*}{$\operatorname{log} L$} & \multicolumn{3}{c}{$c$ for species} \tabularnewline
+&criterion&&&&&setosa&versicolor&virginica\tabularnewline
+\hline
+
+histogram&&
+\Sexpr{Table[["c"]][1]}&\Sexpr{Table[["k"]][1]}&\Sexpr{format(Table[["IC"]][1], digits = 3)}&\Sexpr{format(Table[["logL"]][1], digits = 3)}&
+\Sexpr{Table[["c"]][2]}&\Sexpr{Table[["c"]][3]}&\Sexpr{Table[["c"]][4]}\\
+
+Parzen window&AIC&
+\Sexpr{Table[["c"]][5]}&\Sexpr{Table[["k"]][5]}&\Sexpr{format(Table[["IC"]][5], digits = 3)}&\Sexpr{format(Table[["logL"]][5], digits = 3)}&
+\Sexpr{Table[["c"]][6]}&\Sexpr{Table[["c"]][7]}&\Sexpr{Table[["c"]][8]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][9]}&\Sexpr{Table[["k"]][9]}&\Sexpr{format(Table[["IC"]][9], digits = 3)}&\Sexpr{format(Table[["logL"]][9], digits = 3)}&
+\Sexpr{Table[["c"]][10]}&\Sexpr{Table[["c"]][11]}&\Sexpr{Table[["c"]][12]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][13]}&\Sexpr{Table[["k"]][13]}&\Sexpr{format(Table[["IC"]][13], digits = 3)}&\Sexpr{format(Table[["logL"]][13], digits = 3)}&
+\Sexpr{Table[["c"]][14]}&\Sexpr{Table[["c"]][15]}&\Sexpr{Table[["c"]][16]}\\
+
+Parzen window&AWE&
+\Sexpr{Table[["c"]][17]}&\Sexpr{Table[["k"]][17]}&\Sexpr{format(Table[["IC"]][17], digits = 3)}&\Sexpr{format(Table[["logL"]][17], digits = 3)}&
+\Sexpr{Table[["c"]][18]}&\Sexpr{Table[["c"]][19]}&\Sexpr{Table[["c"]][20]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][21]}&\Sexpr{Table[["k"]][21]}&\Sexpr{format(Table[["IC"]][21], digits = 3)}&\Sexpr{format(Table[["logL"]][21], digits = 3)}&
+\Sexpr{Table[["c"]][22]}&\Sexpr{Table[["c"]][23]}&\Sexpr{Table[["c"]][24]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][25]}&\Sexpr{Table[["k"]][25]}&\Sexpr{format(Table[["IC"]][25], digits = 3)}&\Sexpr{format(Table[["logL"]][25], digits = 3)}&
+\Sexpr{Table[["c"]][26]}&\Sexpr{Table[["c"]][27]}&\Sexpr{Table[["c"]][28]}\\
+
+Parzen window&BIC&
+\Sexpr{Table[["c"]][29]}&\Sexpr{Table[["k"]][29]}&\Sexpr{format(Table[["IC"]][29], digits = 3)}&\Sexpr{format(Table[["logL"]][29], digits = 3)}&
+\Sexpr{Table[["c"]][30]}&\Sexpr{Table[["c"]][31]}&\Sexpr{Table[["c"]][32]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][33]}&\Sexpr{Table[["k"]][33]}&\Sexpr{format(Table[["IC"]][33], digits = 3)}&\Sexpr{format(Table[["logL"]][33], digits = 3)}&
+\Sexpr{Table[["c"]][34]}&\Sexpr{Table[["c"]][35]}&\Sexpr{Table[["c"]][36]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][37]}&\Sexpr{Table[["k"]][37]}&\Sexpr{format(Table[["IC"]][37], digits = 3)}&\Sexpr{format(Table[["logL"]][37], digits = 3)}&
+\Sexpr{Table[["c"]][38]}&\Sexpr{Table[["c"]][39]}&\Sexpr{Table[["c"]][40]}\\
+
+Parzen window&CLC&
+\Sexpr{Table[["c"]][41]}&\Sexpr{Table[["k"]][41]}&\Sexpr{format(Table[["IC"]][41], digits = 3)}&\Sexpr{format(Table[["logL"]][41], digits = 3)}&
+\Sexpr{Table[["c"]][42]}&\Sexpr{Table[["c"]][43]}&\Sexpr{Table[["c"]][44]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][45]}&\Sexpr{Table[["k"]][45]}&\Sexpr{format(Table[["IC"]][45], digits = 3)}&\Sexpr{format(Table[["logL"]][45], digits = 3)}&
+\Sexpr{Table[["c"]][46]}&\Sexpr{Table[["c"]][47]}&\Sexpr{Table[["c"]][48]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][49]}&\Sexpr{Table[["k"]][49]}&\Sexpr{format(Table[["IC"]][49], digits = 3)}&\Sexpr{format(Table[["logL"]][49], digits = 3)}&
+\Sexpr{Table[["c"]][50]}&\Sexpr{Table[["c"]][51]}&\Sexpr{Table[["c"]][52]}\\
+
+Parzen window&ICL&
+\Sexpr{Table[["c"]][53]}&\Sexpr{Table[["k"]][53]}&\Sexpr{format(Table[["IC"]][53], digits = 3)}&\Sexpr{format(Table[["logL"]][53], digits = 3)}&
+\Sexpr{Table[["c"]][54]}&\Sexpr{Table[["c"]][55]}&\Sexpr{Table[["c"]][56]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][57]}&\Sexpr{Table[["k"]][57]}&\Sexpr{format(Table[["IC"]][57], digits = 3)}&\Sexpr{format(Table[["logL"]][57], digits = 3)}&
+\Sexpr{Table[["c"]][58]}&\Sexpr{Table[["c"]][59]}&\Sexpr{Table[["c"]][60]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][61]}&\Sexpr{Table[["k"]][61]}&\Sexpr{format(Table[["IC"]][61], digits = 3)}&\Sexpr{format(Table[["logL"]][61], digits = 3)}&
+\Sexpr{Table[["c"]][62]}&\Sexpr{Table[["c"]][63]}&\Sexpr{Table[["c"]][64]}\\
+
+Parzen window&ICL-BIC&
+\Sexpr{Table[["c"]][65]}&\Sexpr{Table[["k"]][65]}&\Sexpr{format(Table[["IC"]][65], digits = 3)}&\Sexpr{format(Table[["logL"]][65], digits = 3)}&
+\Sexpr{Table[["c"]][66]}&\Sexpr{Table[["c"]][67]}&\Sexpr{Table[["c"]][68]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][69]}&\Sexpr{Table[["k"]][69]}&\Sexpr{format(Table[["IC"]][69], digits = 3)}&\Sexpr{format(Table[["logL"]][69], digits = 3)}&
+\Sexpr{Table[["c"]][70]}&\Sexpr{Table[["c"]][71]}&\Sexpr{Table[["c"]][72]}\\
+\hline
+\end{tabular}
+\normalsize
+\caption{Number of component classes and nearest neighbours for iris dataset.}\label{table:iris}
+\end{table}
+\begin{figure}[tbh]
+\centering
+<<iris-fig, fig = TRUE, height = 4.5, width = 5.5, echo = false>>=
+
+## Visualize Figure 2.
+
+plot(REBMIX[[2, 1]], nrow = 2, ncol = 3, npts = 1000)
+@
+\caption{Iris dataset. Empirical densities (circles) and predictive multivariate marginal normal mixture densities (contour lines).}\label{figure:iris}
+\end{figure}
+It can be concluded that AIC and CLC overestimate the number of components for the set (left part of the table) and for the three subsets significantly. Only the AWE for the histogram preprocessing recognizes three components for the set and one component for each subset. The BIC recognizes too many components for the subsets.
+
+However, according to the log likelihood, ICL and ICL-BIC provide the best results for the histogram preprocessing. Interestingly, the number of components of the set equals $\Sexpr{Table[["c"]][61]}$ for the histogram, which is in accordance with \cite{Wilson_1982}, who suggested that both, the versicolor and virginica species should be split into two subspecies although the analysis by \cite{McLachlan_and_Peel_2000} using maximum likelihood methods suggests that this is not justified for the virginica subset. Also, \cite{Stephens_2000} reported that the superfluous components might appear to model the lack of normality in the subset, rather than interpretable groups. The subset results show that the setosa subset is represented by a single component. The numbers of predictive components for versicolor and virginica are $3$ and $2$, respectively. The \code{plot} method delivers Figure~\ref{figure:iris}.
+\subsection[Wine dataset]{Wine dataset}\label{subsec:wine_dataset}
+<<rebmix-code, split = FALSE, echo = FALSE, results = hide>>=
+
+##################
+## Wine dataset ##
+##################
+
+data("wine")
+
+## Split the wine dataset into three subsets for the three Cultivars
+## and remove the Cultivar column from the datasets.
+
+winecolnames <- !(colnames(wine) %in% "Cultivar")
+
+wine1 <- wine[wine$Cultivar == 1, winecolnames]
+wine2 <- wine[wine$Cultivar == 2, winecolnames]
+wine3 <- wine[wine$Cultivar == 3, winecolnames]
+
+wine <- wine[ , winecolnames]
+
+## Write the datasets without the Cultivar information into the tab
+## delimited ASCII files.
+
+write.table(wine, file = "wine.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(wine1, file = "wine1.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(wine2, file = "wine2.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+write.table(wine3, file = "wine3.txt", sep = "\t",
+  eol = "\n", row.names = FALSE, col.names = FALSE)
+
+## Initialize REBMIX object.
+
+REBMIX <- array(list(NULL), c(6, 3))
+
+## Initialize Table 3.
+
+Table <- NULL
+
+## Estimate number of components, component weights and component parameters.
+
+Preprocessing <- c("histogram", "Parzen window", "k-nearest neighbour")
+InformationCriterion <- c("AIC", "AWE", "BIC", "CLC", "ICL", "ICL-BIC")
+K <- list(6:27, 6:27, 3:14)
+
+for (i in 1:6) {
+  for (j in 1:3) {
+    REBMIX[[i, j]] <- REBMIX(Dataset = c("wine.txt", "wine1.txt", "wine2.txt", "wine3.txt"),
+      Preprocessing = Preprocessing[j],
+      InformationCriterion = InformationCriterion[i],
+      pdf = rep("normal", 13),
+      K = K[[j]])
+
+    ## Fill in Table 3.
+
+    if (is.null(Table))
+      Table <- REBMIX[[i, j]]$summary
+    else
+      Table <- merge(Table, REBMIX[[i, j]]$summary, all = TRUE, sort = FALSE)
+  }
+}
+
+## Visualize Table 3.
+
+Table
+@
+\begin{figure}[p]
+\centering
+<<wine-fig, fig = TRUE, height = 8.8, width = 5.5, echo = false>>=
+
+## Visualize Figure 3.
+
+plot(REBMIX[[6, 2]], nrow = 13, ncol = 6, npts = 1000, plot.cex = 0.3)
+@
+\caption{Wine dataset. Empirical densities (circles) and predictive multivariate marginal normal mixture densities (contour lines).}\label{figure:wine}
+\end{figure}
+\begin{table}[tbh]
+\centering
+\footnotesize
+\begin{tabular}{ccccccccc}
+\hline
+\multirow{2}{*}{Preprocessing} & Information & \multirow{2}{*}{$c$} & \multirow{2}{*}{$k$} & \multirow{2}{*}{$\mathrm{IC}$} & \multirow{2}{*}{$\operatorname{log} L$} & \multicolumn{3}{c}{$c$ for cultivar} \tabularnewline
+&criterion&&&&&1&2&3\tabularnewline
+\hline
+
+histogram&&
+\Sexpr{Table[["c"]][1]}&\Sexpr{Table[["k"]][1]}&\Sexpr{format(Table[["IC"]][1], digits = 3)}&\Sexpr{format(Table[["logL"]][1], digits = 3)}&
+\Sexpr{Table[["c"]][2]}&\Sexpr{Table[["c"]][3]}&\Sexpr{Table[["c"]][4]}\\
+
+Parzen window&AIC&
+\Sexpr{Table[["c"]][5]}&\Sexpr{Table[["k"]][5]}&\Sexpr{format(Table[["IC"]][5], digits = 3)}&\Sexpr{format(Table[["logL"]][5], digits = 3)}&
+\Sexpr{Table[["c"]][6]}&\Sexpr{Table[["c"]][7]}&\Sexpr{Table[["c"]][8]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][9]}&\Sexpr{Table[["k"]][9]}&\Sexpr{format(Table[["IC"]][9], digits = 3)}&\Sexpr{format(Table[["logL"]][9], digits = 3)}&
+\Sexpr{Table[["c"]][10]}&\Sexpr{Table[["c"]][11]}&\Sexpr{Table[["c"]][12]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][13]}&\Sexpr{Table[["k"]][13]}&\Sexpr{format(Table[["IC"]][13], digits = 3)}&\Sexpr{format(Table[["logL"]][13], digits = 3)}&
+\Sexpr{Table[["c"]][14]}&\Sexpr{Table[["c"]][15]}&\Sexpr{Table[["c"]][16]}\\
+
+Parzen window&AWE&
+\Sexpr{Table[["c"]][17]}&\Sexpr{Table[["k"]][17]}&\Sexpr{format(Table[["IC"]][17], digits = 3)}&\Sexpr{format(Table[["logL"]][17], digits = 3)}&
+\Sexpr{Table[["c"]][18]}&\Sexpr{Table[["c"]][19]}&\Sexpr{Table[["c"]][20]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][21]}&\Sexpr{Table[["k"]][21]}&\Sexpr{format(Table[["IC"]][21], digits = 3)}&\Sexpr{format(Table[["logL"]][21], digits = 3)}&
+\Sexpr{Table[["c"]][22]}&\Sexpr{Table[["c"]][23]}&\Sexpr{Table[["c"]][24]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][25]}&\Sexpr{Table[["k"]][25]}&\Sexpr{format(Table[["IC"]][25], digits = 3)}&\Sexpr{format(Table[["logL"]][25], digits = 3)}&
+\Sexpr{Table[["c"]][26]}&\Sexpr{Table[["c"]][27]}&\Sexpr{Table[["c"]][28]}\\
+
+Parzen window&BIC&
+\Sexpr{Table[["c"]][29]}&\Sexpr{Table[["k"]][29]}&\Sexpr{format(Table[["IC"]][29], digits = 3)}&\Sexpr{format(Table[["logL"]][29], digits = 3)}&
+\Sexpr{Table[["c"]][30]}&\Sexpr{Table[["c"]][31]}&\Sexpr{Table[["c"]][32]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][33]}&\Sexpr{Table[["k"]][33]}&\Sexpr{format(Table[["IC"]][33], digits = 3)}&\Sexpr{format(Table[["logL"]][33], digits = 3)}&
+\Sexpr{Table[["c"]][34]}&\Sexpr{Table[["c"]][35]}&\Sexpr{Table[["c"]][36]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][37]}&\Sexpr{Table[["k"]][37]}&\Sexpr{format(Table[["IC"]][37], digits = 3)}&\Sexpr{format(Table[["logL"]][37], digits = 3)}&
+\Sexpr{Table[["c"]][38]}&\Sexpr{Table[["c"]][39]}&\Sexpr{Table[["c"]][40]}\\
+
+Parzen window&CLC&
+\Sexpr{Table[["c"]][41]}&\Sexpr{Table[["k"]][41]}&\Sexpr{format(Table[["IC"]][41], digits = 3)}&\Sexpr{format(Table[["logL"]][41], digits = 3)}&
+\Sexpr{Table[["c"]][42]}&\Sexpr{Table[["c"]][43]}&\Sexpr{Table[["c"]][44]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][45]}&\Sexpr{Table[["k"]][45]}&\Sexpr{format(Table[["IC"]][45], digits = 3)}&\Sexpr{format(Table[["logL"]][45], digits = 3)}&
+\Sexpr{Table[["c"]][46]}&\Sexpr{Table[["c"]][47]}&\Sexpr{Table[["c"]][48]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][49]}&\Sexpr{Table[["k"]][49]}&\Sexpr{format(Table[["IC"]][49], digits = 3)}&\Sexpr{format(Table[["logL"]][49], digits = 3)}&
+\Sexpr{Table[["c"]][50]}&\Sexpr{Table[["c"]][51]}&\Sexpr{Table[["c"]][52]}\\
+
+Parzen window&ICL&
+\Sexpr{Table[["c"]][53]}&\Sexpr{Table[["k"]][53]}&\Sexpr{format(Table[["IC"]][53], digits = 3)}&\Sexpr{format(Table[["logL"]][53], digits = 3)}&
+\Sexpr{Table[["c"]][54]}&\Sexpr{Table[["c"]][55]}&\Sexpr{Table[["c"]][56]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][57]}&\Sexpr{Table[["k"]][57]}&\Sexpr{format(Table[["IC"]][57], digits = 3)}&\Sexpr{format(Table[["logL"]][57], digits = 3)}&
+\Sexpr{Table[["c"]][58]}&\Sexpr{Table[["c"]][59]}&\Sexpr{Table[["c"]][60]}\\
+
+histogram&&
+\Sexpr{Table[["c"]][61]}&\Sexpr{Table[["k"]][61]}&\Sexpr{format(Table[["IC"]][61], digits = 3)}&\Sexpr{format(Table[["logL"]][61], digits = 3)}&
+\Sexpr{Table[["c"]][62]}&\Sexpr{Table[["c"]][63]}&\Sexpr{Table[["c"]][64]}\\
+
+Parzen window&ICL-BIC&
+\Sexpr{Table[["c"]][65]}&\Sexpr{Table[["k"]][65]}&\Sexpr{format(Table[["IC"]][65], digits = 3)}&\Sexpr{format(Table[["logL"]][65], digits = 3)}&
+\Sexpr{Table[["c"]][66]}&\Sexpr{Table[["c"]][67]}&\Sexpr{Table[["c"]][68]}\\
+
+$k$-nearest neighbour&&
+\Sexpr{Table[["c"]][69]}&\Sexpr{Table[["k"]][69]}&\Sexpr{format(Table[["IC"]][69], digits = 3)}&\Sexpr{format(Table[["logL"]][69], digits = 3)}&
+\Sexpr{Table[["c"]][70]}&\Sexpr{Table[["c"]][71]}&\Sexpr{Table[["c"]][72]}\\
+\hline
+\end{tabular}
+\normalsize
+\caption{Number of component classes and nearest neighbours for wine dataset.}\label{table:wine}
+\end{table}
+Next, the results of a wine recognition problem are considered. The set consists of $178$ $13$~dimensional exemplars that are a set of chemical analysis of three types of wine \citep{Asuncion_Newman_2007}.
+
+The standalone replication script \code{rebmix.R} delivers the \proglang{R} sample code. The results of the analysis are plotted in Figure~\ref{figure:wine} and listed in Table~\ref{table:wine}. The AIC and CLC overestimate the number of components for the set (left part of the table) and for the subsets and are thus not applicable. The AWE, BIC, ICL and ICL-BIC recognize three components for the set and one component for each subset for the histogram and Parzen window preprocessing. In a classification context, this is a well posed problem with well behaved class structures \citep[see also][]{Roberts_2000}.
+\subsection[Complex 1 dataset]{Complex 1 dataset}\label{subsec:complex1_dataset}
+Next, $15$ component univariate normal mixture is generated and the probability density is estimated.
+<<rebmix-code, split = FALSE>>=
+
+#######################
+## Complex 1 dataset ##
+#######################
+
+## Generate the complex 1 dataset.
+
+n <- c(998, 263, 1086, 487, 213, 1076, 232,
+  784, 840, 461, 773, 24, 811, 1091, 861)
+
+Theta <- rbind(pdf = "normal",
+  theta1 = c(688.4, 265.1, 30.8, 934, 561.6, 854.9, 883.7,
+  758.3, 189.3, 919.3, 98, 143, 202.5, 628, 977),
+  theta2 = c(12.4, 14.6, 14.8, 8.4, 11.7, 9.2, 6.3, 10.2,
+  9.5, 8.1, 14.7, 11.7, 7.4, 10.1, 14.6))
+
+RNGMIX <- RNGMIX(Dataset = "complex1.txt",
+  n = n,
+  Theta = Theta)
+
+## Estimate number of components, component weights and component parameters.
+
+REBMIX <- REBMIX(Dataset = "complex1.txt",
+  Preprocessing = "histogram",
+  D = 0.0025,
+  cmax = 30,
+  InformationCriterion = "BIC",
+  pdf = "normal",
+  K = seq(14, 200, 4))
+
+REBMIX$w[[1]]
+REBMIX$Theta[[1]]
+REBMIX$summary
+@
+\begin{figure}[t]
+\centering
+<<complex1-fig, fig = TRUE, height = 2.5, width = 5.5, echo = false>>=
+
+## Visualize Figure 4.
+
+plot(REBMIX, npts = 1000)
+@
+\caption{Complex 1 dataset. Empirical densities (circles) and predictive normal mixture density (solid line).}\label{figure:complex1}
+\end{figure}
+Random seed $r_{\mathrm{seed}} = -1$, the number of classes ranges from $14$ \citep{Sturges_1926} to $200$ corresponding to the RootN rule, the maximum number of components is set to $30$ and the information criterion to BIC. Total number of observations $n = 10000$. Consequently, the histogram preprocessing is applied. See \code{help("RNGMIX")} in \pkg{rebmix} for details about specifying arguments for the random univariate or multivariate finite mixture generation.
+
+From Figure~\ref{figure:complex1} it can be noted that it is possible to restore the mixture of $15$ well separated components. Total of positive relative deviations $D = 0.025$ is mostly appropriate. However, if the components with a low probability of occurrence are expected, it should decrease. The complex $1$ dataset requires $D = 0.0025$ to get at the minimum BIC. The calculation time increases if $D$ decreases. The optimal BIC is observed by a larger number of iterations.
+\subsection[Simulated 1 dataset]{Simulated 1 dataset}\label{subsec:simulated_dataset}
+Set $1$ consists of $n = 625$ four~dimensional observations obtained by generating samples separately from each of five normal distributions. The component~sample sizes, means and covariance matrices, which are those adopted in \citet{Bozdogan_1993} and \citet{Celeux_Soromenho_1996}, are displayed below
+\begin{center}
+\(\begin{array}{lll}
+\bm{\mu}_{1} = (10, 12, 10, 12)^{\top} & \bm{\Sigma}_{1} = \bm{I}_{p} & n_{1} = 75 \\
+\bm{\mu}_{2} = (8.5, 10.5, 8.5, 10.5)^{\top} & \bm{\Sigma}_{2} = \bm{I}_{p} & n_{2} = 100 \\
+\bm{\mu}_{3} = (12, 14, 12, 14)^{\top} & \bm{\Sigma}_{3} = \bm{I}_{p} & n_{3} = 125 \\
+\bm{\mu}_{4} = (13, 15, 7, 9)^{\top} & \bm{\Sigma}_{4} = 4\bm{I}_{p} & n_{4} = 150 \\
+\bm{\mu}_{5} = (7, 9, 13, 15)^{\top} & \bm{\Sigma}_{5} = 9\bm{I}_{p} & n_{5} = 175
+\end{array}\)
+\end{center}
+The optimal $c = 5$ component normal mixture model with diagonal component~covariance matrices is fitted \citep{McLachlan_Ng_2000, McLachlan_and_Peel_2000} by using the EMMIX algorithm \cite{McLachlan_1999}. It results in $\mathrm{BIC} = 11479$.
+
+The EMMIX algorithm recognizes five components as optimal regardless of the selection criterion. Ten random starts are performed to initialize the EM algorithm. The solution corresponding to the largest local maximum of the log likelihood located is taken as the MLE after the elimination of local maximizers considered to be spurious on the basis of the relevant sizes of the fitted generalized component variances.
+
+Next, $100$ samples are generated with random seeds $r_{\mathrm{seed}}$ ranging from $-1$ to $-100$.
+<<rebmix-code, split = FALSE, results = hide>>=
+
+#########################
+## Simulated 1 dataset ##
+#########################
+
+## Generate the simulated 1 dataset.
+
+n <- c(75, 100, 125, 150, 175)
+
+Theta <- rbind(rep("normal", 5),
+  c(10, 8.5, 12, 13, 7),
+  c(1, 1, 1, 2, 3),
+  rep("normal", 5),
+  c(12, 10.5, 14, 15, 9),
+  c(1, 1, 1, 2, 3),
+  rep("normal", 5),
+  c(10, 8.5, 12, 7, 13),
+  c(1, 1, 1, 2, 3),
+  rep("normal", 5),
+  c(12, 10.5, 14, 9, 15),
+  c(1, 1, 1, 2, 3))
+
+RNGMIX <- RNGMIX(Dataset = paste("Simulated1_", 1:100, ".txt", sep = ""),
+  n = n,
+  Theta = Theta)
+@
+In total, $100$ finite mixture estimations are performed for the histogram preprocessing and BIC.
+<<rebmix-code, split = FALSE, results = hide>>=
+
+## Estimate number of components, component weights and component parameters.
+
+REBMIX <- REBMIX(paste("Simulated1_", 1:100, ".txt", sep = ""),
+  Preprocessing = "histogram",
+  InformationCriterion = "BIC",
+  pdf = rep("normal", 4),
+  K = seq(10, 28, 2))
+@
+The results are as follows:
+<<rebmix-code, split = FALSE>>=
+
+## Visualize results.
+
+c <- REBMIX$summary$c
+IC <- REBMIX$summary$IC
+
+summary(c)
+summary(IC, digits = 5)
+@
+\begin{figure}[t]
+\centering
+<<simulated1-fig, fig = TRUE, height = 4.5, width = 5.5, echo = FALSE, results = hide>>=
+
+## Probability of identifying 5 components.
+
+P <- length(c[c == 5]) / length(c)
+P
+
+## Extract sample with the minimum BIC.
+
+Min.IC <- min(IC)
+
+summary <- REBMIX$summary[IC == Min.IC, ]
+
+i <- as.numeric(rownames(summary))
+
+## Visualize Figure 5.
+
+plot(REBMIX, pos = i, nrow = 2, ncol = 3, npts = 1000)
+@
+\caption{Simulated 1 dataset. Empirical densities (circles) and predictive multivariate marginal normal mixture densities (contour lines).}\label{figure:simulated1}
+\end{figure}
+The minimum $\mathrm{BIC} = \Sexpr{format(Min.IC, digits = 3)}$ corresponds to the $\Sexpr{i}$th sample in Figure~\ref{figure:simulated1}. The BIC predicts $\Sexpr{format(mean(c), digits = 3)}$ components on average, where probability $\Prob$ of identifying exactly $c = 5$ components equals $\Sexpr{format(P, digits = 3)}$. The fastest histogram preprocessing results in the highest probability of identifying the true number of components and in the most suitable average number of components $c$ for the simulated 1 dataset. The Parzen window and $k$-nearest neighbour are therefore left out here. The REBMIX approaches the EMMIX regarding the information criterion only at the lower limit. However, it is insensitive to spurious local maximizers, robust and fast especially if the optimal number of classes or the nearest neighbours can be guessed at least approximately.
+<<rebmix-code, split = FALSE, echo = FALSE, results = hide>>=
+
+## Remove the created tab delimited ASCII files.
+
+file.remove("galaxy.txt",
+  "iris.txt", "iris1.txt", "iris2.txt", "iris3.txt",
+  "wine.txt", "wine1.txt", "wine2.txt", "wine3.txt",
+  "complex1.txt",
+  paste("Simulated1_", 1:100, ".txt", sep = ""),
+  "InpREBMIX.txt", "InpRNGMIX.txt",  
+  "OutREBMIX_1.txt", "OutREBMIX_2.txt", "OutRNGMIX_1.txt")
+
+rm(list = ls())
+@
+\section[Conclusions and future work]{Conclusions and future work}\label{sec:conclusions_future_work}
+The article presents the REBMIX algorithm and the \pkg{rebmix} package. The galaxy, iris, wine, complex 1 and simulated 1 datasets are 
+studied on the x64 architecture. By applying the \pkg{tikzDevice} package \citep{tikzDevice_2010}, \LaTeX\ plots with legends can be obtained.
+The REBMIX algorithm leads to slightly worse estimates than the EM algorithm and can be used to assess the initial set of the unknown parameters and number of components for the EM algorithm or as a standalone procedure that is a good compromise between the nonparametric and parametric methods to the finite mixture estimation.
+
+Its major superiorities are robustness and time efficiency especially with the histogram and Parzen window preprocessing for all sample sizes. The $k$-nearest neighbour is more suitable for smaller samples. Its advantages are more stressed for complex mixtures composed of numerous components.
+
+There are several possibilities to further decrease the calculation time, which have been left for the future. The number of components affects the computational time, but it does not contribute to the numerical instability of the algorithm. The REBMIX is being extended to mixed categorical variables. The binomial parametric family is already available in the attached \proglang{C} source code and is to be validated. The pseudo code in \cite{Nagode_Fajdiga_2011a} differs slightly from Algorithm~\ref{alg:rebmix}. The effect of the differences on the predictive finite mixtures is negligible and improve the calculation speed considerably. Potentially, the REBMIX can be used for pattern recognition and as a neural network.
+\bibliography{rebmix}
+\end{document}
