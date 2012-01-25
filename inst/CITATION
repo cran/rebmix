@@ -33,5 +33,5 @@ citEntry(entry = "Article",
   paste("Marko Nagode, Matija Fajdiga (2011).",
         "The REBMIX Algorithm for the Multivariate Finite Mixture Estimation.",
         "Communications in Statistics - Theory and Methods, 40(11), 2022-2034.",
-        "http://www.informaworld.com/smpp/content~db=all~content=a935984004~frm=titlelink.")
+        "URL http://www.informaworld.com/smpp/content~db=all~content=a935984004~frm=titlelink.")
 )

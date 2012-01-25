@@ -1,7 +1,7 @@
 \name{plot.REBMIX}
 \alias{plot.REBMIX}
 \title{
-Plots Univariate or Multivariate REBMIX Algorithm Output
+Plots Univariate or Multivariate REBMIX Output
 }
 \description{
 Takes an object of class \code{REBMIX} and plots empirical and predictive univariate \eqn{d = 1} mixture densities
@@ -11,9 +11,9 @@ densities follow the histogram, Parzen window or \emph{k}-nearest neighbour appr
 \usage{
 \method{plot}{REBMIX}(x, pos = 1, nrow = 2, ncol = 2, npts = 200, cex = 0.8,
      fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
-     plot.cex = 0.8, plot.pch = 19, plot.type = "p", 
-     contour.drawlabels = FALSE, contour.labcex = 0.8, 
-     contour.method = "flattest", contour.nlevels = 12, ...)
+     plot.cex = 0.8, plot.pch = 19, contour.drawlabels = FALSE, 
+     contour.labcex = 0.8, contour.method = "flattest", 
+     contour.nlevels = 12, ...)
 }
 \arguments{
 \item{x}{
@@ -62,9 +62,6 @@ The default value is \code{0.8}.
 \item{plot.pch}{
 a vector of plotting characters or symbols, see also \code{\link[graphics]{points}}. The default value is \code{19}.
 }
-\item{plot.type}{
-a type of plot to be drawn, see also \code{\link[graphics]{plot}}. The default value is \code{"p"}.
-}
 \item{contour.drawlabels}{
 logical. The contours are labelled if \code{TRUE}. The default value is \code{FALSE}.
 }
@@ -82,6 +79,10 @@ a number of desired contour levels. The default value is \code{12}.
 \item{\dots}{
 further arguments to \code{\link[graphics]{par}}.
 }
+}
+\value{
+\code{par} is returned in an invisible named list. Such a list
+can be passed as an argument to \code{\link[graphics]{par}} to restore the parameter values.
 }
 \references{
 Bishop CM (1995). \emph{Neural Networks for Pattern Recognition}. Clarendon Press, Oxford.
@@ -102,55 +103,27 @@ wine <- wine[ , winecolnames]
 d <- ncol(wine) 
 n <- nrow(wine)
 
-## Write the dataset without the Cultivar information into the 
-## tab delimited ASCII file.
-
-write.table(wine, file = "wine.txt", sep = "\t", 
-  eol = "\n", row.names = FALSE, col.names = FALSE)
-
 ## Estimate number of components, component weights and component parameters.
 
-Dataset <- "wine.txt"
-
-Preprocessing <- "Parzen window"
-
-D <- 0.025
-
-cmax <- 15
-
-InformationCriterion <- "ICL-BIC"
-
-pdf <- rep("normal", d)
-
-k <- c(as.integer(1 + log2(n)), ## Minimum k follows the Sturges rule.
-  as.integer(2 * n^0.5)) ## Maximum k follows the RootN rule.
+v <- c(as.integer(1 + log2(n)), ## Minimum v follows the Sturges rule.
+  as.integer(2 * n^0.5)) ## Maximum v follows the RootN rule.
 
 ## Number of classes or nearest neighbours to be processed.
 
-N <- as.integer(log(k[2] / (k[1] + 1)) / log(1 + 1 / k[1]))
+N <- as.integer(log(v[2] / (v[1] + 1)) / log(1 + 1 / v[1]))
 
-K <- c(k[1], as.integer((k[1] + 1) * (1 + 1 / k[1])^(0:N)), k[2])
+K <- c(v[1], as.integer((v[1] + 1) * (1 + 1 / v[1])^(0:N)), v[2])
 
-Rmin <- 0.001
-
-ar <- 0.1
-
-Restraints <- "loose"
-
-REBMIX <- REBMIX(Dataset = Dataset, 
-  Preprocessing = Preprocessing, 
-  D = D, 
-  cmax = cmax, 
-  InformationCriterion = InformationCriterion, 
-  pdf = pdf, 
-  K = K, 
-  Rmin = Rmin, 
-  ar = ar, 
-  Restraints = Restraints)
+wineest <- REBMIX(Dataset = list(wine = wine), 
+  Preprocessing = "Parzen window", 
+  Criterion = "ICL-BIC", 
+  Variables = rep("continuous", d),
+  pdf = rep("normal", d), 
+  K = K)
 
 ## Plot the finite mixture.
 
-plot(REBMIX, nrow = 4, ncol = 5, npts = 500, pty = "s")
+plot(wineest, nrow = 4, ncol = 5, npts = 500, pty = "s")
 }
-\keyword{finite mixtures}
-\keyword{probability distributions}
+\keyword{plot}
+

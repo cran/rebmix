@@ -12,13 +12,54 @@ and proline found in each of the three types of the wines. The number of instanc
 wine
 }
 \format{
-\code{wine} is a data frame with 178 cases (rows) and 14 variables (columns) named \code{Alcohol}, \code{Malic.Acid}, \code{Ash}, \code{Alcalinity.of.Ash},
-\code{Magnesium}, \code{Total.Phenols}, \code{Flavanoids}, \code{Nonflavanoid.Phenols}, \code{Proanthocyanins}, \code{Color.Intensity}, \code{Hue},
-\code{OD280.OD315.of.Diluted.Wines}, \code{Proline} and \code{Cultivar}.
+\code{wine} is a data frame with 178 cases (rows) and 14 variables (columns) named:
+\enumerate{
+\item{
+\code{Alcohol} continuous.
+}
+\item{
+\code{Malic.Acid} continuous.
+}
+\item{
+\code{Ash} continuous.
+}
+\item{
+\code{Alcalinity.of.Ash} continuous.
+}
+\item{
+\code{Magnesium} continuous.
+}
+\item{
+\code{Total.Phenols} continuous.
+}
+\item{
+\code{Flavanoids} continuous.
+}
+\item{
+\code{Nonflavanoid.Phenols} continuous.
+}
+\item{
+\code{Proanthocyanins} continuous. 
+}
+\item{
+\code{Color.Intensity} continuous.
+}
+\item{
+\code{Hue} continuous.
+}
+\item{
+\code{OD280.OD315.of.Diluted.Wines} continuous.
+}
+\item{
+\code{Proline} continuous.
+}
+\item{
+\code{Cultivar} continuous.
+}
+}
 }
 \source{
-Asuncion A, Newman DJ (2007). UCI Machine Learning Repository. \url{http://www.
-ics.uci.edu/~mlearn/MLRepository.html}.
+Frank A, Asuncion A (2010). UCI Machine Learning Repository. \url{http://archive.ics.uci.edu/ml}.
 }
 \references{
 Roberts SJ, Everson R, Rezek I (2000). Maximum Certainty Data Partitioning. \emph{Pattern

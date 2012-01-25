@@ -9,7 +9,7 @@ The unfilled survey of the Corona Borealis region contains the velocities of 82 
 galaxy
 }
 \format{
-\code{galaxy} is a data frame with 82 cases (rows) and 1 variable (columns) called \code{Velocity}.
+\code{galaxy} is a data frame with 82 cases (rows) and 1 continuous variable (columns) called \code{Velocity}.
 }
 \source{
 Roeder K (1990). Density Estimation with Confidence Sets Exemplified by Superclusters
@@ -32,5 +32,9 @@ colnames(galaxy)
 
 write.table(galaxy, file = "galaxy.txt", sep = "\t", 
   eol = "\n", row.names = FALSE, col.names = FALSE)
+  
+## Write dataset into the rda file.
+
+save(galaxy, file = "galaxy.rda")
 }
 \keyword{datasets}

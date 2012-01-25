@@ -45,11 +45,15 @@ extern "C" {
 #endif
 
 #ifndef ItMax
-#define ItMax 2000
+#define ItMax 1000
 #endif
 
 #ifndef BufInc
 #define BufInc 1000
+#endif
+
+#ifndef CL
+#define CL "                                                                                                    "
 #endif
 
 #define IsNan(x) ((x) != (x)) 
@@ -62,10 +66,17 @@ typedef enum {
 } PreprocessingType_e;
 
 typedef enum {
-    pfNormal,    /* Normal distribution. */
-    pfLognormal, /* Lognormal distribution. */
-    pfWeibull,   /* Weibull distribution. */
-    pfBinomial   /* Binomial distribution. */
+    vtContinuous,  /* Continuous variable. */
+    vtDiscrete     /* Ordered or non-ordered binary or discrete variable. */
+} VariablesType_e;
+
+typedef enum {
+    pfNormal,      /* Normal distribution. */
+    pfLognormal,   /* Lognormal distribution. */
+    pfWeibull,     /* Weibull distribution. */
+    pfBinomial,    /* Binomial distribution. */
+	pfPoisson,     /* Poisson distribution. */
+	pfDirac        /* Dirac distribution. */
 } ParametricFamilyType_e;
 
 typedef enum {
@@ -74,9 +85,9 @@ typedef enum {
 } PestraintsType_e;
 
 typedef struct marginaldistributiontype {
-    ParametricFamilyType_e ParametricFamily; /* Parametric family. */
-    FLOAT                  Parameter0;       /* Parameter 0. */ 
-    FLOAT                  Parameter1;       /* Parameter 1. */
+    ParametricFamilyType_e ParFamType; /* Parametric family. */
+    FLOAT                  Par0;       /* Parameter 0. */ 
+    FLOAT                  Par1;       /* Parameter 0. */ 
 } MarginalDistributionType;
 
 typedef enum {
@@ -93,7 +104,9 @@ typedef enum {
     icCLC,    /* CLC - Classification likelihood criterion Biernacki & Govaert (1997). */
     icICL,    /* ICL - Integrated classification likelihood Biernacki et al. (1998). */
     icPC,     /* PC - Partition coefficient Bezdek (1981). */
-    icICLBIC  /* ICL-BIC - Integrated classification likelihood criterion Biernacki et al. (1998). */ 
+    icICLBIC, /* ICL-BIC - Integrated classification likelihood criterion Biernacki et al. (1998). */ 
+	icD,      /* D - Total of positive relative deviations Nagode & Fajdiga (2011). */
+	icSSE,    /* SSE - Sum of squares error Bishop (1998). */
 } InformationCriterionType_e;
 
 typedef struct roughparametertype {
@@ -123,12 +136,15 @@ typedef struct inputrebmixparametertype {
     int                        cmax;        /* Maximum number of components. */  
     InformationCriterionType_e ICType;      /* Information criterion types. */
     int                        d;           /* Number of independent random variables. */ 
-    ParametricFamilyType_e     *ParFamType; /* Parametric family types. */
-    FLOAT                      *Par0;       /* Component parameters. */
-    FLOAT                      *Par1;       /* Component parameters. */
+    VariablesType_e            *VarType;    /* Types of variables. */
+    ParametricFamilyType_e     *IniFamType; /* Initial parametric family types. */
+    FLOAT                      *Ini0;       /* Initial component parameters. */
+    FLOAT                      *Ini1;       /* Initial component parameters. */
     int                        kmax;        /* Number of classes or k-nearest neighbours to be processed. */
-    int                        *k;          /* Number of classes or k-nearest neighbours. */
-    FLOAT                      RMIN;        /* Minimum radius of the hypersphere. */
+    int                        *K;          /* Number of classes or k-nearest neighbours. */
+	FLOAT                      *ymin;       /* Minimum observations. */
+	FLOAT                      *ymax;       /* Maximum observations. */
+    FLOAT                      b;           /* Minimum weight multiplier. */
     FLOAT                      ar;          /* Acceleration rate. */
     PestraintsType_e           ResType;     /* Restraints type. */
     char                       *save;       /* Path to the save data file. */
@@ -158,6 +174,24 @@ int ReadREBMIXDataFile(InputREBMIXParameterType  InpParType,   /* Input paramete
 /* Returns the value log(Gamma(y)) for y > 0. See http://www.nrbook.com/a/bookcpdf/c6-1.pdf */
 
 FLOAT Gammaln(FLOAT y);
+
+/* Returns component p.d.f or c.d.f. */ 
+
+int ComponentDist(int                      d,            /* Number of independent random variables. */
+                  FLOAT                    *Y,           /* Pointer to the input point [y0,...,yd-1]. */
+                  MarginalDistributionType *MrgDistType, /* Marginal distribution type. */
+                  FLOAT                    *CmpDist,     /* Component distribution. */
+                  int                      Cumulative);  /* Set 1 if c.d.f. or 0 if p.d.f. */
+
+/* Returns mixture p.d.f or c.d.f. */ 
+
+int MixtureDist(int                      d,             /* Number of independent random variables. */
+                FLOAT                    *Y,            /* Pointer to the input point [y0,...,yd-1]. */
+                int                      c,             /* Number of components. */ 
+                FLOAT                    *W,            /* Component weights. */
+                MarginalDistributionType **MrgDistType, /* Marginal distribution type. */
+                FLOAT                    *MixDist,      /* Mixture distribution. */
+                int                      Cumulative);   /* Set 1 if c.d.f. or 0 if p.d.f. */
 
 /* REBMIX algorithm. */
 

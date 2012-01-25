@@ -14,7 +14,8 @@ int   NDevISet = 0;
 FLOAT NDevVSet = (FLOAT)0.0;
 int   LDevISet = 0;
 FLOAT LDevVSet = (FLOAT)0.0;
-FLOAT Bn = (FLOAT)(-1.0), Bp = (FLOAT)(-1.0), Be, Bg, Bplog, Bpc, Bpclog;
+FLOAT Bn = -(FLOAT)1.0, Bp = -(FLOAT)1.0, Be, Bg, Bplog, Bpc, Bpclog;
+FLOAT PTheta = -(FLOAT)1.0, Pg, Psq, PalTheta;
 long  IY = 0;
 long  IV[NTAB];
 
@@ -54,6 +55,40 @@ FLOAT Ran1(int *IDum)
     if ((Tmp = AM * IY) > RNMX) return (RNMX); else return (Tmp);
 } /* Ran1 */
 
+/* Writes output data into the file stream. */
+
+int WriteRNGMIXDataFile(InputRNGMIXParameterType  InpParType,  /* Input parameters. */ 
+                        OutputRNGMIXParameterType OutParType)  /* Output parameters. */
+{
+    int  i, j;
+    FILE *fp = NULL;
+    int  Error = 0;
+
+	if ((fp = fopen(InpParType.curr, "w")) == NULL) {
+        Error = 1; goto E0;
+    }
+
+	for (i = 0; i < OutParType.n; i++) {
+        fprintf(fp, "%E", OutParType.X[0][i]); 
+        
+        for (j = 1; j < InpParType.d; j++) fprintf(fp, "\t%E", OutParType.X[j][i]); 
+        
+        fprintf(fp, "\n");
+	}
+
+E0: if (fp) fclose(fp);
+    
+    if (OutParType.X) {
+        for (i = 0; i < InpParType.d; i++) {
+            if (OutParType.X[i]) free(OutParType.X[i]);
+        }
+         
+        free(OutParType.X);
+    }
+
+	return (Error);
+} /* WriteRNGMIXDataFile */
+
 /* Writes input parameters into the file stream. */
 
 int WriteRNGMIXParameterFile(InputRNGMIXParameterType InpParType)  /* Input parameters. */ 
@@ -92,36 +127,31 @@ E0: if (fp) fclose(fp);
 
 /* Returns random sample of independent observations. */
 
-int RNGMIX(InputRNGMIXParameterType InpParType) /* Input parameters. */
+int RNGMIX(InputRNGMIXParameterType  InpParType,  /* Input parameters. */ 
+           OutputRNGMIXParameterType *OutParType) /* Output parameters. */  	
 {
-    FLOAT **Y = NULL;
     FLOAT C[8];
     FLOAT y, p;
-    int   i, j, k, l, m, n = 0;
-    FILE  *fp = NULL;
+    int   i, j, k, l, m;
     int   Error = 0;
-
-    if ((fp = fopen(InpParType.curr, "w")) == NULL) {
-        Error = 1; goto E0;
-    }
-
-    n = 0; for (i = 0; i < InpParType.c; i++) n += InpParType.n[i];
+	
+    OutParType->n = 0; for (i = 0; i < InpParType.c; i++) OutParType->n += InpParType.N[i];
     
-    Y = (FLOAT**)malloc(n * sizeof(FLOAT*));
+	OutParType->X = (FLOAT**)malloc(OutParType->n * sizeof(FLOAT*));
 
-    Error = NULL == Y; if (Error) goto E0;
+    Error = NULL == OutParType->X; if (Error) goto E0;
 
-    for (i = 0; i < n; i++) {
-        Y[i] = (FLOAT*)malloc(InpParType.d * sizeof(FLOAT));
+    for (i = 0; i < OutParType->n; i++) {
+        OutParType->X[i] = (FLOAT*)malloc(InpParType.d * sizeof(FLOAT));
 
-        Error = NULL == Y[i]; if (Error) goto E0;
+        Error = NULL == OutParType->X[i]; if (Error) goto E0;
     }
 
     l = 0;
     for (i = 0; i < InpParType.c; i++) {
-        for (j = 0; j < InpParType.n[i]; j++) {
+        for (j = 0; j < InpParType.N[i]; j++) {
             for (k = 0; k < InpParType.d; k++) {
-                switch (InpParType.Theta[i][k].ParametricFamily) {
+                switch (InpParType.Theta[i][k].ParFamType) {
                 case pfNormal:
                     if (NDevISet == 0) {
                         do {
@@ -142,8 +172,8 @@ int RNGMIX(InputRNGMIXParameterType InpParType) /* Input parameters. */
                         y = NDevVSet; NDevISet = 0;
                     }
 
-                    Y[l][k] = InpParType.Theta[i][k].Parameter1 * y + 
-                              InpParType.Theta[i][k].Parameter0;
+                    OutParType->X[l][k] = InpParType.Theta[i][k].Par1 * y + 
+                                          InpParType.Theta[i][k].Par0;
 
                     break;
                 case pfLognormal:
@@ -166,52 +196,52 @@ int RNGMIX(InputRNGMIXParameterType InpParType) /* Input parameters. */
                         y = LDevVSet; LDevISet = 0;
                     }
 
-                    Y[l][k] = (FLOAT)exp(InpParType.Theta[i][k].Parameter1 * y + 
-                                         InpParType.Theta[i][k].Parameter0);
+                    OutParType->X[l][k] = (FLOAT)exp(InpParType.Theta[i][k].Par1 * y + 
+                                          InpParType.Theta[i][k].Par0);
 
                     break;
                 case pfWeibull:
-                    Y[l][k] = InpParType.Theta[i][k].Parameter0 * 
-                              (FLOAT)exp(log(log((FLOAT)1.0 / Ran1(&InpParType.IDum))) / 
-                              InpParType.Theta[i][k].Parameter1);
+                    OutParType->X[l][k] = InpParType.Theta[i][k].Par0 * 
+                                          (FLOAT)exp(log(log((FLOAT)1.0 / Ran1(&InpParType.IDum))) / 
+                                          InpParType.Theta[i][k].Par1);
 
                     break;
                 case pfBinomial:
-                    if (InpParType.Theta[i][k].Parameter1 < (FLOAT)0.5) {
-                        p = InpParType.Theta[i][k].Parameter1;
+                    if (InpParType.Theta[i][k].Par1 < (FLOAT)0.5) {
+                        p = InpParType.Theta[i][k].Par1;
                     }
                     else {
-                        p = (FLOAT)1.0 - InpParType.Theta[i][k].Parameter1;
+                        p = (FLOAT)1.0 - InpParType.Theta[i][k].Par1;
                     }
 
-                    C[0] = InpParType.Theta[i][k].Parameter0 * p;
-                    if ((int)InpParType.Theta[i][k].Parameter0 < 25) {
-                        Y[l][k] = (FLOAT)0.0;
+                    C[0] = InpParType.Theta[i][k].Par0 * p;
+                    if ((int)InpParType.Theta[i][k].Par0 < 25) {
+                        OutParType->X[l][k] = (FLOAT)0.0;
                         
-                        for (m = 0; m < (int)InpParType.Theta[i][k].Parameter0; m++) {
-                            if (Ran1(&InpParType.IDum) < p) ++Y[l][k];
+                        for (m = 0; m < (int)InpParType.Theta[i][k].Par0; m++) {
+                            if (Ran1(&InpParType.IDum) < p) ++OutParType->X[l][k];
                         }
                     }
                     else 
                     if (C[0] < (FLOAT)1.0) {
                         C[1] = (FLOAT)exp(-C[0]); C[2] = (FLOAT)1.0;
 
-                        for (m = 0; m < (int)InpParType.Theta[i][k].Parameter0; m++) {
+                        for (m = 0; m < (int)InpParType.Theta[i][k].Par0; m++) {
                             C[2] *= Ran1(&InpParType.IDum); if (C[2] < C[1]) break;
                         }
 
-                        if (m > (int)InpParType.Theta[i][k].Parameter0) {
-                            Y[l][k] = InpParType.Theta[i][k].Parameter0;
+                        if (m > (int)InpParType.Theta[i][k].Par0) {
+                            OutParType->X[l][k] = InpParType.Theta[i][k].Par0;
                         }
                         else {
-                            Y[l][k] = m;
+                            OutParType->X[l][k] = m;
                         }
                     }
                     else {
-                        if (InpParType.Theta[i][k].Parameter0 != Bn) {
-                            Be = InpParType.Theta[i][k].Parameter0;
+                        if (InpParType.Theta[i][k].Par0 != Bn) {
+                            Be = InpParType.Theta[i][k].Par0;
                             Bg = Gammaln(Be + (FLOAT)1.0);
-                            Bn = InpParType.Theta[i][k].Parameter0;
+                            Bn = InpParType.Theta[i][k].Par0;
                         }
 
                         if (p != Bp) {
@@ -242,49 +272,79 @@ int RNGMIX(InputRNGMIXParameterType InpParType) /* Input parameters. */
 
                         } while (Ran1(&InpParType.IDum) > C[7]);
 
-                        Y[l][k] = C[6];
+                        OutParType->X[l][k] = C[6];
                     }
 
-                    if (p != InpParType.Theta[i][k].Parameter1) {
-                        Y[l][k] = InpParType.Theta[i][k].Parameter0 - Y[l][k];
+                    if (p != InpParType.Theta[i][k].Par1) {
+                        OutParType->X[l][k] = InpParType.Theta[i][k].Par0 - OutParType->X[l][k];
                     }
+
+					break;
+				case pfPoisson:
+					if (InpParType.Theta[i][k].Par0 < (FLOAT)12.0) {
+						if (InpParType.Theta[i][k].Par0 != PTheta) {
+							PTheta = InpParType.Theta[i][k].Par0;
+
+							Pg = (FLOAT)exp(-InpParType.Theta[i][k].Par0);
+						}
+
+						C[0] = -(FLOAT)1.0; C[1] = (FLOAT)1.0;
+
+						do {
+							++C[0];	C[1] *= Ran1(&InpParType.IDum);
+						} while (C[1] > Pg);
+					}
+					else {
+						if (InpParType.Theta[i][k].Par0 != PTheta) {
+							PTheta = InpParType.Theta[i][k].Par0;
+
+							Psq = (FLOAT)sqrt((FLOAT)2.0 * InpParType.Theta[i][k].Par0);
+
+							PalTheta = (FLOAT)log(InpParType.Theta[i][k].Par0);
+
+							Pg = InpParType.Theta[i][k].Par0 * PalTheta - Gammaln(InpParType.Theta[i][k].Par0 + (FLOAT)1.0);
+						}
+
+						do {
+							do {
+								C[2] = (FLOAT)tan(Pi * Ran1(&InpParType.IDum));
+
+								C[0] = Psq * C[2] + InpParType.Theta[i][k].Par0;
+							} while (C[0] < (FLOAT)0.0);
+
+							C[0] = (FLOAT)floor(C[0]);
+
+							C[1] = (FLOAT)0.9 * ((FLOAT)1.0 + C[2] * C[2]) * (FLOAT)exp(C[0] * PalTheta - Gammaln(C[0] + (FLOAT)1.0) - Pg);
+						} while (Ran1(&InpParType.IDum) > C[1]);
+					}
+
+					OutParType->X[l][k] = C[0];
+
+					break;
+				case pfDirac:
+                    OutParType->X[l][k] = InpParType.Theta[i][k].Par0;
                 }
             }
-
-            fprintf(fp, "%E", Y[l][0]); 
-        
-            for (k = 1; k < InpParType.d; k++) fprintf(fp, "\t%E", Y[l][k]); 
-        
-            fprintf(fp, "\n");
 
             l++;
         }
     }
 
-E0: if (fp) fclose(fp);
-    
-    if (Y) {
-        for (i = 0; i < n; i++) {
-            if (Y[i]) free(Y[i]);
-        }
-         
-        free(Y);
-    }
-
-    return (Error);
+E0: return (Error);
 } /* RNGMIX */
 
 /* Runs RNGMIX template file stream. */
 
 int RunRNGMIXTemplateFile(char *file)  /* File stream. */
 {
-    InputRNGMIXParameterType InpParType;
-    int                      i, imin, imax, j, k, isI;
-    FLOAT                    isF;
-    char                     line[65536], ident[65536], list[65536];
-    char                     *pchar = NULL;
-    FILE                     *fp = NULL;
-    int                      Error = 0;
+    InputRNGMIXParameterType  InpParType;
+	OutputRNGMIXParameterType OutParType;
+    int                       i, imin, imax, j, k, isI;
+    FLOAT                     isF;
+    char                      line[65536], ident[65536], list[65536];
+    char                      *pchar = NULL;
+    FILE                      *fp = NULL;
+    int                       Error = 0;
 
     memset(&InpParType, 0, sizeof(InputRNGMIXParameterType));
 
@@ -293,9 +353,9 @@ int RunRNGMIXTemplateFile(char *file)  /* File stream. */
     }
 
     #if (_REBMIXEXE)
-    printf("RNGMIX Version 2.2.1\n");
+    printf("\r%s\rRNGMIX Version 2.3.0\n", CL);
     #elif (_REBMIXR)
-    Rprintf("RNGMIX Version 2.2.1\n");
+    Rprintf("\r%s\rRNGMIX Version 2.3.0\n", CL);
     R_FlushConsole();
     #endif
 
@@ -360,13 +420,17 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 InpParType.curr = InpParType.open[k]; 
 
                 #if (_REBMIXEXE)
-                printf("Dataset = %s\n", InpParType.curr);
+                printf("\r%s\rDataset = %s\n", CL, InpParType.curr);
                 #elif (_REBMIXR)
-                Rprintf("Dataset = %s\n", InpParType.curr);
+                Rprintf("\r%s\rDataset = %s\n", CL, InpParType.curr);
                 R_FlushConsole();
                 #endif
 
-                Error = RNGMIX(InpParType);
+                Error = RNGMIX(InpParType, &OutParType);
+
+                if (Error) goto E0;
+
+                Error = WriteRNGMIXDataFile(InpParType, OutParType);
 
                 if (Error) goto E0;
 
@@ -392,11 +456,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             Error = isI >= 0; if (Error) goto E0;
         } else
         if (!strcmp(ident, "NTHETA")) {
-            InpParType.n = (int*)realloc(InpParType.n, (InpParType.c + 1) * sizeof(int));
+            InpParType.N = (int*)realloc(InpParType.N, (InpParType.c + 1) * sizeof(int));
 
-            Error = NULL == InpParType.n; if (Error) goto E0;
+            Error = NULL == InpParType.N; if (Error) goto E0;
 
-            InpParType.n[InpParType.c] = isI = (int)atol(pchar);
+            InpParType.N[InpParType.c] = isI = (int)atol(pchar);
 
             Error = isI < 1; if (Error) goto E0;
 
@@ -415,63 +479,81 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                     Error = NULL == InpParType.Theta[InpParType.c]; if (Error) goto E0;
 
                     if (!strcmp(pchar, "NORMAL")) {
-                        InpParType.Theta[InpParType.c][InpParType.d].ParametricFamily = pfNormal; 
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfNormal;
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter0 = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = (FLOAT)atof(pchar);
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter1 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par1 = isF = (FLOAT)atof(pchar);
 
                         Error = isF <= (FLOAT)0.0; if (Error) goto E0;
                     }
                     else
                     if (!strcmp(pchar, "LOGNORMAL")) {
-                        InpParType.Theta[InpParType.c][InpParType.d].ParametricFamily = pfLognormal;
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfLognormal;
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter0 = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = (FLOAT)atof(pchar);
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter1 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par1 = isF = (FLOAT)atof(pchar);
 
                         Error = isF <= (FLOAT)0.0; if (Error) goto E0;
                     }
                     else
                     if (!strcmp(pchar, "WEIBULL")) {
-                        InpParType.Theta[InpParType.c][InpParType.d].ParametricFamily = pfWeibull; 
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfWeibull; 
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter0 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = isF = (FLOAT)atof(pchar);
 
                         Error = isF <= (FLOAT)0.0; if (Error) goto E0;
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter1 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par1 = isF = (FLOAT)atof(pchar);
 
                         Error = isF <= (FLOAT)0.0; if (Error) goto E0;
                     }
                     else
                     if (!strcmp(pchar, "BINOMIAL")) {
-                        InpParType.Theta[InpParType.c][InpParType.d].ParametricFamily = pfBinomial; 
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfBinomial; 
 
-                        pchar = strtok(NULL, "\t"); 
+                        pchar = strtok(NULL, "\t");
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter0 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = isF = (FLOAT)floor(atof(pchar) + (FLOAT)0.5);
 
                         Error = isF <= (FLOAT)0.0; if (Error) goto E0;
 
                         pchar = strtok(NULL, "\t"); 
 
-                        InpParType.Theta[InpParType.c][InpParType.d].Parameter1 = isF = (FLOAT)atof(pchar);
+                        InpParType.Theta[InpParType.c][InpParType.d].Par1 = isF = (FLOAT)atof(pchar);
 
                         Error = (isF < (FLOAT)0.0) || (isF > (FLOAT)1.0) ; if (Error) goto E0;
+                    }
+                    else
+                    if (!strcmp(pchar, "POISSON")) {
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfPoisson; 
+
+                        pchar = strtok(NULL, "\t"); 
+
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = isF = (FLOAT)atof(pchar);
+
+                        Error = isF <= (FLOAT)0.0; if (Error) goto E0;
+                    }
+					else
+                    if (!strcmp(pchar, "DIRAC")) {
+                        InpParType.Theta[InpParType.c][InpParType.d].ParFamType = pfDirac; 
+
+                        pchar = strtok(NULL, "\t"); 
+
+                        InpParType.Theta[InpParType.c][InpParType.d].Par0 = isF = (FLOAT)atof(pchar);
                     }
                     else {
                         Error = 1; goto E0;
@@ -504,7 +586,7 @@ E0: if (fp) fclose(fp);
         free(InpParType.open);
     }
 
-    if (InpParType.n) free(InpParType.n);
+    if (InpParType.N) free(InpParType.N);
 
     if (InpParType.Theta) {
         for (i = 0; i < InpParType.c; i++) {

@@ -40,16 +40,21 @@ extern "C" {
 #endif
 
 typedef struct inputrngmixparametertype {
-    char                     *curr;     /* Path to the currently open data file. */
-    int                      o;         /* Number of paths. */ 
-    char                     **open;    /* Paths to open data files. */
-    int                      IDum;      /* Random seed. */
-    int                      d;         /* Number of independent random variables. */ 
-    int                      c;         /* Number of components. */ 
-    int                      *n;        /* Total number of observations in class l. */
-    MarginalDistributionType **Theta;   /* Marginal distribution type. */
-    char                     *save;     /* Path to the save data file. */
+    char                     *curr;   /* Path to the currently open data file. */
+    int                      o;       /* Number of paths. */ 
+    char                     **open;  /* Paths to open data files. */
+    int                      IDum;    /* Random seed. */
+    int                      d;       /* Number of independent random variables. */ 
+    int                      c;       /* Number of components. */ 
+    int                      *N;      /* Total number of observations in class l. */
+    MarginalDistributionType **Theta; /* Marginal distribution type. */
+    char                     *save;   /* Path to the save data file. */
 } InputRNGMIXParameterType;
+
+typedef struct outputrngmixparametertype {
+    int   n;   /* Total number of independent observations. */
+    FLOAT **X; /* Pointer to the output observations [x0,...,xd-1]. */
+} OutputRNGMIXParameterType;
 
 #if (_REBMIXDLL)
 /* Writes input parameters into the file stream. */
@@ -59,7 +64,8 @@ int WriteRNGMIXParameterFile(InputRNGMIXParameterType InpParType); /* Input para
 
 /* Returns random sample of independent observations. */
 
-int RNGMIX(InputRNGMIXParameterType InpParType); /* Input parameters. */
+int RNGMIX(InputRNGMIXParameterType  InpParType,   /* Input parameters. */ 
+           OutputRNGMIXParameterType *OutParType); /* Output parameters. */  
 
 /* Runs RNGMIX template file stream. */
 
