@@ -56,7 +56,7 @@ levels(adult[["Sex"]])
 levels(adult[["Native.Country"]])
 levels(adult[["Income"]])
 
-## Replace the levels with numbers.
+## Replace levels with numbers.
 
 adult <- as.data.frame(data.matrix(adult))
 
@@ -68,8 +68,8 @@ f <- c("Type", "Workclass", "Education", "Marital.Status", "Occupation",
 
 adult[, f] <- adult[, f] - 1
 
-## Split the adult dataset into two train subsets for the two Incomes
-## and remove the Type and Income columns.
+## Split adult dataset into two train subsets for the two Incomes
+## and remove Type and Income columns.
 
 trainle50k <- subset(adult, subset = (Type == 1) & (Income == 0), 
   select = c(-Type, -Income))
@@ -80,7 +80,7 @@ trainall <- subset(adult, subset = Type == 1, select = c(-Type, -Income))
 
 train <- as.factor(subset(adult, subset = Type == 1, select = c(Income))[, 1])
 
-## Extract test dataset form the adult dataset and remove the Type 
+## Extract test dataset form adult dataset and remove Type 
 ## and Income columns.
 
 testle50k <- subset(adult, subset = (Type == 0) & (Income == 0), 
@@ -123,7 +123,8 @@ LS <- list(NA, 0:7, NA, 0:15, ymin[5]:ymax[5], 0:6, 0:13,
 adultest <- list()
 
 for (i in c(1:14)) {
-  adultest[[i]] <- REBMIX(Dataset = list(as.data.frame(trainle50k[, i]), as.data.frame(traingt50k[, i])),
+  adultest[[i]] <- REBMIX(Dataset = list(as.data.frame(trainle50k[, i]), 
+    as.data.frame(traingt50k[, i])),
     Preprocessing = "histogram",
     D = if (Variables[i] == "continuous") 0.025 else 0.0,
     cmax = if (Variables[i] == "continuous") 15 else 100,
@@ -168,7 +169,7 @@ for (i in 1:14) {
   }
 }
 
-## Error on the train dataset.
+## Error on train dataset.
 
 Error
 
@@ -186,7 +187,7 @@ Accuracy <- (CM[1, 1] + CM[2, 2]) / sum(CM)
 
 Error <- 1.0 - Accuracy
 
-## Error on the test dataset.
+## Error on test dataset.
 
 Error
 }

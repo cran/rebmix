@@ -4,12 +4,6 @@
 
 #include "rngmixf.h"
 
-#if (_REBMIXR)
-#include <R.h>
-#include <Rinternals.h>
-#include <R_ext/Rdynload.h>
-#endif
-
 int   NDevISet = 0;
 FLOAT NDevVSet = (FLOAT)0.0;
 int   LDevISet = 0;
@@ -353,10 +347,7 @@ int RunRNGMIXTemplateFile(char *file)  /* File stream. */
     }
 
     #if (_REBMIXEXE)
-    printf("\r%s\rRNGMIX Version 2.3.0\n", CL);
-    #elif (_REBMIXR)
-    Rprintf("\r%s\rRNGMIX Version 2.3.0\n", CL);
-    R_FlushConsole();
+    printf("\r%s\rRNGMIX Version 2.4.0\n", CL);
     #endif
 
 S0: while (fgets(line, 2048, fp) != NULL) {
@@ -421,9 +412,6 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
                 #if (_REBMIXEXE)
                 printf("\r%s\rDataset = %s\n", CL, InpParType.curr);
-                #elif (_REBMIXR)
-                Rprintf("\r%s\rDataset = %s\n", CL, InpParType.curr);
-                R_FlushConsole();
                 #endif
 
                 Error = RNGMIX(InpParType, &OutParType);

@@ -9,8 +9,9 @@ or pairs of empirical and predictive bivariate marginal mixture densities for \e
 densities follow the histogram, Parzen window or \emph{k}-nearest neighbour approach.
 }
 \usage{
-\method{plot}{REBMIX}(x, pos = 1, nrow = 2, ncol = 2, npts = 200, cex = 0.8,
-     fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
+\method{plot}{REBMIX}(x, pos = 1, what = c("density"),
+     nrow = 1, ncol = 1, npts = 200, cex = 0.8, fg = "black",
+     lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
      plot.cex = 0.8, plot.pch = 19, contour.drawlabels = FALSE, 
      contour.labcex = 0.8, contour.method = "flattest", 
      contour.nlevels = 12, ...)
@@ -22,11 +23,15 @@ an object of class \code{REBMIX}.
 \item{pos}{
 a desired row number in \code{x$summary} to be ploted. The default value is \code{1}.
 }
+\item{what}{
+a character vector, giving the plot types. One of \code{"density"}, \code{"marginal"}, \code{"c"}, \code{"IC"}, \code{"logL"}, \code{"D"} or \code{"distribution"}.
+The default value is \code{"density"}.
+}
 \item{nrow}{
-a desired number of rows in which the empirical and predictive densities are to be ploted. The default value is \code{2}.
+a desired number of rows in which the empirical and predictive densities are to be ploted. The default value is \code{1}.
 }
 \item{ncol}{
-a desired number of columns in which the empirical and predictive densities are to be ploted. The default value is \code{2}.
+a desired number of columns in which the empirical and predictive densities are to be ploted. The default value is \code{1}.
 }
 \item{npts}{
 a number of points at which the predictive densities are to be ploted. The default value is \code{200}.
@@ -92,7 +97,7 @@ data("wine")
 
 colnames(wine)
 
-## Remove the Cultivar column from the wine dataset.
+## Remove Cultivar column from wine dataset.
 
 winecolnames <- !(colnames(wine) \%in\% "Cultivar")
 
@@ -121,9 +126,10 @@ wineest <- REBMIX(Dataset = list(wine = wine),
   pdf = rep("normal", d), 
   K = K)
 
-## Plot the finite mixture.
+## Plot finite mixture.
 
-plot(wineest, nrow = 4, ncol = 5, npts = 500, pty = "s")
+plot(wineest, what = c("density", "marginal", "c", "IC", "logL", "D", 
+  "distribution"), nrow = 4, ncol = 5, npts = 500, pty = "s")
 }
 \keyword{plot}
 

@@ -14,25 +14,25 @@ Returns the \code{summary} output for class REBMIX.
 an object of class \code{REBMIX}.
 }
 \item{\dots}{
-further arguments to \code{\link[base]{summary}}.
+further arguments to \code{\link[base]{print}}.
 }
 }
 \examples{
-## Generate and print the simulated 6 dataset.
+## Generate and print simulated dataset.
 
 Theta <- rbind(pdf = rep("Dirac", 4),
   theta1 = c(1, 3, 4, 8))
 
-simulated6 <- RNGMIX(Dataset = "simulated6",
+simulated <- RNGMIX(Dataset = "simulated",
   rseed = -1,
   n = c(40, 20, 50, 10),
   Theta = Theta)
   
-simulated6
+simulated
 
 ## Estimate number of components, component weights and component parameters.
 
-simulated6est <- REBMIX(Dataset = simulated6$Dataset, 
+simulatedest <- REBMIX(Dataset = simulated$Dataset, 
   Preprocessing = "histogram", 
   D = 0.025, 
   cmax = 8, 
@@ -42,11 +42,11 @@ simulated6est <- REBMIX(Dataset = simulated6$Dataset,
   K = 1, 
   b = 0.0)
   
-## Print summary and plot the finite mixture.  
+## Print summary and plot finite mixture.  
 
-summary(simulated6est)
+summary(simulatedest)
 
-plot(simulated6est)
+plot(simulatedest)
 }
 \keyword{print}
 

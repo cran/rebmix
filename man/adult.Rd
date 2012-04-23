@@ -189,7 +189,7 @@ levels(adult[["Sex"]])
 levels(adult[["Native.Country"]])
 levels(adult[["Income"]])
 
-## Replace the levels with numbers.
+## Replace levels with numbers.
 
 adult <- as.data.frame(data.matrix(adult))
 
@@ -201,8 +201,8 @@ f <- c("Type", "Workclass", "Education", "Marital.Status", "Occupation",
 
 adult[, f] <- adult[, f] - 1
 
-## Split the adult dataset into two train subsets for the two Incomes
-## and remove the Type and Income columns.
+## Split adult dataset into two train subsets for the two Incomes
+## and remove Type and Income columns.
 
 trainle50k <- subset(adult, subset = (Type == 1) & (Income == 0), 
   select = c(-Type, -Income))
@@ -213,7 +213,7 @@ trainall <- subset(adult, subset = Type == 1, select = c(-Type, -Income))
 
 train <- as.factor(subset(adult, subset = Type == 1, select = c(Income))[, 1])
 
-## Extract test dataset form the adult dataset and remove the Type 
+## Extract test dataset form adult dataset and remove Type 
 ## and Income columns.
 
 testle50k <- subset(adult, subset = (Type == 0) & (Income == 0), 

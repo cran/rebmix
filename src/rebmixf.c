@@ -679,13 +679,14 @@ int InformationCriterionKNN(InformationCriterionType_e ICType,        /* Informa
                             MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
                             FLOAT                      *IC,           /* Information criterion. */
                             FLOAT                      *logL,         /* log-likelihood. */
+							int                        *M,            /* Degrees of freedom. */
 							FLOAT                      *D)            /* Total of positive relative deviations. */
 {
-    int   i, j, M;
+    int   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
     int   Error = 0;
 
-	Error = DegreesOffreedom(d, c, MrgDistType, &M);
+	Error = DegreesOffreedom(d, c, MrgDistType, M);
 
 	if (Error) goto E0;
 
@@ -734,43 +735,43 @@ int InformationCriterionKNN(InformationCriterionType_e ICType,        /* Informa
 
     switch (ICType) {
     case icAIC: /* AIC - Akaike information criterion Akaike (1973). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M);
 
         break;
     case icAIC3: /* AIC3 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * (*M);
 
         break;
     case icAIC4: /* AIC4 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * (*M);
 
         break;
     case icAICc: /* AICc - Akaike second-order corrected information criterion for small sample sizes Hurvich & Tsai (1989). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * ((FLOAT)1.0 + (M + 1) / (n - M - (FLOAT)1.0));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * ((FLOAT)1.0 + ((*M) + 1) / (n - (*M) - (FLOAT)1.0));
 
         break;
     case icBIC: /* BIC - Bayesian information criterion Schwarz (1978). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icCAIC: /* CAIC - Consistent Akaike information criterion Bozdogan (1987). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
 
         break;
     case icHQC: /* HQC - Hannan-Quinn information criterion Hannan & Quinn (1979). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log(log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log(log((FLOAT)n));
 
         break;
     case icMDL2: /* MDL2 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icMDL5: /* MDL5 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icAWE: /* AWE - Approximate weight of evidence criterion Banfield & Raftery (1993). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * M * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * (*M) * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
 
         break;
     case icCLC: /* CLC - Classification likelihood criterion Biernacki & Govaert (1997). */
@@ -784,7 +785,7 @@ int InformationCriterionKNN(InformationCriterionType_e ICType,        /* Informa
 
         K += Gammaln(c * (FLOAT)0.5) - c * Gammaln((FLOAT)0.5) - Gammaln(n + c * (FLOAT)0.5);
 
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + (M - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + ((*M) - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
 
         break;
     case icPC: /* PC - Partition coeficient Bezdek (1981). */
@@ -792,7 +793,7 @@ int InformationCriterionKNN(InformationCriterionType_e ICType,        /* Informa
 
         break;
     case icICLBIC: /* ICL-BIC - Integrated classification likelihood criterion Biernacki et al. (1998). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (*M) * (FLOAT)log((FLOAT)n);
 
 		break;
     case icD: /* D - Total of positive relative deviations Nagode & Fajdiga (2011). */
@@ -818,13 +819,14 @@ int InformationCriterionPW(InformationCriterionType_e ICType,        /* Informat
                            MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
                            FLOAT                      *IC,           /* Information criterion. */
                            FLOAT                      *logL,         /* log-likelihood. */
+ 						   int                        *M,            /* Degrees of freedom. */
   						   FLOAT                      *D)            /* Total of positive relative deviations. */
 {
-    int   i, j, M;
+    int   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
     int   Error = 0;
 
-	Error = DegreesOffreedom(d, c, MrgDistType, &M);
+	Error = DegreesOffreedom(d, c, MrgDistType, M);
 
 	if (Error) goto E0;
 
@@ -873,43 +875,43 @@ int InformationCriterionPW(InformationCriterionType_e ICType,        /* Informat
 
     switch (ICType) {
     case icAIC: /* AIC - Akaike information criterion Akaike (1973). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M);
 
         break;
     case icAIC3: /* AIC3 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * (*M);
 
         break;
     case icAIC4: /* AIC4 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * (*M);
 
         break;
     case icAICc: /* AICc - Akaike second-order corrected information criterion for small sample sizes Hurvich & Tsai (1989). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * ((FLOAT)1.0 + (M + 1) / (n - M - (FLOAT)1.0));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * ((FLOAT)1.0 + ((*M) + 1) / (n - (*M) - (FLOAT)1.0));
 
         break;
     case icBIC: /* BIC - Bayesian information criterion Schwarz (1978). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icCAIC: /* CAIC - Consistent Akaike information criterion Bozdogan (1987). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
 
         break;
     case icHQC: /* HQC - Hannan-Quinn information criterion Hannan & Quinn (1979). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log(log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log(log((FLOAT)n));
 
         break;
     case icMDL2: /* MDL2 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icMDL5: /* MDL5 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icAWE: /* AWE - Approximate weight of evidence criterion Banfield & Raftery (1993). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * M * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * (*M) * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
 
         break;
     case icCLC: /* CLC - Classification likelihood criterion Biernacki & Govaert (1997). */
@@ -923,7 +925,7 @@ int InformationCriterionPW(InformationCriterionType_e ICType,        /* Informat
 
         K += Gammaln(c * (FLOAT)0.5) - c * Gammaln((FLOAT)0.5) - Gammaln(n + c * (FLOAT)0.5);
 
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + (M - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + ((*M) - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
 
         break;
     case icPC: /* PC - Partition coeficient Bezdek (1981). */
@@ -931,7 +933,7 @@ int InformationCriterionPW(InformationCriterionType_e ICType,        /* Informat
 
         break;
     case icICLBIC: /* ICL-BIC - Integrated classification likelihood criterion Biernacki et al. (1998). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (*M) * (FLOAT)log((FLOAT)n);
 
 		break;
     case icD: /* D - Total of positive relative deviations Nagode & Fajdiga (2011). */
@@ -958,13 +960,14 @@ int InformationCriterionH(InformationCriterionType_e ICType,        /* Informati
                           MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
                           FLOAT                      *IC,           /* Information criterion. */
                           FLOAT                      *logL,         /* log-likelihood. */
+   					      int                        *M,            /* Degrees of freedom. */
 						  FLOAT                      *D)            /* Total of positive relative deviations. */
 {
-    int   i, j, M;
+    int   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
     int   Error = 0;
 
-	Error = DegreesOffreedom(d, c, MrgDistType, &M);
+	Error = DegreesOffreedom(d, c, MrgDistType, M);
 
 	if (Error) goto E0;
 
@@ -1013,43 +1016,43 @@ int InformationCriterionH(InformationCriterionType_e ICType,        /* Informati
 
     switch (ICType) {
     case icAIC: /* AIC - Akaike information criterion Akaike (1973). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M);
 
         break;
     case icAIC3: /* AIC3 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * (*M);
 
         break;
     case icAIC4: /* AIC4 - Modified Akaike information criterion Smith & Spiegelhalter (1980). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * M;
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * (*M);
 
         break;
     case icAICc: /* AICc - Akaike second-order corrected information criterion for small sample sizes Hurvich & Tsai (1989). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * ((FLOAT)1.0 + (M + 1) / (n - M - (FLOAT)1.0));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * ((FLOAT)1.0 + ((*M) + 1) / (n - (*M) - (FLOAT)1.0));
 
         break;
     case icBIC: /* BIC - Bayesian information criterion Schwarz (1978). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icCAIC: /* CAIC - Consistent Akaike information criterion Bozdogan (1987). */
-        *IC = -(FLOAT)2.0 * (*logL) + M * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * ((FLOAT)log((FLOAT)n) + (FLOAT)1.0);
 
         break;
     case icHQC: /* HQC - Hannan-Quinn information criterion Hannan & Quinn (1979). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log(log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log(log((FLOAT)n));
 
         break;
     case icMDL2: /* MDL2 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icMDL5: /* MDL5 - Minimum description length Liang et al. (1992). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * (*M) * (FLOAT)log((FLOAT)n);
 
         break;
     case icAWE: /* AWE - Approximate weight of evidence criterion Banfield & Raftery (1993). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * M * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * (*M) * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n));
 
         break;
     case icCLC: /* CLC - Classification likelihood criterion Biernacki & Govaert (1997). */
@@ -1063,7 +1066,7 @@ int InformationCriterionH(InformationCriterionType_e ICType,        /* Informati
 
         K += Gammaln(c * (FLOAT)0.5) - c * Gammaln((FLOAT)0.5) - Gammaln(n + c * (FLOAT)0.5);
 
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + (M - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n * PW - (FLOAT)2.0 * K + ((*M) - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n);
 
         break;
     case icPC: /* PC - Partition coeficient Bezdek (1981). */
@@ -1071,7 +1074,7 @@ int InformationCriterionH(InformationCriterionType_e ICType,        /* Informati
 
         break;
     case icICLBIC: /* ICL-BIC - Integrated classification likelihood criterion Biernacki et al. (1998). */
-        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + M * (FLOAT)log((FLOAT)n);
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (*M) * (FLOAT)log((FLOAT)n);
 
 		break;
     case icD: /* D - Total of positive relative deviations Nagode & Fajdiga (2011). */
@@ -1096,7 +1099,9 @@ int PreprocessingKNN(int   k,    /* k-nearest neighbours. */
     FLOAT *Dk = NULL;
     FLOAT Dc, R, V, Vn;
     int   i, j, l, m, q;
-    int   Error = 0;
+    int   Error = n < 1;
+
+	if (Error) goto E0;
 
     if (k > 1) k -= 1; else k = 1; 
     
@@ -1155,6 +1160,8 @@ int PreprocessingPW(FLOAT *h,   /* Sides of the hypersquare. */
     int i, j, k;
     int Error = n < 1;
 
+	if (Error) goto E0;
+
 	for (i = 0; i < n; i++) {
 		Y[i][d] = (FLOAT)1.0; Y[i][d + 1] = (FLOAT)0.0;
 	}
@@ -1167,14 +1174,14 @@ int PreprocessingPW(FLOAT *h,   /* Sides of the hypersquare. */
 S0:;    }
     }
 
-    return (Error);
+E0: return (Error);
 } /* PreprocessingPW */
 
 /* Preprocessing of observations for histogram. */
 
 int PreprocessingH(FLOAT           *h,          /* Sides of the hypersquare. */
                    FLOAT           *y0,         /* Origin. */
-                   VariablesType_e *VarType,    /* PTypes of variables. */
+                   VariablesType_e *VarType,    /* Types of variables. */
                    int             *k,          /* Total number of bins. */
                    int             n,           /* Total number of independent observations. */
                    int             d,           /* Number of independent random variables. */ 
@@ -1183,6 +1190,8 @@ int PreprocessingH(FLOAT           *h,          /* Sides of the hypersquare. */
 {
     int i, j, l, m = *k - 1;
     int Error = n < 1;
+
+	if (Error) goto E0;
 
     *k = 0;
 
@@ -1211,7 +1220,7 @@ S0:;    }
         Y[*k][d] = (FLOAT)1.0; (*k)++;
 S1:;}
 
-    return (Error);
+E0: return (Error);
 } /* PreprocessingH */
 
 /* Global mode detection for k-nearest neighbour. */
@@ -3557,30 +3566,24 @@ E0: return (Error);
 
 /* REBMIX algorithm for k-nearest neighbours. */
 
-int REBMIXKNN(InputREBMIXParameterType  InpParType,   /* Input parameters. */ 
-              OutputREBMIXParameterType *OutParType)  /* Output parameters. */
+int REBMIXKNN(InputREBMIXParameterType   InpParType,   /* Input parameters. */ 
+              OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
+			  HistoryREBMIXParameterType *HisParType)  /* Output parameters. */ 
 {
-    FLOAT                    **Y = NULL;
-    FLOAT                    *h = NULL;
-    FLOAT                    *R = NULL, *E = NULL, *Epsilon = NULL;
-    FLOAT                    *W = NULL;
-    MarginalDistributionType **Theta = NULL; 
-    FLOAT                    **FirstM = NULL, **SecondM = NULL;
-    int                      c = 0, i, I, j, J, l, m;
-    FLOAT                    Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
-	clock_t                  Start;
-	FLOAT                    TimeLeft;
-    int                      Error = 0, Stop = 0;
-    #if(_DEBUG)
-    int                      o;
-    FILE                     *fp0 = NULL;
-    #endif
+    FLOAT                      **Y = NULL;
+    FLOAT                      *h = NULL;
+    FLOAT                      *R = NULL, *E = NULL, *Epsilon = NULL;
+    FLOAT                      *W = NULL;
+    MarginalDistributionType   **Theta = NULL; 
+    FLOAT                      **FirstM = NULL, **SecondM = NULL;
+	HistoryREBMIXParameterType TmpParType;
+    int                        c = 0, i, I, j, J, l, m, M;
+    FLOAT                      Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
+	clock_t                    Start;
+	FLOAT                      TimeLeft;
+    int                        Error = 0, Stop = 0, Found = 0;
 
-    #if(_DEBUG)
-    if ((fp0 = fopen("debug.txt", "w")) == NULL) {
-        Error = 1; goto E0;
-    }
-    #endif
+	memset(&TmpParType, 0, sizeof(HistoryREBMIXParameterType));
 
     /* Allocation and initialisation. */
 
@@ -3716,6 +3719,42 @@ int REBMIXKNN(InputREBMIXParameterType  InpParType,   /* Input parameters. */
         Error = NULL == OutParType->Theta[i]; if (Error) goto E0;
     }
 
+	HisParType->Imax = ItMax;
+
+	HisParType->c = (int*)malloc(HisParType->Imax * sizeof(int));
+
+	Error = NULL == HisParType->c; if (Error) goto E0;
+
+    HisParType->IC = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->IC; if (Error) goto E0;
+
+    HisParType->logL = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->logL; if (Error) goto E0;
+
+    HisParType->D = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->D; if (Error) goto E0;
+
+    TmpParType.Imax = ItMax;
+
+    TmpParType.c = (int*)malloc(TmpParType.Imax * sizeof(int));
+
+	Error = NULL == TmpParType.c; if (Error) goto E0;
+
+    TmpParType.IC = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.IC; if (Error) goto E0;
+
+    TmpParType.logL = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.logL; if (Error) goto E0;
+
+    TmpParType.D = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.D; if (Error) goto E0;
+
     Start = clock();
 
     for (i = 0; i < InpParType.kmax; i++) {
@@ -3725,23 +3764,7 @@ int REBMIXKNN(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
         if (Error) goto E0;
 
-        #if(_DEBUG)
-        fprintf(fp0, "%s\t%d\n%s", "k", InpParType.K[i], "h");
-
-        for (j = 0; j < InpParType.d; j++) fprintf(fp0, "\t%E", h[j]);
-
-        fprintf(fp0, "\n");
-
-        for (j = 0; j < OutParType->n; j++) {
-            fprintf(fp0, "%s%d%s", "Y[", j, "]");
-
-            for (o = 0; o < InpParType.d + 3; o++) fprintf(fp0, "\t%E", Y[j][o]);
-
-            fprintf(fp0, "\n");
-        }
-        #endif
-
-        Dmin = (FLOAT)0.25; J = 1;
+        Found = 0; Dmin = (FLOAT)0.25; J = 1;
 
         /* Outer loop. */
 
@@ -3844,16 +3867,18 @@ int REBMIXKNN(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
             for (j = 0; j < OutParType->n; j++) Y[j][InpParType.d] = (FLOAT)1.0;
 
-            Error = InformationCriterionKNN(InpParType.ICType, InpParType.K[i], OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &D);
+            Error = InformationCriterionKNN(InpParType.ICType, InpParType.K[i], OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &M, &D);
             
             if (Error) goto E0;
 
             if (IC < OutParType->IC) {
+				Found = 1;
+
                 OutParType->k = InpParType.K[i];
 
                 memcpy(OutParType->h, h, InpParType.d * sizeof(FLOAT));  
                 
-                OutParType->IC = IC; OutParType->logL = logL; OutParType->c = c; 
+                OutParType->IC = IC; OutParType->logL = logL; OutParType->M = M; OutParType->c = c; 
 
                 memcpy(OutParType->W, W, c * sizeof(FLOAT));  
 
@@ -3862,31 +3887,42 @@ int REBMIXKNN(InputREBMIXParameterType  InpParType,   /* Input parameters. */
                 }
             }
 
-            #if(_DEBUG)
-            fprintf(fp0, "%s\t%d\t%s\t%E\t%s\t%E\t%s\t%E\t%s\t%E\n", "c", c, "IC", IC, "c * Dmin", c * Dmin, "logL", logL, "D", D);
-            #endif 
+			j = J - 1; TmpParType.c[j] = c; TmpParType.IC[j] = IC; TmpParType.logL[j] = logL; TmpParType.D[j] = D;
 
             Stop |= (D <= InpParType.D) || (D <= FLOAT_MIN) || (J >= ItMax); Dmin *= c / (c + (FLOAT)1.0); J++;
         }
         while (!Stop);
 
+		TmpParType.Imax = J - 1;
+
+		if (Found) {
+			HisParType->Imax = TmpParType.Imax;
+
+			memcpy(HisParType->c, TmpParType.c, HisParType->Imax * sizeof(int));  
+			memcpy(HisParType->IC, TmpParType.IC, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->logL, TmpParType.logL, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->D, TmpParType.D, HisParType->Imax * sizeof(FLOAT));  
+		}
+
         TimeLeft = (FLOAT)(InpParType.kmax - i) * (clock() - Start) / CLOCKS_PER_SEC / (i + 1);
 
         #if (_REBMIXEXE)
-        printf("\r%s\rTime left %2.1f sec", CL, TimeLeft); 
+        printf("%sTime left %2.1f sec", CL, TimeLeft); 
         #elif (_REBMIXR)
-        Rprintf("\r%s\rTime left %2.1f sec", CL, TimeLeft);
+        Rprintf("%sTime left %2.1f sec", CL, TimeLeft);
         R_FlushConsole();
+		R_ProcessEvents();
         #endif
     }
 
 E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT));
 
     #if (_REBMIXEXE)
-    printf("\r%s\r", CL);
+    printf("%s", CL);
     #elif (_REBMIXR)
-    Rprintf("\r%s\r", CL);
+    Rprintf("%s", CL);
     R_FlushConsole();
+	R_ProcessEvents();
     #endif
 
     if (OutParType->Theta) {
@@ -3896,6 +3932,14 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
 
         OutParType->Theta = (MarginalDistributionType**)realloc(OutParType->Theta, OutParType->c * sizeof(MarginalDistributionType*));
     }
+
+	if (TmpParType.D) free(TmpParType.D);
+
+    if (TmpParType.logL) free(TmpParType.logL);
+
+    if (TmpParType.IC) free(TmpParType.IC);
+
+    if (TmpParType.c) free(TmpParType.c);
     
     if (SecondM) {
         for (i = 0; i < InpParType.cmax; i++) {
@@ -3939,39 +3983,29 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
         free(Y);
     }
 
-    #if(_DEBUG)
-    if (fp0) fclose(fp0);
-    #endif
-
     return (Error);
 } /* REBMIXKNN */
 
 /* REBMIX algorithm for Parzen window. */
 
-int REBMIXPW(InputREBMIXParameterType  InpParType,   /* Input parameters. */ 
-             OutputREBMIXParameterType *OutParType)  /* Output parameters. */
+int REBMIXPW(InputREBMIXParameterType   InpParType,   /* Input parameters. */ 
+             OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
+			 HistoryREBMIXParameterType *HisParType)  /* History parameters. */ 
 {
-    FLOAT                    **Y = NULL;
-    FLOAT                    *h = NULL;
-    FLOAT                    *R = NULL, *E = NULL, *Epsilon = NULL;
-    FLOAT                    *W = NULL;
-    MarginalDistributionType **Theta = NULL; 
-    FLOAT                    **FirstM = NULL, **SecondM = NULL;
-    int                      c = 0, i, I, j, J, l, m;
-    FLOAT                    V, Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
-	clock_t                  Start;
-	FLOAT                    TimeLeft;
-    int                      Error = 0, Stop = 0;
-    #if(_DEBUG)
-    int                      o; 
-    FILE                     *fp0 = NULL;
-    #endif
+    FLOAT                      **Y = NULL;
+    FLOAT                      *h = NULL;
+    FLOAT                      *R = NULL, *E = NULL, *Epsilon = NULL;
+    FLOAT                      *W = NULL;
+    MarginalDistributionType   **Theta = NULL; 
+    FLOAT                      **FirstM = NULL, **SecondM = NULL;
+	HistoryREBMIXParameterType TmpParType;
+    int                        c = 0, i, I, j, J, l, m, M;
+    FLOAT                      V, Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
+	clock_t                    Start;
+	FLOAT                      TimeLeft;
+    int                        Error = 0, Stop = 0, Found = 0;
 
-    #if(_DEBUG)
-    if ((fp0 = fopen("debug.txt", "w")) == NULL) {
-        Error = 1; goto E0;
-    }
-    #endif
+	memset(&TmpParType, 0, sizeof(HistoryREBMIXParameterType));
 
     /* Allocation and initialisation. */
 
@@ -4103,6 +4137,42 @@ int REBMIXPW(InputREBMIXParameterType  InpParType,   /* Input parameters. */
         Error = NULL == OutParType->Theta[i]; if (Error) goto E0;
     }
 
+	HisParType->Imax = ItMax;
+
+	HisParType->c = (int*)malloc(HisParType->Imax * sizeof(int));
+
+	Error = NULL == HisParType->c; if (Error) goto E0;
+
+    HisParType->IC = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->IC; if (Error) goto E0;
+
+    HisParType->logL = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->logL; if (Error) goto E0;
+
+    HisParType->D = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->D; if (Error) goto E0;
+
+    TmpParType.Imax = ItMax;
+
+    TmpParType.c = (int*)malloc(TmpParType.Imax * sizeof(int));
+
+	Error = NULL == TmpParType.c; if (Error) goto E0;
+
+    TmpParType.IC = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.IC; if (Error) goto E0;
+
+    TmpParType.logL = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.logL; if (Error) goto E0;
+
+    TmpParType.D = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.D; if (Error) goto E0;
+
 	Start = clock();
 
     for (i = 0; i < InpParType.kmax; i++) {
@@ -4123,27 +4193,9 @@ int REBMIXPW(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
         Error = PreprocessingPW(h, OutParType->n, InpParType.d, Y);
 
-        if (Error) { 
-            Error = 0; goto E1;
-        }
+		if (Error) goto E0;
 
-        #if(_DEBUG)
-        fprintf(fp0, "%s\t%d\n%s", "k", InpParType.K[i], "h");
-
-        for (j = 0; j < InpParType.d; j++) fprintf(fp0, "\t%E", h[j]);
-
-        fprintf(fp0, "\n");
-
-        for (j = 0; j < OutParType->n; j++) {
-            fprintf(fp0, "%s%d%s", "Y[", j, "]");
-
-            for (o = 0; o < InpParType.d + 2; o++) fprintf(fp0, "\t%E", Y[j][o]);
-
-            fprintf(fp0, "\n");
-        }
-        #endif
-
-        Dmin = (FLOAT)0.25; J = 1;
+        Found = 0; Dmin = (FLOAT)0.25; J = 1;
 
         /* Outer loop. */
 
@@ -4246,16 +4298,18 @@ int REBMIXPW(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
             for (j = 0; j < OutParType->n; j++) Y[j][InpParType.d] = (FLOAT)1.0;
 
-            Error = InformationCriterionPW(InpParType.ICType, V, OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &D);
+            Error = InformationCriterionPW(InpParType.ICType, V, OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &M, &D);
             
             if (Error) goto E0;
 
             if (IC < OutParType->IC) {
+				Found = 1;
+
                 OutParType->k = InpParType.K[i];
 
                 memcpy(OutParType->h, h, InpParType.d * sizeof(FLOAT));  
                 
-                OutParType->IC = IC; OutParType->logL = logL; OutParType->c = c; 
+                OutParType->IC = IC; OutParType->logL = logL; OutParType->M = M; OutParType->c = c; 
 
                 memcpy(OutParType->W, W, c * sizeof(FLOAT));  
 
@@ -4264,31 +4318,42 @@ int REBMIXPW(InputREBMIXParameterType  InpParType,   /* Input parameters. */
                 }
             }
 
-            #if(_DEBUG)
-            fprintf(fp0, "%s\t%d\t%s\t%E\t%s\t%E\t%s\t%E\t%s\t%E\n", "c", c, "IC", IC, "c * Dmin", c * Dmin, "logL", logL, "D", D);
-            #endif  
+			j = J - 1; TmpParType.c[j] = c; TmpParType.IC[j] = IC; TmpParType.logL[j] = logL; TmpParType.D[j] = D;
 
 			Stop |= (D <= InpParType.D) || (D <= FLOAT_MIN) || (J >= ItMax); Dmin *= c / (c + (FLOAT)1.0); J++; 
         }
         while (!Stop);
-E1:; 
+
+		TmpParType.Imax = J - 1;
+
+		if (Found) {
+			HisParType->Imax = TmpParType.Imax;
+
+			memcpy(HisParType->c, TmpParType.c, HisParType->Imax * sizeof(int));  
+			memcpy(HisParType->IC, TmpParType.IC, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->logL, TmpParType.logL, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->D, TmpParType.D, HisParType->Imax * sizeof(FLOAT));  
+		}
+ 
 		TimeLeft = (FLOAT)(InpParType.kmax - i) * (clock() - Start) / CLOCKS_PER_SEC / (i + 1);
 
         #if (_REBMIXEXE)
-        printf("\r%s\rTime left %2.1f sec", CL, TimeLeft); 
+        printf("%sTime left %2.1f sec", CL, TimeLeft); 
         #elif (_REBMIXR)
-        Rprintf("\r%s\rTime left %2.1f sec", CL, TimeLeft);
+        Rprintf("%sTime left %2.1f sec", CL, TimeLeft);
         R_FlushConsole();
+		R_ProcessEvents();
         #endif
     }
 
 E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT));
 
     #if (_REBMIXEXE)
-    printf("\r%s\r", CL);
+    printf("%s", CL);
     #elif (_REBMIXR)
-    Rprintf("\r%s\r", CL);
+    Rprintf("%s", CL);
     R_FlushConsole();
+	R_ProcessEvents();
     #endif
 
     if (OutParType->Theta) {
@@ -4298,6 +4363,14 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
 
         OutParType->Theta = (MarginalDistributionType**)realloc(OutParType->Theta, OutParType->c * sizeof(MarginalDistributionType*));
     }
+
+	if (TmpParType.D) free(TmpParType.D);
+
+    if (TmpParType.logL) free(TmpParType.logL);
+
+    if (TmpParType.IC) free(TmpParType.IC);
+
+    if (TmpParType.c) free(TmpParType.c);
     
     if (SecondM) {
         for (i = 0; i < InpParType.cmax; i++) {
@@ -4341,40 +4414,30 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
         free(Y);
     }
 
-    #if(_DEBUG)
-    if (fp0) fclose(fp0);
-    #endif
-
     return (Error);
 } /* REBMIXPW */
 
 /* REBMIX algorithm for histogram. */
 
-int REBMIXH(InputREBMIXParameterType  InpParType,   /* Input parameters. */ 
-            OutputREBMIXParameterType *OutParType)  /* Output parameters. */
+int REBMIXH(InputREBMIXParameterType   InpParType,   /* Input parameters. */ 
+            OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
+			HistoryREBMIXParameterType *HisParType)  /* History parameters. */ 
 {
-    FLOAT                    **Y = NULL;
-    FLOAT                    *h = NULL, *y0 = NULL;
-    FLOAT                    *R = NULL, *E = NULL, *Epsilon = NULL;
-    FLOAT                    *K = NULL;
-    FLOAT                    *W = NULL;
-    MarginalDistributionType **Theta = NULL; 
-    FLOAT                    **FirstM = NULL, **SecondM = NULL;
-    int                      c = 0, i, I, j, J, k, l, m;
-    FLOAT                    V, Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
-	clock_t                  Start;
-	FLOAT                    TimeLeft;
-    int                      Error = 0, Stop = 0;
-    #if(_DEBUG)
-    int                      o;
-    FILE                     *fp0 = NULL;
-    #endif
+    FLOAT                      **Y = NULL;
+    FLOAT                      *h = NULL, *y0 = NULL;
+    FLOAT                      *R = NULL, *E = NULL, *Epsilon = NULL;
+    FLOAT                      *K = NULL;
+    FLOAT                      *W = NULL;
+    MarginalDistributionType   **Theta = NULL; 
+    FLOAT                      **FirstM = NULL, **SecondM = NULL;
+	HistoryREBMIXParameterType TmpParType;
+    int                        c = 0, i, I, j, J, k, l, m, M;
+    FLOAT                      V, Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
+	clock_t                    Start;
+	FLOAT                      TimeLeft;
+    int                        Error = 0, Stop = 0, Found = 0;
 
-    #if(_DEBUG)
-    if ((fp0 = fopen("debug.txt", "w")) == NULL) {
-        Error = 1; goto E0;
-    }
-    #endif
+	memset(&TmpParType, 0, sizeof(HistoryREBMIXParameterType));
 
     /* Allocation and initialisation. */
 
@@ -4512,10 +4575,46 @@ int REBMIXH(InputREBMIXParameterType  InpParType,   /* Input parameters. */
         Error = NULL == OutParType->Theta[i]; if (Error) goto E0;
     }
 
+	HisParType->Imax = ItMax;
+
+	HisParType->c = (int*)malloc(HisParType->Imax * sizeof(int));
+
+	Error = NULL == HisParType->c; if (Error) goto E0;
+
+    HisParType->IC = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->IC; if (Error) goto E0;
+
+    HisParType->logL = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->logL; if (Error) goto E0;
+
+    HisParType->D = (FLOAT*)malloc(HisParType->Imax * sizeof(FLOAT));
+
+	Error = NULL == HisParType->D; if (Error) goto E0;
+
+    TmpParType.Imax = ItMax;
+
+    TmpParType.c = (int*)malloc(TmpParType.Imax * sizeof(int));
+
+	Error = NULL == TmpParType.c; if (Error) goto E0;
+
+    TmpParType.IC = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.IC; if (Error) goto E0;
+
+    TmpParType.logL = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.logL; if (Error) goto E0;
+
+    TmpParType.D = (FLOAT*)malloc(TmpParType.Imax * sizeof(FLOAT));
+
+	Error = NULL == TmpParType.D; if (Error) goto E0;
+
 	Start = clock();
 
     for (i = 0; i < InpParType.kmax; i++) {
-        /* Preprocessing of observations. */
+		/* Preprocessing of observations. */
 
         k = InpParType.K[i]; V = (FLOAT)1.0; 
         
@@ -4532,29 +4631,11 @@ int REBMIXH(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
         Error = PreprocessingH(h, y0, InpParType.VarType, &InpParType.K[i], OutParType->n, InpParType.d, OutParType->X, Y);
 
-        if (Error) { 
-            Error = 0; goto E1;
-        }
-
-        #if(_DEBUG)
-        fprintf(fp0, "%s\t%d\n%s", "k", k, "h");
-
-        for (j = 0; j < InpParType.d; j++) fprintf(fp0, "\t%E", h[j]);
-
-        fprintf(fp0, "\n");
-
-        for (j = 0; j < InpParType.K[i]; j++) {
-            fprintf(fp0, "%s%d%s", "Y[", j, "]");
-
-            for (o = 0; o < InpParType.d + 1; o++) fprintf(fp0, "\t%E", Y[j][o]);
-
-            fprintf(fp0, "\n");
-        }
-        #endif
+        if (Error) goto E0;
 
         for (j = 0; j < InpParType.K[i]; j++) K[j] = Y[j][InpParType.d];
 
-        Dmin = (FLOAT)0.25; J = 1;
+        Found = 0; Dmin = (FLOAT)0.25; J = 1;
 
         /* Outer loop. */
 
@@ -4657,18 +4738,20 @@ int REBMIXH(InputREBMIXParameterType  InpParType,   /* Input parameters. */
 
             for (j = 0; j < InpParType.K[i]; j++) Y[j][InpParType.d] = K[j];
 
-            Error = InformationCriterionH(InpParType.ICType, V, InpParType.K[i], OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &D);
+            Error = InformationCriterionH(InpParType.ICType, V, InpParType.K[i], OutParType->n, InpParType.d, Y, c, W, Theta, &IC, &logL, &M, &D);
             
             if (Error) goto E0;
 
             if (IC < OutParType->IC) {
+				Found = 1; 
+
                 OutParType->k = k;
 
                 memcpy(OutParType->h, h, InpParType.d * sizeof(FLOAT));
 
                 memcpy(OutParType->y0, y0, InpParType.d * sizeof(FLOAT)); 
                 
-                OutParType->IC = IC; OutParType->logL = logL; OutParType->c = c; 
+                OutParType->IC = IC; OutParType->logL = logL; OutParType->M = M; OutParType->c = c; 
 
                 memcpy(OutParType->W, W, c * sizeof(FLOAT));  
 
@@ -4677,33 +4760,44 @@ int REBMIXH(InputREBMIXParameterType  InpParType,   /* Input parameters. */
                 }
             }
 
-            #if(_DEBUG)
-            fprintf(fp0, "%s\t%d\t%s\t%E\t%s\t%E\t%s\t%E\t%s\t%E\n", "c", c, "IC", IC, "c * Dmin", c * Dmin, "logL", logL, "D", D);
-            #endif  
+			j = J - 1; TmpParType.c[j] = c; TmpParType.IC[j] = IC; TmpParType.logL[j] = logL; TmpParType.D[j] = D;
 
             Stop |= (D <= InpParType.D) || (D <= FLOAT_MIN) || (J >= ItMax); Dmin *= c / (c + (FLOAT)1.0); J++;
         }
         while (!Stop);
 
-E1:     InpParType.K[i] = k;
+		TmpParType.Imax = J - 1;
+
+		if (Found) {
+			HisParType->Imax = TmpParType.Imax;
+
+			memcpy(HisParType->c, TmpParType.c, HisParType->Imax * sizeof(int));  
+			memcpy(HisParType->IC, TmpParType.IC, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->logL, TmpParType.logL, HisParType->Imax * sizeof(FLOAT));  
+			memcpy(HisParType->D, TmpParType.D, HisParType->Imax * sizeof(FLOAT));  
+		}
+
+        InpParType.K[i] = k;
 
         TimeLeft = (FLOAT)(InpParType.kmax - i) * (clock() - Start) / CLOCKS_PER_SEC / (i + 1);
 
         #if (_REBMIXEXE)
-        printf("\r%s\rTime left %2.1f sec", CL, TimeLeft); 
+        printf("%sTime left %2.1f sec", CL, TimeLeft); 
         #elif (_REBMIXR)
-        Rprintf("\r%s\rTime left %2.1f sec", CL, TimeLeft);
+        Rprintf("%sTime left %2.1f sec", CL, TimeLeft);
         R_FlushConsole();
+		R_ProcessEvents();
         #endif
     }
 
 E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT));
 
     #if (_REBMIXEXE)
-    printf("\r%s\r", CL);
+    printf("%s", CL);
     #elif (_REBMIXR)
-    Rprintf("\r%s\r", CL);
+    Rprintf("%s", CL);
     R_FlushConsole();
+	R_ProcessEvents();
     #endif
 
     if (OutParType->Theta) {
@@ -4713,6 +4807,14 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
 
         OutParType->Theta = (MarginalDistributionType**)realloc(OutParType->Theta, OutParType->c * sizeof(MarginalDistributionType*));
     }
+
+	if (TmpParType.D) free(TmpParType.D);
+
+    if (TmpParType.logL) free(TmpParType.logL);
+
+    if (TmpParType.IC) free(TmpParType.IC);
+
+    if (TmpParType.c) free(TmpParType.c);
     
     if (SecondM) {
         for (i = 0; i < InpParType.cmax; i++) {
@@ -4759,10 +4861,6 @@ E0: OutParType->W = (FLOAT*)realloc(OutParType->W, OutParType->c * sizeof(FLOAT)
          
         free(Y);
     }
-
-    #if(_DEBUG)
-    if (fp0) fclose(fp0);
-    #endif
 
     return (Error);
 } /* REBMIXH */
@@ -4958,9 +5056,8 @@ int WriteREBMIXParameterFile(InputREBMIXParameterType  InpParType,   /* Input pa
             }
         }
 
-        fprintf(fp0, "\t%s\t%s\t%s\n", "tc",
-                                       "IC",
-                                       "logL");
+        fprintf(fp0, "\t%s\t%s\n", "IC",
+                                   "logL");
 
         fprintf(fp1, "%s\t%s", "Dataset",
                                "w");
@@ -5134,9 +5231,8 @@ int WriteREBMIXParameterFile(InputREBMIXParameterType  InpParType,   /* Input pa
         }
     }
 
-    fprintf(fp0, "\t%d\t%E\t%E\n", (int)OutParType.ClcTime,
-                                   OutParType.IC,
-                                   OutParType.logL);
+    fprintf(fp0, "\t%E\t%E\n", OutParType.IC,
+                               OutParType.logL);
 
     for (i = 0; i < OutParType.c; i++) {
         fprintf(fp1, "%s\t%E", path,
@@ -5206,34 +5302,30 @@ E0: if (fp0) fclose(fp0);
 
 /* REBMIX algorithm. */
 
-int REBMIX(InputREBMIXParameterType  InpParType,   /* Input parameters. */ 
-           OutputREBMIXParameterType *OutParType)  /* Output parameters. */
+int REBMIX(InputREBMIXParameterType   InpParType,   /* Input parameters. */ 
+           OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
+		   HistoryREBMIXParameterType *HisParType)  /* History parameters. */ 
 {
-    long StartTime, EndTime;
     int  Error = 0;
-
-    StartTime = clock();
 
     switch (InpParType.PreType) {
     case poHistogram:
-        Error = REBMIXH(InpParType, OutParType);
+        Error = REBMIXH(InpParType, OutParType, HisParType);
 
         if (Error) goto E0;
 
         break;
     case poParzenWindow:
-        Error = REBMIXPW(InpParType, OutParType);
+        Error = REBMIXPW(InpParType, OutParType, HisParType);
 
         if (Error) goto E0;
 
         break;
     case poKNearestNeighbour:
-        Error = REBMIXKNN(InpParType, OutParType);
+        Error = REBMIXKNN(InpParType, OutParType, HisParType);
 
         if (Error) goto E0;
     }
-
-    EndTime = clock(); OutParType->ClcTime = 1000 * (EndTime - StartTime) / CLOCKS_PER_SEC;
 
 E0: return (Error);
 } /* REBMIX */
@@ -5242,14 +5334,15 @@ E0: return (Error);
 
 int RunREBMIXTemplateFile(char *file)
 {
-    char                      line[65536], ident[65536], list[65536];
-    char                      *pchar = NULL, *rchar = NULL;
-    int                       i, imin, imax, iinc, j, k, isI;
-    FLOAT                     isF;
-    InputREBMIXParameterType  InpParType;
-    OutputREBMIXParameterType OutParType;
-    FILE                      *fp = NULL;
-    int                       Error = 0;
+    char                       line[65536], ident[65536], list[65536];
+    char                       *pchar = NULL, *rchar = NULL;
+    int                        i, imin, imax, iinc, j, k, isI;
+    FLOAT                      isF;
+    InputREBMIXParameterType   InpParType;
+    OutputREBMIXParameterType  OutParType;
+    HistoryREBMIXParameterType HisParType;
+    FILE                       *fp = NULL;
+    int                        Error = 0;
 
     memset(&InpParType, 0, sizeof(InputREBMIXParameterType));
 
@@ -5263,16 +5356,14 @@ int RunREBMIXTemplateFile(char *file)
     InpParType.ResType = rtLoose;
 
     memset(&OutParType, 0, sizeof(OutputREBMIXParameterType));
+    memset(&HisParType, 0, sizeof(HistoryREBMIXParameterType));
 
     if ((fp = fopen(file, "r")) == NULL) {
         Error = 1; goto E0;
     }
 
     #if (_REBMIXEXE)
-    printf("\r%s\rREBMIX Version 2.3.0\n", CL);
-    #elif (_REBMIXR)
-    Rprintf("\r%s\rREBMIX Version 2.3.0\n", CL);
-    R_FlushConsole();
+    printf("\r%s\rREBMIX Version 2.4.0\n", CL);
     #endif
 
 S0: while (fgets(line, 2048, fp) != NULL) {
@@ -5337,12 +5428,9 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
                 #if (_REBMIXEXE)
                 printf("\r%s\rDataset = %s\n", CL, InpParType.curr);
-                #elif (_REBMIXR)
-                Rprintf("\r%s\rDataset = %s\n", CL, InpParType.curr);
-                R_FlushConsole();
                 #endif
 
-                Error = REBMIX(InpParType, &OutParType);
+                Error = REBMIX(InpParType, &OutParType, &HisParType);
 
                 if (Error) goto E0;
 
@@ -5686,5 +5774,35 @@ E0: if (fp) fclose(fp);
         free(InpParType.open);
     }
 
-    return (Error);
+    if (OutParType.X) {
+        for (i = 0; i < OutParType.n; i++) {
+            if (OutParType.X[i]) free(OutParType.X[i]);
+        }
+         
+        free(OutParType.X);
+    }
+
+    if (OutParType.Theta) {
+        for (i = 0; i < OutParType.c; i++) {
+            if (OutParType.Theta[i]) free(OutParType.Theta[i]);
+        }
+         
+        free(OutParType.Theta);
+    }
+
+    if (OutParType.W) free(OutParType.W);
+
+    if (OutParType.y0) free(OutParType.y0);
+
+    if (OutParType.h) free(OutParType.h);
+
+    if (HisParType.D) free(HisParType.D);
+
+    if (HisParType.logL) free(HisParType.logL);
+
+    if (HisParType.IC) free(HisParType.IC);
+
+    if (HisParType.c) free(HisParType.c);
+
+	return (Error);
 } /* RunREBMIXTemplateFile */

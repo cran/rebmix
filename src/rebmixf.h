@@ -53,7 +53,7 @@ extern "C" {
 #endif
 
 #ifndef CL
-#define CL "                                                                                                    "
+#define CL "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
 #endif
 
 #define IsNan(x) ((x) != (x)) 
@@ -151,18 +151,26 @@ typedef struct inputrebmixparametertype {
 } InputREBMIXParameterType;
 
 typedef struct outputrebmixparametertype {
-    int                      k;       /* Optimal number of classes or k-nearest neighbours. */
-    FLOAT                    *h;      /* Optimal class widths. */ 
-    FLOAT                    *y0;     /* Origins. */
-    FLOAT                    IC;      /* Optimal information criterion. */
-    FLOAT                    logL;    /* log-likelihood. */
-    int                      c;       /* Optimal number of components. */ 
-    FLOAT                    *W;      /* Optimal component weights. */
-    MarginalDistributionType **Theta; /* Optimal parameters. */
-    int                      n;       /* Total number of independent observations. */
-    FLOAT                    **X;     /* Pointer to the input observations [x0,...,xd-1]. */
-    long                     ClcTime; /* Calculation time. */
+    int                      k;         /* Optimal number of classes or k-nearest neighbours. */
+    FLOAT                    *h;        /* Optimal class widths. */ 
+    FLOAT                    *y0;       /* Origins. */
+    FLOAT                    IC;        /* Optimal information criterion. */
+    FLOAT                    logL;      /* Log-likelihood. */
+    int                      M;         /* Degrees of freedom. */
+    int                      c;         /* Optimal number of components. */ 
+    FLOAT                    *W;        /* Optimal component weights. */
+    MarginalDistributionType **Theta;   /* Optimal parameters. */
+    int                      n;         /* Total number of independent observations. */
+    FLOAT                    **X;       /* Pointer to the input observations [x0,...,xd-1]. */
 } OutputREBMIXParameterType;
+
+typedef struct historyrebmixparametertype {
+	int   Imax;   /* Number of iterations. */
+	int   *c;     /* Numbers of components. */ 
+	FLOAT *IC;    /* Information criteria. */  
+	FLOAT *logL;  /* Log-likelihoods. */
+	FLOAT *D;     /* Totals of positive relative deviations. */ 
+} HistoryREBMIXParameterType;
 
 #if (_REBMIXDLL)
 /* Reads input data from the file stream. */
@@ -195,8 +203,9 @@ int MixtureDist(int                      d,             /* Number of independent
 
 /* REBMIX algorithm. */
 
-int REBMIX(InputREBMIXParameterType  InpParType,   /* Input parameters. */ 
-           OutputREBMIXParameterType *OutParType); /* Output parameters. */
+int REBMIX(InputREBMIXParameterType   InpParType,   /* Input parameters. */ 
+           OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
+		   HistoryREBMIXParameterType *HisParType); /* History parameters. */ 
 
 /* Reads input data from the file stream. */
 
@@ -211,6 +220,78 @@ int WriteREBMIXParameterFile(InputREBMIXParameterType  InpParType,   /* Input pa
 /* Runs REBMIX template file stream. */
 
 int RunREBMIXTemplateFile(char *file); /* File stream. */
+
+/* Preprocessing of observations for k-nearest neighbour. */
+
+int PreprocessingKNN(int   k,    /* k-nearest neighbours. */
+                     FLOAT *h,   /* Normalizing vector. */
+                     int   n,    /* Total number of independent observations. */
+                     int   d,    /* Number of independent random variables. */ 
+                     FLOAT **Y); /* Pointer to the input array [y0,...,yd-1,kl,V,R]. */
+
+/* Preprocessing of observations for Parzen window. */
+
+int PreprocessingPW(FLOAT *h,   /* Sides of the hypersquare. */
+                    int   n,    /* Total number of independent observations. */
+                    int   d,    /* Number of independent random variables. */ 
+                    FLOAT **Y); /* Pointer to the input array [y0,...,yd-1,kl,k]. */
+
+/* Preprocessing of observations for histogram. */
+
+int PreprocessingH(FLOAT           *h,          /* Sides of the hypersquare. */
+                   FLOAT           *y0,         /* Origin. */
+                   VariablesType_e *VarType,    /* Types of variables. */
+                   int             *k,          /* Total number of bins. */
+                   int             n,           /* Total number of independent observations. */
+                   int             d,           /* Number of independent random variables. */ 
+                   FLOAT           **X,         /* Pointer to the input points [x0,...,xd-1]. */
+                   FLOAT           **Y);        /* Pointer to the input array [y0,...,yd-1,kl]. */
+
+/* Returns information criterion for k-nearest neighbour. */ 
+
+int InformationCriterionKNN(InformationCriterionType_e ICType,        /* Information criterion type. */
+                            int                        k,             /* k-nearest neighbours. */
+                            int                        n,             /* Total number of independent observations. */
+                            int                        d,             /* Number of independent random variables. */ 
+                            FLOAT                      **Y,           /* Pointer to the input points [y0,...,yd-1,kl,V,R]. */
+                            int                        c,             /* Number of components. */ 
+                            FLOAT                      *W,            /* Component weights. */
+                            MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
+                            FLOAT                      *IC,           /* Information criterion. */
+                            FLOAT                      *logL,         /* log-likelihood. */
+							int                        *M,            /* Degrees of freedom. */
+							FLOAT                      *D);           /* Total of positive relative deviations. */
+
+/* Returns information criterion for Parzen window. */ 
+
+int InformationCriterionPW(InformationCriterionType_e ICType,        /* Information criterion type. */
+                           FLOAT                      V,             /* Volume of the hypersquare. */
+                           int                        n,             /* Total number of independent observations. */
+                           int                        d,             /* Number of independent random variables. */ 
+                           FLOAT                      **Y,           /* Pointer to the input points [y0,...,yd-1,kl,k]. */
+                           int                        c,             /* Number of components. */ 
+                           FLOAT                      *W,            /* Component weights. */
+                           MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
+                           FLOAT                      *IC,           /* Information criterion. */
+                           FLOAT                      *logL,         /* log-likelihood. */
+						   int                        *M,            /* Degrees of freedom. */
+  						   FLOAT                      *D);           /* Total of positive relative deviations. */
+
+/* Returns information criterion for histogram. */ 
+
+int InformationCriterionH(InformationCriterionType_e ICType,        /* Information criterion type. */
+                          FLOAT                      V,             /* Volume of the hypersquare. */
+                          int                        k,             /* Total number of bins. */
+                          int                        n,             /* Total number of independent observations. */
+                          int                        d,             /* Number of independent random variables. */ 
+                          FLOAT                      **Y,           /* Pointer to the input points [y0,...,yd-1,kl]. */
+                          int                        c,             /* Number of components. */ 
+                          FLOAT                      *W,            /* Component weights. */
+                          MarginalDistributionType   **MrgDistType, /* Marginal distribution type. */
+                          FLOAT                      *IC,           /* Information criterion. */
+                          FLOAT                      *logL,         /* log-likelihood. */
+						  int                        *M,            /* Degrees of freedom. */
+						  FLOAT                      *D);           /* Total of positive relative deviations. */
 
 #endif
 

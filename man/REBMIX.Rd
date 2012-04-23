@@ -46,7 +46,7 @@ a character vector of length \eqn{d} containing continuous or discrete parametri
 a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{Number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise. 
 }
 \item{Theta2}{
-a vector of length \eqn{d} containing initial component parameters. The value is \code{"NULL"}.
+a vector of length \eqn{d} containing initial component parameters. The value is \code{NULL}.
 }
 \item{K}{
 a vector or a list of vectors containing numbers of bins \eqn{v} for the histogram and the Parzen window or numbers of nearest
@@ -86,18 +86,42 @@ a list of data frames each containing \eqn{c} component weights \eqn{w_{l}} summ
 a list of data frames each containing  \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
 Component parameters \code{theta1.i} follow the parametric family types. One of \eqn{\mu_{il}} for normal and lognormal distributions and \eqn{\theta_{il}} for Weibull, binomial, Poisson and Dirac distributions.
 Component parameters \code{theta2.i} follow \code{theta1.i}. One of \eqn{\sigma_{il}} for normal and lognormal distributions, \eqn{\beta_{il}} for Weibull distribution and \eqn{p_{il}} for binomial distribution.
-
 }
 \item{Variables}{
 a character vector containing types of variables. One of \code{"continuous"} or \code{"discrete"}.
 }
+\item{pdf}{
+a character vector containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
+}
+\item{Theta1}{
+a vector containing initial component parameters. One of \eqn{n_{il} = \textrm{Number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise. 
+}
+\item{Theta2}{
+a vector containing initial component parameters. The value is \code{NULL}.
+}
 \item{summary}{
 a data frame with additional information about dataset, preprocessing, \eqn{D}, \eqn{c_{\mathrm{max}}}, information criterion type, 
 \eqn{b}, \eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{y_{i0}}, optimal \eqn{h_{i}},
-information criterion \eqn{\mathrm{IC}} and log likelihood \eqn{\mathrm{log}\, L}.
+information criterion \eqn{\mathrm{IC}}, log likelihood \eqn{\mathrm{log}\, L} and degrees of freedom \eqn{M}.
 }
 \item{pos}{
 position in the \code{summary} data frame at which log likelihood \eqn{\mathrm{log}\, L} attains its maximum.
+}
+
+\item{all.Imax}{
+a list of all numbers of iterations.
+}
+\item{all.c}{
+a list of all numbers of components.
+}
+\item{all.IC}{
+a list of all information criteria.
+}
+\item{all.logL}{
+a list of all log lekelihoods.
+}
+\item{all.D}{
+a list of all totals of positive relative deviations.
 }
 }
 \references{
@@ -132,6 +156,10 @@ complex1 <- RNGMIX(Dataset = "complex1",
   rseed = -1,
   n = n,
   Theta = Theta)
+  
+complex1
+
+complex1$Dataset[[1]][1:20, ]  
 
 ## Estimate number of components, component weights and component parameters. 
 
@@ -161,4 +189,3 @@ complex1est
 plot(complex1est, npts = 1000)
 }
 \keyword{parameter estimation}
-

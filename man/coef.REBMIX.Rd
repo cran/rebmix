@@ -21,22 +21,22 @@ further arguments to \code{\link[base]{print}}.
 }
 }
 \examples{
-## Generate and print the simulated 7 dataset.
+## Generate and print simulated dataset.
 
 Theta <- rbind(pdf = rep("Weibull", 3),
   theta1 = c(2.0, 10.0, 30),
   theta2 = c(2.0, 4.0, 7.0))
 
-simulated7 <- RNGMIX(Dataset = "simulated7",
+simulated <- RNGMIX(Dataset = "simulated",
   rseed = -1,
   n = c(40, 60, 50),
   Theta = Theta)
   
-simulated7
+simulated
 
 ## Estimate number of components, component weights and component parameters.
 
-simulated7est <- REBMIX(Dataset = simulated7$Dataset, 
+simulatedest <- REBMIX(Dataset = simulated$Dataset, 
   Preprocessing = "histogram", 
   D = 0.025, 
   cmax = 6, 
@@ -46,11 +46,11 @@ simulated7est <- REBMIX(Dataset = simulated7$Dataset,
   K = 8:25, 
   b = 1.0)
   
-## Print coefficients and plot the finite mixture.  
+## Print coefficients and plot finite mixture.  
 
-coef(simulated7est)
+coef(simulatedest)
 
-plot(simulated7est)
+plot(simulatedest)
 }
 \keyword{print}
 
