@@ -1,5 +1,5 @@
 Package: rebmix
-Version: 2.4.2
+Version: 2.5.0
 Title: The Rebmix Package
 Author: Marko Nagode
 Maintainer: Marko Nagode <marko.nagode@fs.uni-lj.si>
@@ -13,7 +13,7 @@ Description: R functions for random univariate and multivariate finite
         components.
 License: GPL (>= 2)
 Suggests: mixtools, mclust
-Packaged: 2012-11-11 09:33:15 UTC; Marko Nagode
+Packaged: 2013-01-25 13:20:11 UTC; Marko Nagode
 Depends: R (>= 2.10)
 Repository: CRAN
-Date/Publication: 2012-11-11 14:41:32
+Date/Publication: 2013-01-25 15:57:57
