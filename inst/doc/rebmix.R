@@ -51,8 +51,7 @@ for (i in 1:3) {
     Criterion = c("AIC", "BIC"),
     Variables = "continuous",
     pdf = pdf[i],
-    K = 7:20,
-    b = 0.0)
+    K = 7:20)
 }
 
 
@@ -197,8 +196,7 @@ complex1est1 <- REBMIX(Dataset = complex1$Dataset,
   Criterion = "BIC",
   Variables = "continuous",
   pdf = "normal",
-  K = seq(14, 200, 4),
-  b = 0)
+  K = seq(14, 200, 4))
 )
 
 
@@ -256,8 +254,7 @@ complex2est <- REBMIX(Dataset = complex2$Dataset,
   Variables = c("continuous", "discrete", "discrete", "continuous"),
   pdf = c("lognormal", "Poisson", "binomial", "Weibull"),
   Theta1 = c(NA, NA, 10, NA),
-  K = seq(10, 64, 1),
-  b = 0)
+  K = seq(10, 64, 1))
 )
 
 
@@ -329,8 +326,7 @@ simulated1est1 <- REBMIX(simulated1$Dataset,
   Criterion = "BIC",
   Variables = rep("continuous", 4),
   pdf = rep("normal", 4),
-  K = seq(10, 28, 2),
-  b = 0)
+  K = seq(10, 28, 2))
 )
 
 c <- as.numeric(simulated1est1$summary$c)
