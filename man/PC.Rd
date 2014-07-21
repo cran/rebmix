@@ -1,15 +1,15 @@
-\name{logL}
-\alias{logL}
-\alias{logL.default}
-\alias{logL.REBMIX}
+\name{PC}
+\alias{PC}
+\alias{PC.default}
+\alias{PC.REBMIX}
 \title{
-Log Likelihood
+Partition Coefficient
 }
 \description{
-Returns the log likelihood at \code{pos} for class REBMIX.
+Returns the partition coefficient of Bezdek at \code{pos} for class REBMIX.
 }
 \usage{
-\method{logL}{REBMIX}(object, pos = 1, ...)
+\method{PC}{REBMIX}(object, pos = 1, ...)
 }
 \arguments{
 \item{object}{
