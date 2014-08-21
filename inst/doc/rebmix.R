@@ -113,7 +113,7 @@ coef(gamma2est)
 ### code chunk number 8: rebmix-code
 ###################################################
 ## Bootstrap finite mixture.
-gamma3boot <- boot.REBMIX(x = gamma3est, pos = 1, Bootstrap = "p", B = 100, n = NULL, replace = TRUE, prob = NULL)
+gamma3boot <- boot.REBMIX(x = gamma3est, pos = 1, Bootstrap = "p", B = 10, n = NULL, replace = TRUE, prob = NULL)
 
 
 ###################################################
