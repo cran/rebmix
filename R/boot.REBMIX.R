@@ -1,23 +1,3 @@
-boot <- function(x,
-  pos = 1,
-  Bootstrap = "parametric",
-  B = 100, 
-  n = NULL,
-  replace = TRUE, 
-  prob = NULL, ...) 
-UseMethod("boot")
-
-boot.default <- function(x,
-  pos = 1,
-  Bootstrap = "parametric",
-  B = 100, 
-  n = NULL,
-  replace = TRUE, 
-  prob = NULL, ...)
-{
-  stop(sQuote("x"), " object of class REBMIX is requested!", call. = FALSE)
-} ## boot.default
-
 boot.REBMIX <- function(x,
   pos = 1,
   Bootstrap = "parametric",
@@ -99,7 +79,6 @@ boot.REBMIX <- function(x,
   
   bsampleest <- REBMIX(Dataset = bsample$Dataset,
     Preprocessing = as.character(x$summary[pos, "Preprocessing"]),
-    D = as.numeric(x$summary[pos, "D"]),
     cmax = as.numeric(x$summary[pos, "cmax"]),
     Criterion = as.character(x$summary[pos, "Criterion"]),
     Variables = x$call$Variables,

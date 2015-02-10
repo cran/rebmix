@@ -7,7 +7,7 @@ REBMIX Algorithm for Univariate or Multivariate Finite Mixture Estimation
 Returns the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.
 }
 \usage{
-REBMIX(Dataset = NULL, Preprocessing = NULL, D = 0.025, cmax = 15, 
+REBMIX(Dataset = NULL, Preprocessing = NULL, cmax = 15, 
        Criterion = "AIC", Variables = NULL, pdf = NULL,
        Theta1 = NULL, Theta2 = NULL, K = NULL, y0 = NULL, 
        ymin = NULL, ymax = NULL, ar = 0.1, Restraints = "loose", ...)
@@ -19,12 +19,6 @@ represents one random variable. Number of observations \eqn{n} equals the number
 }
 \item{Preprocessing}{
 a character vector, giving the preprocessing types. One of \code{"histogram"}, \code{"Parzen window"} or \code{"k-nearest neighbour"}.
-}
-\item{D}{
-total of positive relative deviations standing for the maximum acceptable measure of
-distance between predictive and empirical densities. It satisfies the relation \eqn{0 \leq D \leq 1}.
-The default value is \code{0.025}. However, if components with a low probability of occurrence are expected, it has to
-decrease. If \eqn{D = 0} the mixture tends to \eqn{c = c_{\mathrm{max}}} components.
 }
 \item{cmax}{
 maximum number of components \eqn{c_{\mathrm{max}} > 0}. The default value is \code{15}.
@@ -54,7 +48,7 @@ neighbours \eqn{k} for the \emph{k}-nearest neighbour. There is no genuine rule 
 the REBMIX algorithm identifies them from the set \code{K} of input values by
 minimizing the information criterion. The Sturges rule \eqn{v = 1 + \mathrm{log_{2}}(n)}, \eqn{\mathrm{Log}_{10}} rule \eqn{v = 10 \mathrm{log_{10}}(n)} or RootN 
 rule \eqn{v = 2 \sqrt{n}} can be applied to estimate the limiting numbers of bins
-or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours.
+or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours. If, e.g., \code{K = c(10, 20, 40, 60)} and minimum \code{IC} coincides, e.g., \code{40}, brackets are set to \code{20} and \code{60} and the golden section is applied to refine the minimum search. See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. 
 }
 \item{y0}{
 a vector of length \eqn{d} containing origins. The default value is \code{NULL}.
@@ -90,27 +84,36 @@ Component parameters \code{theta1.i} follow the parametric family types. One of 
 Component parameters \code{theta2.i} follow \code{theta1.i}. One of \eqn{\sigma_{il}} for normal and lognormal distributions, \eqn{\beta_{il}} for Weibull and gamma distributions and \eqn{p_{il}} for binomial distribution.
 }
 \item{summary}{
-a data frame with additional information about dataset, preprocessing, \eqn{D}, \eqn{c_{\mathrm{max}}}, information criterion type, 
+a data frame with additional information about dataset, preprocessing, \eqn{c_{\mathrm{max}}}, information criterion type, 
 \eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, optimal \eqn{h_{i}},
 information criterion \eqn{\mathrm{IC}}, log likelihood \eqn{\mathrm{log}\, L} and degrees of freedom \eqn{M}.
 }
 \item{pos}{
 position in the \code{summary} data frame at which log likelihood \eqn{\mathrm{log}\, L} attains its maximum.
 }
-\item{all.Imax}{
-a list of all numbers of iterations.
+\item{opt.c}{
+a list of vectors containing numbers of components for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
 }
-\item{all.c}{
-a list of all numbers of components.
+\item{opt.IC}{
+a list of vectors containing information criteria for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
+}
+\item{opt.logL}{
+a list of vectors containing log likelihoods for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
+}
+\item{opt.D}{
+a list of vectors containing totals of positive relative deviations for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
+}
+\item{all.K}{
+a list of vectors containing all processed numbers of bins \eqn{v} for the histogram and the Parzen window or all processed numbers of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
 }
 \item{all.IC}{
-a list of all information criteria.
-}
-\item{all.logL}{
-a list of all log lekelihoods.
-}
-\item{all.D}{
-a list of all totals of positive relative deviations.
+a list of vectors containing information criteria for all processed numbers of bins \eqn{v} for the histogram and the Parzen window or for all processed numbers of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
 }
 \item{call}{
 a function call used to create the object.
@@ -123,11 +126,9 @@ M. Nagode and M. Fajdiga. A general multi-modal probability density function sui
 rainflow ranges of stationary random processes. International Journal of Fatigue, 20(3):211-223,
 1998. \url{http://dx.doi.org/10.1016/S0142-1123(97)00106-0}.\cr\cr
 M. Nagode and M. Fajdiga. An improved algorithm for parameter estimation suitable for mixed
-weibull distributions. International Journal of Fatigue, 22(1):75-80, 2000. \url{http://dx.doi.org/10.1016/S0142-
-1123(99)00112-7}.\cr\cr
+weibull distributions. International Journal of Fatigue, 22(1):75-80, 2000. \url{http://dx.doi.org/10.1016/S0142-1123(99)00112-7}.\cr\cr
 M. Nagode, J. Klemenc, and M. Fajdiga. Parametric modelling and scatter prediction of rainflow
-matrices. International Journal of Fatigue, 23(6):525-532, 2001. \url{http://dx.doi.org/10.1016/S0142-1123(01)00007-
-X}.\cr\cr
+matrices. International Journal of Fatigue, 23(6):525-532, 2001. \url{http://dx.doi.org/10.1016/S0142-1123(01)00007-X}.\cr\cr
 M. Nagode and M. Fajdiga. An alternative perspective on the mixture estimation problem. Reliability
 Engineering & System Safety, 91(4):388-397, 2006. \url{http://dx.doi.org/10.1016/j.ress.2005.02.005}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the univariate finite mixture estimation.
@@ -170,7 +171,6 @@ K <- c(v[1], as.integer((v[1] + 1) * (1 + 1 / v[1])^(0:N)))
 
 complex1est <- REBMIX(Dataset = complex1$Dataset, 
   Preprocessing = "histogram", 
-  D = 0.0025, 
   cmax = 30, 
   Criterion = "BIC", 
   Variables = "continuous",

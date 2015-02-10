@@ -1,4 +1,4 @@
-predict.list <- function(object,
+RCLSMIX <- function(object,
   P = NULL,
   Dataset = NULL, ...)
 {
@@ -110,7 +110,7 @@ predict.list <- function(object,
   }
 
   if (s > 1) {
-    message("RCLSMIX Version 2.6.2");
+    message("RCLSMIX Version 2.7.0");
     flush.console()
 
     output <- .C("RCLSMIX",
@@ -142,4 +142,4 @@ predict.list <- function(object,
   rm(list = ls()[!(ls() %in% c("output"))])
 
   return(output)
-} ## predict.list
+} ## RCLSMIX

@@ -56,6 +56,10 @@ extern "C" {
 #define Euler (FLOAT)0.5772156649015328606065120900824
 #endif
 
+#ifndef Phi       
+#define Phi (FLOAT)1.6180339887498948482045868343656
+#endif  
+
 #ifndef Eps
 #define Eps (FLOAT)0.000001
 #endif
@@ -68,6 +72,8 @@ extern "C" {
 #define BufInc 1000
 #endif
 
+#define Min(x, y) ((x < y) ? x : y) 
+#define Max(x, y) ((x > y) ? x : y) 
 #define IsNan(x) ((x) != (x)) 
 #define IsInf(x) (!IsNan(x) && IsNan((x) - (x))) 
 
@@ -133,7 +139,6 @@ typedef struct inputrebmixparametertype {
     int                        o;           /* Number of paths. */ 
     char                       **open;      /* Paths to open data files. */
     PreprocessingType_e        PreType;     /* Preprocessing of observations. */
-    FLOAT                      D;           /* Total of positive relative deviations. */
     int                        cmax;        /* Maximum number of components. */  
     InformationCriterionType_e ICType;      /* Information criterion types. */
     int                        d;           /* Number of independent random variables. */ 
@@ -142,11 +147,10 @@ typedef struct inputrebmixparametertype {
     FLOAT                      *Par0;       /* Initial component parameters. */
     FLOAT                      *Par1;       /* Initial component parameters. */
     int                        kmax;        /* Number of classes or k-nearest neighbours to be processed. */
-    int                        *K;          /* Number of classes or k-nearest neighbours. */
+    int                        *K;          /* Numbers of classes or k-nearest neighbours. */
     FLOAT                      *y0;         /* Origins. */
     FLOAT                      *ymin;       /* Minimum observations. */
     FLOAT                      *ymax;       /* Maximum observations. */
-    FLOAT                      b;           /* Minimum weight multiplier. */
     FLOAT                      ar;          /* Acceleration rate. */
     PestraintsType_e           ResType;     /* Restraints type. */
     char                       *save;       /* Path to the save data file. */
@@ -166,13 +170,24 @@ typedef struct outputrebmixparametertype {
     FLOAT                    **X;       /* Pointer to the input observations [x0,...,xd-1]. */
 } OutputREBMIXParameterType;
 
-typedef struct historyrebmixparametertype {
-    int   Imax;   /* Number of iterations. */
-    int   *c;     /* Numbers of components. */ 
-    FLOAT *IC;    /* Information criteria. */  
-    FLOAT *logL;  /* Log-likelihoods. */
-    FLOAT *D;     /* Totals of positive relative deviations. */ 
-} HistoryREBMIXParameterType;
+typedef struct optrebmixparametertype {
+    int   Imax;   /* Number of iterations for optimal number of classes or k-nearest neighbours. */
+    int   *c;     /* Numbers of components for optimal number of classes or k-nearest neighbours. */ 
+    FLOAT *IC;    /* Information criteria for optimal number of classes or k-nearest neighbours. */  
+    FLOAT *logL;  /* Log-likelihoods for optimal number of classes or k-nearest neighbours. */
+    FLOAT *D;     /* Totals of positive relative deviations for optimal number of classes or k-nearest neighbours. */ 
+} OptREBMIXParameterType;
+
+typedef struct allrebmixparametertype {
+    int   Bracket; /* 1 for bracketing and 0 for golden section.*/
+    int   a;       /* Golden section constant. */
+    int   b;       /* Golden section constant. */
+    int   c;       /* Golden section constant. */
+    int   d;       /* Golden section constant. */
+    int   kmax;    /* Number of classes or k-nearest neighbours. */
+    int   *K;      /* Numbers of classes or k-nearest neighbours. */
+    FLOAT *IC;     /* Information criteria for numbers of classes or k-nearest neighbours. */  
+} AllREBMIXParameterType;
 
 /* Returns the value log(Gamma(y)) for y > 0. See http://www.nrbook.com/a/bookcpdf/c6-1.pdf */
 
@@ -208,7 +223,8 @@ int MixtureDist(int                      d,             /* Number of independent
 
 int REBMIX(InputREBMIXParameterType   *InpParType,  /* Input parameters. */ 
            OutputREBMIXParameterType  *OutParType,  /* Output parameters. */
-           HistoryREBMIXParameterType *HisParType); /* History parameters. */ 
+           OptREBMIXParameterType     *OptParType,  /* Optimal parameters. */ 
+           AllREBMIXParameterType     *AllParType); /* All parameters. */ 
 
 /* Reads input data from the file stream. */
 

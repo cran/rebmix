@@ -1,5 +1,5 @@
-\name{predict.list}
-\alias{predict.list}
+\name{RCLSMIX}
+\alias{RCLSMIX}
 \title{
 Predicts Class Membership Based Upon a Model Trained by REBMIX
 }
@@ -7,9 +7,7 @@ Predicts Class Membership Based Upon a Model Trained by REBMIX
 Takes a list of objects of class \code{REBMIX}, prior probabilities \code{P} and data frame \code{Dataset} with test classes and returns predictive classes.
 }
 \usage{
-\method{predict}{list}(object,
-  P = NULL,
-  Dataset = NULL, ...)      
+RCLSMIX(object, P = NULL, Dataset = NULL, ...)      
 }
 \arguments{
 \item{object}{
@@ -22,7 +20,7 @@ a vector of length \eqn{s} containing prior probabilites.
 a data frame containing test classes.
 }
 \item{\dots}{
-further arguments to \code{\link[stats]{predict}}.
+potential further arguments of the method.
 }
 }
 \value{
@@ -111,16 +109,10 @@ pdf <- c("normal", "Dirac", "normal", "Dirac",
   "Dirac", "Dirac", "Dirac", "Dirac", "Dirac",
   "Dirac", "Dirac", "Dirac", "Dirac", "Dirac")
 
-K <- list(13:44, 1, 13:44, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+K <- list(kseq(6, 20, 0.05), 1, kseq(6, 20, 0.05), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 
 ymin <- as.numeric(apply(trainall, 2, min))
 ymax <- as.numeric(apply(trainall, 2, max))
-
-## In case of zero occurrences for discrete and integer variables 
-## Laplace smoothing is applied.
-
-LS <- list(NA, 0:7, NA, 0:15, ymin[5]:ymax[5], 0:6, 0:13, 
-  0:5, 0:4, 0:1, NA, NA, ymin[13]:ymax[13], 0:40)
 
 adultest <- list()
 
@@ -128,7 +120,6 @@ for (i in c(1:14)) {
   adultest[[i]] <- REBMIX(Dataset = list(as.data.frame(trainle50k[, i]), 
     as.data.frame(traingt50k[, i])),
     Preprocessing = "histogram",
-    D = if (Variables[i] == "continuous") 0.025 else 0.0,
     cmax = if (Variables[i] == "continuous") 15 else 100,
     Criterion = "D",
     Variables = Variables[i],
@@ -137,8 +128,8 @@ for (i in c(1:14)) {
     ymin = ymin[i],
     ymax = ymax[i])
 
-    plot(adultest[[i]], pos = 1, nrow = 1, ncol = 1)
-    plot(adultest[[i]], pos = 2, nrow = 1, ncol = 1)
+    plot(adultest[[i]], pos = 1, nrow = 1, ncol = 2, what = c("den", "IC"))
+    plot(adultest[[i]], pos = 2, nrow = 1, ncol = 2, what = c("den", "IC"))
 }
 
 ## Best-first feature subset selection.
@@ -149,7 +140,7 @@ for (i in 1:14) {
   k <- NA
 
   for (j in rvs) {
-    predictive <- predict(adultest[c(c, j)],
+    predictive <- RCLSMIX(adultest[c(c, j)],
       P = P,
       Dataset = trainall[, c(c, j)]) 
 
@@ -178,7 +169,7 @@ Error
 
 c
 
-predictive <- predict(adultest[c],
+predictive <- RCLSMIX(adultest[c],
   P = P,
   Dataset = testall[, c]) 
 
