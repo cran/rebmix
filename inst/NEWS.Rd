@@ -1,5 +1,11 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.7.1}{ 
+\itemize{
+\item Demos \code{rebmix.galaxy}, \code{rebmix.univariate.normal}, \code{rebmix.mixed.continuous.discrete} and 
+\code{rebmix.multivariate.normal} are changed. 
+}
+}
 \section{Changes in version 2.7.0}{ 
 \itemize{
 \item Fixed title field in \code{DESCRIPTION} file.
@@ -15,7 +21,7 @@
 \item Value \code{"c"} is eliminated from \code{what} argument.
 \item Value \code{"K"} is added to \code{what} argument.
 \item Fixed bug in C functions \code{InformationCriterionKNN()}, \code{InformationCriterionPW()} and \code{InformationCriterionH()}.
-\item Fixed bug Illegal characters found in URL.
+\item Fixed bug illegal characters found in URL.
 \item Methods \code{AIC}, \code{AIC3}, \code{AIC4}, \code{AICc}, \code{CAIC}, \code{BIC}, \code{HQC}, \code{MDL2}, \code{MDL5}, \code{AWE}, \code{CLC}, \code{ICL}, \code{ICLBIC}, \code{PRD}, \code{SSE} and \code{PC} are converted to functions with the same names.
 \item Renewed vignette.
 }
