@@ -1,145 +1,172 @@
-RCLSMIX <- function(x,
-  P = NULL,
-  Dataset = NULL, ...)
+setMethod("RCLSMIX",
+          signature(model = "RCLSMIX"),
+function(model, ...)
 {
-  digits <- getOption("digits"); options(digits = 15)
-
-  if (missing(x)) {
-    stop(sQuote("x"), " object or list of classes REBMIX is requested!", call. = FALSE)
-  }
-
-  if (class(x) == "list") {
-    o <- length(x)
-
-    for (i in 1:o) {
-      if (class(x[[i]]) != "REBMIX") {
-        stop(sQuote("x"), " list of classes REBMIX is requested!", call. = FALSE)
-      }
-    }
-  }
-  else
-  if (class(x) == "REBMIX") {
-    o <- 1;
-
-    x[[1]] <- x
-  }
-  else {
-    stop(sQuote("x"), " object or list of classes REBMIX is requested!", call. = FALSE)
-  }
-
-  if (is.null(Dataset)) {
-    stop(sQuote("Dataset"), " must not be NULL!", call. = FALSE)
-  }
-
-  Dataset <- as.data.frame(Dataset)
-
-  s <- nrow(x[[1]]$summary)
-
-  if (o > 1) {
-    for (i in 2:o) {
-      if (s != nrow(x[[i]]$summary)) {
-        stop(sQuote("x"), " list of classes REBMIX with equal number of classes is requested!", call. = FALSE)
-      }
-    }
-  }
-
-  if (s > 1) {
-    if (is.null(P)) {
-      stop(sQuote("P"), " must not be NULL!", call. = FALSE)
-    }
-
-    if (s != length(P)) {
-      stop(sQuote("x"), " and ", sQuote("P"), " must be of the same length!", call. = FALSE)
-    }
-  }
+  o <- length(model@x)
 
   d <- array(data = NA, dim = o, dimnames = NULL)
 
-  c <- array(data = list(NULL), dim = c(o, s), dimnames = NULL)
+  c <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
 
-  w <- array(data = list(NULL), dim = c(o, s), dimnames = NULL)
+  w <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
 
-  pdf <- array(data = list(NULL), dim = c(o, s), dimnames = NULL)
+  pdf <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
 
-  theta1 <- array(data = list(NULL), dim = c(o, s), dimnames = NULL)
+  theta1 <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
 
-  theta2 <- array(data = list(NULL), dim = c(o, s), dimnames = NULL)
+  theta2 <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
 
   for (io in 1:o) {
-    for (is in 1:s) {
-      nrow <- nrow(x[[io]]$Theta[[is]])
-      ncol <- ncol(x[[io]]$Theta[[is]])
+    for (is in 1:model@s) {
+      Names <- names(model@x[[io]]@Theta[[is]])
+    
+      pdf[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("pdf", Names)])
+    
+      theta1[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("theta1", Names)])
+      
+      theta1[[io, is]][is.na(theta1[[io, is]])] <- 0
 
-      c[[io, is]] <- ncol
+      theta2[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("theta2", Names)])
+      
+      theta2[[io, is]][is.na(theta2[[io, is]])] <- 0
 
-      w[[io, is]] <- as.numeric(x[[io]]$w[[is]])
+      c[[io, is]] <- length(model@x[[io]]@w[[is]])
 
-      pdf[[io, is]] <- array(data = NA, dim = c(nrow, ncol), dimnames = NULL)
-      theta1[[io, is]] <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-      theta2[[io, is]] <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-
-      for (j in 1:ncol) {
-        M <- match(x[[io]]$Theta[[is]][, j], .rebmix$pdf)
-
-        d[io] <- 1;
-
-        for (l in 1:length(M)) {
-          if (M[l] %in% which(.rebmix$pdf.nargs == 2)) {
-            pdf[[io, is]][d[io], j] <- x[[io]]$Theta[[is]][l, j]
-            theta1[[io, is]][d[io], j] <- as.numeric(x[[io]]$Theta[[is]][l + 1, j])
-            theta2[[io, is]][d[io], j] <- as.numeric(x[[io]]$Theta[[is]][l + 2, j])
-
-            d[io] <- d[io] + 1
-          }
-          else
-          if (M[l] %in% which(.rebmix$pdf.nargs == 1)) {
-            pdf[[io, is]][d[io], j] <- x[[io]]$Theta[[is]][l, j]
-            theta1[[io, is]][d[io], j] <- as.numeric(x[[io]]$Theta[[is]][l + 1, j])
-
-            d[io] <- d[io] + 1
-          }
-        }
-      }
-
-      d[io] <- d[io] - 1
-
-      pdf[[io, is]] <- pdf[[io, is]][1:d[io], ]; dim(pdf[[io, is]]) <- c(d[io], ncol)
-      theta1[[io, is]] <- theta1[[io, is]][1:d[io], ]; dim(theta1[[io, is]]) <- c(d[io], ncol)
-      theta2[[io, is]] <- theta2[[io, is]][1:d[io], ]; dim(theta2[[io, is]]) <- c(d[io], ncol)
+      w[[io, is]] <- model@x[[io]]@w[[is]]
+      
+      d[io] <- length(pdf[[io, is]]) / c[[io, is]]
     }
   }
 
-  if (s > 1) {
-    message("RCLSMIX Version 2.7.2");
-    flush.console()
+  output <- .C("RCLSMIX",
+    n = model@ntest,
+    X = as.double(unlist(model@Dataset)),
+    s = as.integer(model@s),
+    o = as.integer(o),
+    d = as.integer(d),
+    c = as.integer(unlist(c)),
+    w = as.double(unlist(w)),
+    pdf = as.character(unlist(pdf)),
+    theta1 = as.double(unlist(theta1)),
+    theta2 = as.double(unlist(theta2)),
+    P = as.double(unlist(model@P)),
+    Z = integer(model@ntest),
+    error = integer(1),
+    PACKAGE = "rebmix")
 
-    output <- .C("RCLSMIX",
-      n = as.integer(nrow(Dataset)),
-      X = as.double(unlist(Dataset)),
-      s = as.integer(s),
-      o = as.integer(o),
-      d = as.integer(d),
-      c = as.integer(unlist(c)),
-      W = as.double(unlist(w)),
-      ParFamType = as.character(unlist(pdf)),
-      Par0 = as.double(unlist(theta1)),
-      Par1 = as.double(unlist(theta2)),
-      P = as.double(unlist(P)),
-      Z = integer(nrow(Dataset)),
-      error = integer(1),
-      PACKAGE = "rebmix")
-
-    if (output$error == 1) {
-      stop("in RCLSMIX!", call. = FALSE); return(NA)
-    }
+  if (output$error == 1) {
+    stop("in RCLSMIX!", call. = FALSE); return(NA)
   }
 
-  output <- as.factor(output$Z)
-  levels(output) <- 0:(length(P) -1)
+  model@Zp <- as.factor(output$Z)
+
+  rm(list = ls()[!(ls() %in% c("model"))])
+
+  return(model)
+}) ## RCLSMIX
+
+setMethod("RCLSMIX",
+          signature(model = "RCLSMVNORM"),
+function(model, ...)
+{
+  o <- length(model@x)
+
+  d <- array(data = NA, dim = o, dimnames = NULL)
+
+  c <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
+
+  w <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
+
+  pdf <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
+
+  theta1 <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
+
+  theta2 <- array(data = list(NULL), dim = c(o, model@s), dimnames = NULL)
+
+  for (io in 1:o) {
+    for (is in 1:model@s) {
+      Names <- names(model@x[[io]]@Theta[[is]])
+    
+      pdf[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("pdf", Names)])
+    
+      theta1[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("theta1", Names)])
+      
+      theta1[[io, is]][is.na(theta1[[io, is]])] <- 0
+
+      theta2[[io, is]] <- unlist(model@x[[io]]@Theta[[is]][grep("theta2", Names)])
+      
+      theta2[[io, is]][is.na(theta2[[io, is]])] <- 0
+
+      c[[io, is]] <- length(model@x[[io]]@w[[is]])
+
+      w[[io, is]] <- model@x[[io]]@w[[is]]
+      
+      d[io] <- length(pdf[[io, is]]) / c[[io, is]]
+    }
+  }
   
-  options(digits = digits)
+  output <- .C("RCLSMVNORM",
+    n = model@ntest,
+    X = as.double(unlist(model@Dataset)),
+    s = as.integer(model@s),
+    o = as.integer(o),
+    d = as.integer(d),
+    c = as.integer(unlist(c)),
+    w = as.double(unlist(w)),
+    pdf = as.character(unlist(pdf)),
+    theta1 = as.double(unlist(theta1)),
+    theta2 = as.double(unlist(theta2)),
+    P = as.double(unlist(model@P)),
+    Z = integer(model@ntest),
+    error = integer(1),
+    PACKAGE = "rebmix")
 
-  rm(list = ls()[!(ls() %in% c("output"))])
+  if (output$error == 1) {
+    stop("in RCLSMIX!", call. = FALSE); return(NA)
+  }
 
-  return(output)
-} ## RCLSMIX
+  model@Zp <- as.factor(output$Z)
+
+  rm(list = ls()[!(ls() %in% c("model"))])
+
+  return(model)
+}) ## RCLSMIX
+
+setMethod("RCLSMIX",
+          signature(model = "ANY"),
+function(model,
+  x,
+  Dataset, 
+  Zt, ...)
+{
+  digits <- getOption("digits"); options(digits = 15)
+  
+  message("RCLSMIX Version 2.8.0")
+ 
+  flush.console()
+  
+  model <- new(model,
+    x = x,
+    Dataset = Dataset,
+    Zt = Zt)
+     
+  model <- RCLSMIX(model = model, ...)
+  
+  model@CM <- table(model@Zt, model@Zp)
+  
+  model@Accuracy <- sum(diag(model@CM)) / model@ntest
+  
+  model@Error <- 1.0 - model@Accuracy
+  
+  model@Precission <- diag(model@CM) / apply(model@CM, 1, sum)
+  
+  model@Sensitivity <- diag(model@CM) / apply(model@CM, 2, sum)
+  
+  model@Specificity <- (model@ntest - apply(model@CM, 1, sum)) / (model@ntest - apply(model@CM, 2, sum))
+  
+  options(digits = digits)  
+
+  rm(list = ls()[!(ls() %in% c("model"))])
+
+  return(model)
+}) ## RCLSMIX

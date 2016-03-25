@@ -6,7 +6,7 @@
 The unfilled survey of the Corona Borealis region contains the velocities of 82 galaxies from 6 well separated conic sections of space.
 }
 \usage{
-galaxy
+data("galaxy")
 }
 \format{
 \code{galaxy} is a data frame with 82 cases (rows) and 1 continuous variable (columns) called \code{Velocity}.
@@ -28,12 +28,12 @@ data("galaxy")
 
 colnames(galaxy)
 
-## Write dataset into tab delimited ASCII file.
+# Write dataset into tab delimited ASCII file.
 
 write.table(galaxy, file = "galaxy.txt", sep = "\t", 
   eol = "\n", row.names = FALSE, col.names = FALSE)
   
-## Write dataset into rda file.
+# Write dataset into rda file.
 
 save(galaxy, file = "galaxy.rda")
 }

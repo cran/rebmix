@@ -1,24 +1,41 @@
-\name{plot.REBMIX}
-\alias{plot.REBMIX}
+\name{plot-methods}
+\docType{methods}
+\alias{plot-methods}
+\alias{plot,REBMIX,missing-method}
+\alias{plot,REBMVNORM,missing-method}
+\alias{plot,RCLRMIX,missing-method}
+\alias{plot,RCLRMVNORM,missing-method}
+\alias{plot,RCLSMIX,missing-method}
+\alias{plot,RCLSMVNORM,missing-method}
 \title{
 Plots Univariate or Multivariate REBMIX Output
 }
 \description{
-Takes an object of class \code{REBMIX} and plots empirical and predictive univariate \eqn{d = 1} mixture densities
+Plots empirical and predictive univariate \eqn{d = 1} mixture densities
 or pairs of empirical and predictive bivariate marginal mixture densities for \eqn{d > 1}. The empirical
 densities follow the histogram, Parzen window or \emph{k}-nearest neighbour approach.
 }
 \usage{
-\method{plot}{REBMIX}(x, pos = 1, what = c("density"),
+\S4method{plot}{REBMIX,missing}(x, y, pos = 1, what = c("density"),
      nrow = 1, ncol = 1, npts = 200, n = 200, cex = 0.8, fg = "black",
      lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
      plot.cex = 0.8, plot.pch = 19, contour.drawlabels = FALSE, 
      contour.labcex = 0.8, contour.method = "flattest", 
      contour.nlevels = 12, ...)
+\S4method{plot}{RCLRMIX,missing}(x, y, nrow = 1, ncol = 1, cex = 0.8,
+     fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
+     plot.cex = 0.8, plot.pch = 19, ...)        
+\S4method{plot}{RCLSMIX,missing}(x, y, nrow = 1, ncol = 1, cex = 0.8,
+     fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
+     plot.cex = 0.8, plot.pch = 19, ...)     
+## ... and for other signatures
 }
 \arguments{
 \item{x}{
-an object of class \code{REBMIX}.
+see Methods section below.
+}
+\item{y}{
+currently not used.
 }
 \item{pos}{
 a desired row number in \code{x$summary} to be ploted. The default value is \code{1}.
@@ -78,7 +95,7 @@ logical. The contours are labelled if \code{TRUE}. The default value is \code{FA
 \code{\link[graphics]{par}("cex")}.
 }
 \item{contour.method}{
-a character string specifying where the labels will be located. The possible values
+a character specifying where the labels will be located. The possible values
 are \code{"simple"}, \code{"edge"} and default \code{"flattest"}, see also \code{\link[graphics]{contour}}.
 }
 \item{contour.nlevels}{
@@ -92,48 +109,57 @@ further arguments to \code{\link[graphics]{par}}.
 \code{par} is returned in an invisible named list. Such a list
 can be passed as an argument to \code{\link[graphics]{par}} to restore the parameter values.
 }
+\section{Methods}{
+\describe{
+\item{\code{signature(x = "REBMIX", y = "missing")}}{an object of class \code{REBMIX}.}
+\item{\code{signature(x = "REBMVNORM", y = "missing")}}{an object of class \code{REBMVNORM}.}
+\item{\code{signature(x = "RCLRMIX", y = "missing")}}{an object of class \code{RCLRMIX}.}
+\item{\code{signature(x = "RCLRMVNORM", y = "missing")}}{an object of class \code{RCLRMVNORM}.}
+\item{\code{signature(x = "RCLSMIX", y = "missing")}}{an object of class \code{RCLSMIX}.}
+\item{\code{signature(x = "RCLSMVNORM", y = "missing")}}{an object of class \code{RCLSMVNORM}.}
+}
+}
+\author{Marko Nagode}
 \references{
 C. M. Bishop. Neural Networks for Pattern Recognition. Clarendon Press, Oxford, 1995.
 }
 \examples{
 \dontrun{
+devAskNewPage(ask = TRUE)
+
 data("wine")
 
 colnames(wine)
 
-## Remove Cultivar column from wine dataset.
+# Remove Cultivar column from wine dataset.
 
 winecolnames <- !(colnames(wine) \%in\% "Cultivar")
 
-wine <- wine[ , winecolnames]
+wine <- wine[, winecolnames]
 
-## Determine number of dimensions d and wine dataset size n.
+# Determine number of dimensions d and wine dataset size n.
 
 d <- ncol(wine) 
 n <- nrow(wine)
 
-## Estimate number of components, component weights and component parameters.
+# Estimate number of components, component weights and component parameters.
 
-v <- c(as.integer(1 + log2(n)), ## Minimum v follows the Sturges rule.
-  as.integer(2 * n^0.5)) ## Maximum v follows the RootN rule.
+Sturges <- as.integer(1 + log2(n)) # Minimum v follows Sturges rule.
+RootN <- as.integer(2 * n^0.5) # Maximum v follows RootN rule.
 
-## Number of classes or nearest neighbours to be processed.
+K <- c(floor(Sturges^(1/13)), ceiling(RootN^(1/13)))
 
-N <- as.integer(log(v[2] / (v[1] + 1)) / log(1 + 1 / v[1]))
-
-K <- c(v[1], as.integer((v[1] + 1) * (1 + 1 / v[1])^(0:N)), v[2])
-
-wineest <- REBMIX(Dataset = list(wine = wine), 
+wineest <- REBMIX(model = "REBMVNORM",
+  Dataset = list(wine = wine), 
   Preprocessing = "Parzen window", 
   Criterion = "ICL-BIC", 
-  Variables = rep("continuous", d),
   pdf = rep("normal", d), 
-  K = K)
+  K = K[1]:K[2])
 
-## Plot finite mixture.
+# Plot finite mixture.
 
-plot(wineest, what = c("density", "marginal", "IC", "logL", "D", 
-  "distribution"), nrow = 4, ncol = 5, npts = 500, pty = "s")
+plot(wineest, what = c("density", "IC", "logL", "D"),
+  nrow = 2, ncol = 2, pty = "s")
 }
 }
 \keyword{plot}

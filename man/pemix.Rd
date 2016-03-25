@@ -5,8 +5,7 @@ Empirical Distribution Function Calculation
 }
 \description{
 \code{pemix} returns (invisibly) the data frame containing observations \eqn{\bm{x}_{1}, \ldots, \bm{x}_{n}} and empirical 
-distribution functions \eqn{F_{1}, \ldots, F_{n}}. Vectors \eqn{\bm{x}} are subvectors of 
-\eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}}.
+distribution functions \eqn{F_{1}, \ldots, F_{n}}. Vector \eqn{\bm{x}} ia a subvector of \eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}}.
 }
 \usage{
 pemix(x = NULL, lower.tail = TRUE, log.p = FALSE, ...)
@@ -25,24 +24,25 @@ logical. if \code{TRUE}, probabilities \eqn{p} are given as \eqn{\log(p)}.
 currently not used.
 }
 }
+\author{Marko Nagode}
 \examples{
-## Generate simulated dataset.
+# Generate simulated dataset.
 
-Theta <- rbind(pdf1 = rep("normal", 2),
+Theta <- list(pdf1 = rep("normal", 2),
   theta1.1 = c(10, 20),
-  theta2.1 = c(3.0, 2.0),
-  pdf1 = rep("normal", 2),
-  theta1.1 = c(3, 2),
-  theta2.1 = c(20, 10))
+  theta2.1 = c(3, 2),
+  pdf2 = rep("normal", 2),
+  theta1.2 = c(3, 2),
+  theta2.2 = c(20, 10))
 
-simulated <- RNGMIX(Dataset = "simulated",
+simulated <- RNGMIX(Dataset.name = "simulated",
   rseed = -1,
   n = c(15, 15),
   Theta = Theta)
 
-## Preprocess simulated dataset.
+# Preprocess simulated dataset.
 
-y1y2F <- pemix(x = simulated$Dataset[[1]])
+y1y2F <- pemix(x = simulated@Dataset[[1]])
   
 y1y2F
 }

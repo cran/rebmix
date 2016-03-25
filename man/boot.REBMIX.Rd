@@ -1,85 +1,70 @@
-\name{boot.REBMIX}
-\alias{boot.REBMIX}
+\name{boot-methods}
+\docType{methods}
+\alias{boot}
+\alias{boot-methods}
+\alias{boot,REBMIX-method}
+\alias{boot,REBMVNORM-method}
+\alias{show,REBMIX.boot-method}
+\alias{show,REBMVNORM.boot-method}
+\alias{summary,REBMIX.boot-method}
+\alias{summary,REBMVNORM.boot-method}
 \title{
 Parametric or Nonparametric Bootstrap for Standard Error and Coefficient of Variation Estimation
 }
 \description{
-Returns the boot.REBMIX output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.
-}
-\usage{
-boot.REBMIX(x, pos = 1, Bootstrap = "parametric", 
-     B = 100, n = NULL, replace = TRUE, prob = NULL, ...)
+Returns as default the boot output for mixtures of conditionally independent normal, 
+lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities. If 
+\code{x} is of class \code{RNGMVNORM} the boot output for mixtures of multivariate normal 
+component densities with unrestricted variance-covariance matrices is returned.
+} 
+\usage{ 
+\S4method{boot}{REBMIX}(x = NULL, pos = 1, Bootstrap = "parametric", 
+     B = 100, n = numeric(), replace = TRUE, prob = numeric(), ...)
+## ... and for other signatures
+\S4method{summary}{REBMIX.boot}(object, ...)
+## ... and for other signatures
 }
 \arguments{
 \item{x}{
-an object of class \code{REBMIX}.
+see Methods section below.
 }
 \item{pos}{
-a desired row number in \code{x$summary} to be bootstrapped. The default value is \code{1}.
+a desired row number in \code{x@summary} to be bootstrapped. The default value is \code{1}.
 }
 \item{Bootstrap}{
-a character vector giving the bootstrap type. One of default \code{"parametric"} or \code{"nonparametric"}.
+a character giving the bootstrap type. One of default \code{"parametric"} or \code{"nonparametric"}.
 }
 \item{B}{
 number of bootstrap datasets. The default value is \code{100}.
 }
 \item{n}{
-number of observations. The default value is \code{NULL}.
+number of observations. The default value is \code{numeric()}.
 }
 \item{replace}{
 logical. The sampling is with replacement if \code{TRUE}, see also \code{\link[base]{sample}}. The default value is \code{TRUE}.
 }
 \item{prob}{
-a vector of length \eqn{n} containing probability weights, see also \code{\link[base]{sample}}. The default value is \code{NULL}.
+a vector of length \eqn{n} containing probability weights, see also \code{\link[base]{sample}}. The default value is \code{numeric()}.
 }
 \item{\dots}{
-further arguments to \code{\link[base]{sample}}.
+further arguments to \code{\link[base]{sample}}; additional arguments affecting the summary produced.
+}
+\item{object}{
+see Methods section below.
 }
 }
 \value{
-\item{c}{
-a data frame containing numbers of components for \eqn{B} bootstrap datasets.
+Returns an object of class \code{REBMIX.boot} or \code{REBMVNORM.boot}.
 }
-\item{c.se}{
-standard error of numbers of components \code{c}.
-}
-\item{c.cv}{
-coefficient of variation of numbers of components \code{c}.
-}
-\item{c.mode}{
-mode of numbers of components \code{c}.
-}
-\item{c.prob}{
-probability of mode \code{c.mode}.
-}
-\item{w}{
-a data frame containing component weights for \eqn{\leq B} bootstrap datasets.
-}
-\item{w.se}{
-a vector containing standard errors of component weights \code{w}.
-}
-\item{w.cv}{
-a vector containing coefficients of variation of component weights \code{w}.
-}
-\item{theta1.i}{
-data frames containing component parameters \code{theta1.i} for \eqn{\leq B} bootstrap datasets.
-}
-\item{theta1.i.se}{
-vectors containing standard errors of component parameters \code{theta1.i}.
-}
-\item{theta1.i.cv}{
-vectors containing coefficients of variation of component parameters \code{theta1.i}.
-}
-\item{theta2.i}{
-data frames containing component parameters \code{theta2.i} for \eqn{\leq B} bootstrap datasets.
-}
-\item{theta2.i.se}{
-vectors containing standard errors of component parameters \code{theta2.i}.
-}
-\item{theta2.i.cv}{
-vectors containing coefficients of variation of component parameters \code{theta2.i}.
+\section{Methods}{
+\describe{
+\item{\code{signature(x = "REBMIX")}}{an object of class \code{REBMIX} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.}
+\item{\code{signature(x = "REBMVNORM")}}{an object of class \code{REBMVNORM} for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices.}
+\item{\code{signature(object = "REBMIX")}}{an object of class \code{REBMIX}.}
+\item{\code{signature(object = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
 }
 }
+\author{Marko Nagode}
 \references{
 G. McLachlan and D. Peel. Finite Mixture Models. John Wiley & Sons, New York, 2000.
 }
@@ -88,30 +73,29 @@ data("weibull")
 
 n <- nrow(weibull)
 
-## Number of classes or nearest neighbours to be processed.
+# Number of classes or nearest neighbours to be processed.
 
-K <- c(as.integer(1 + log2(sum(n))), ## Minimum v follows the Sturges rule.
-  as.integer(10 * log10(n))) ## Maximum v follows the log10 rule.
+K <- c(as.integer(1 + log2(sum(n))), # Minimum v follows Sturges rule.
+  as.integer(10 * log10(n))) # Maximum v follows log10 rule.
 
-## Estimate number of components, component weights and component parameters. 
+# Estimate number of components, component weights and component parameters. 
 
 weibullest <- REBMIX(Dataset = list(weibull),
   Preprocessing = "Parzen window", 
   cmax = 4,
   Criterion = "BIC", 
-  Variables = "continuous",
   pdf = "Weibull", 
   K = K[1]:K[2], 
   Restraints = "loose")
   
-## Plot finite mixture.
+# Plot finite mixture.
 
 plot(weibullest, what = c("density", "distribution", "IC", "logL", "D"), 
   nrow = 3, ncol = 2, npts = 1000)
   
-## Bootstrap finite mixture.  
+# Bootstrap finite mixture.  
 
-weibullboot <- boot.REBMIX(x = weibullest, Bootstrap = "nonparametric", B = 10)
+weibullboot <- boot(x = weibullest, Bootstrap = "nonparametric", B = 10)
 
 weibullboot
 }

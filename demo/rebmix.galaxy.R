@@ -11,7 +11,7 @@ options(prompt = "> ", continue = "+ ", width = 70,
 ## Preliminaries ##
 ###################
 
-## load package.
+# Load package.
 
 library("rebmix")
 
@@ -19,13 +19,13 @@ library("rebmix")
 ## Galaxy dataset ##
 ####################
 
-## Load galaxy dataset.
+# Load galaxy dataset.
 
 data("galaxy")
 
 galaxyest <- list(normal = NULL, lognormal = NULL, Weibull = NULL, gamma = NULL)
 
-## Estimate number of components, component weights and component parameters.
+# Estimate number of components, component weights and component parameters.
 
 pdf <- c("normal", "lognormal", "Weibull", "gamma")
 
@@ -34,7 +34,6 @@ for (i in 1:4) {
     Preprocessing = c("histogram", "Parzen window"),
     cmax = 10,
     Criterion = c("AIC", "BIC"),
-    Variables = "continuous",
     pdf = pdf[i],
     K = 7:20)
 }

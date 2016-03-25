@@ -1,9 +1,21 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.8.0}{ 
+\itemize{
+\item Object-oriented C++ code is improved considerably.
+\item R code is extended and rewritten in S4 class system.
+\item Multivariate normal parametric family with unrestricted variance-covariance matrices is enabled.
+\item Classification is improved.
+\item Clustering is added.
+\item Datasets \code{iris} is added. 
+\item Renewed vignette.
+\item Fixed bug in C++ functions \code{RoughLognormalParameters()}, \code{RoughWeibullParameters()} and \code{RoughGammaParameters()}.
+}
+}
 \section{Changes in version 2.7.2}{ 
 \itemize{
-\item Switch \code{_TIME_LEFT_SWITCH} eliminated from C code.
-\item C code converted into object-oriented C++ code.
+\item Switch \code{_TIME_LEFT_SWITCH} is eliminated from C code.
+\item C code is converted into object-oriented C++ code.
 \item Fixed no visible global function definition bug in \code{NAMESPACE} file.
 \item Renewed vignette.
 }

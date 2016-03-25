@@ -1,18 +1,32 @@
-\name{REBMIX}
+\name{REBMIX-methods}
+\docType{methods}
 \alias{REBMIX}
+\alias{REBMIX-methods}
+\alias{REBMIX,REBMIX-method}
+\alias{REBMIX,REBMVNORM-method}
+\alias{show,REBMIX-method}
+\alias{show,REBMVNORM-method}
+\alias{summary,REBMIX-method}
+\alias{summary,REBMVNORM-method}
 \title{
 REBMIX Algorithm for Univariate or Multivariate Finite Mixture Estimation
 }
 \description{
-Returns the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.
+Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
 }
 \usage{
-REBMIX(Dataset = NULL, Preprocessing = NULL, cmax = 15, 
-       Criterion = "AIC", Variables = NULL, pdf = NULL,
-       Theta1 = NULL, Theta2 = NULL, K = NULL, y0 = NULL, 
-       ymin = NULL, ymax = NULL, ar = 0.1, Restraints = "loose", ...)
+\S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(), 
+       cmax = 15, Criterion = "AIC", pdf = character(), theta1 = numeric(), 
+       theta2 = numeric(), K = numeric(), y0 = numeric(), ymin = numeric(), 
+       ymax = numeric(), ar = 0.1, Restraints = "loose", ...)
+## ... and for other signatures
+\S4method{summary}{REBMIX}(object, ...)   
+## ... and for other signatures 
 }
 \arguments{
+\item{model}{
+see Methods section below.
+}
 \item{Dataset}{
 a list of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
 represents one random variable. Number of observations \eqn{n} equals the number of rows in the datasets.
@@ -30,17 +44,14 @@ approximate weight of evidence \code{"AWE"}, classification likelihood \code{"CL
 integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition coefficient \code{"PC"}, 
 total of positive relative deviations \code{"D"} or sum of squares error \code{"SSE"}.
 }
-\item{Variables}{
-a character vector of length \eqn{d} containing types of variables. One of \code{"continuous"} or \code{"discrete"}.
-}
 \item{pdf}{
 a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
 }
-\item{Theta1}{
+\item{theta1}{
 a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{Number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise. 
 }
-\item{Theta2}{
-a vector of length \eqn{d} containing initial component parameters. The value is \code{NULL}.
+\item{theta2}{
+a vector of length \eqn{d} containing initial component parameters. Currently not used.
 }
 \item{K}{
 a vector or a list of vectors containing numbers of bins \eqn{v} for the histogram and the Parzen window or numbers of nearest
@@ -51,74 +62,40 @@ rule \eqn{v = 2 \sqrt{n}} can be applied to estimate the limiting numbers of bin
 or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours. If, e.g., \code{K = c(10, 20, 40, 60)} and minimum \code{IC} coincides, e.g., \code{40}, brackets are set to \code{20} and \code{60} and the golden section is applied to refine the minimum search. See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. 
 }
 \item{y0}{
-a vector of length \eqn{d} containing origins. The default value is \code{NULL}.
+a vector of length \eqn{d} containing origins. The default value is \code{numeric()}.
 }
 \item{ymin}{
-a vector of length \eqn{d} containing minimum observations. The default value is \code{NULL}.
+a vector of length \eqn{d} containing minimum observations. The default value is \code{numeric()}.
 }
 \item{ymax}{
-a vector of length \eqn{d} containing maximum observations. The default value is \code{NULL}.
+a vector of length \eqn{d} containing maximum observations. The default value is \code{numeric()}.
 }
 \item{ar}{
 acceleration rate \eqn{0 < a_{\mathrm{r}} \leq 1}. The default value is \code{0.1} and in most cases does not have to be altered.
 }
 \item{Restraints}{
-a character string giving the restraints type. One of \code{"rigid"} or default \code{"loose"}.
+a character giving the restraints type. One of \code{"rigid"} or default \code{"loose"}.
 The rigid restraints are obsolete and applicable for well separated components only. 
 }
-\item{...}{
-potential further arguments of the method. 
+\item{object}{
+see Methods section below.
+}
+\item{\dots}{
+currently not used; additional arguments affecting the summary produced.
 }
 }
 \value{
-\item{Dataset}{
-a list of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
-represents one random variable. Number of observations \eqn{n} equals the number of rows in the datasets.
+Returns an object of class \code{REBMIX} or \code{REBMVNORM}.
 }
-\item{w}{
-a list of data frames each containing \eqn{c} component weights \eqn{w_{l}} summing to 1.
-}
-\item{Theta}{
-a list of data frames each containing  \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
-Component parameters \code{theta1.i} follow the parametric family types. One of \eqn{\mu_{il}} for normal and lognormal distributions and \eqn{\theta_{il}} for Weibull, gamma, binomial, Poisson and Dirac distributions.
-Component parameters \code{theta2.i} follow \code{theta1.i}. One of \eqn{\sigma_{il}} for normal and lognormal distributions, \eqn{\beta_{il}} for Weibull and gamma distributions and \eqn{p_{il}} for binomial distribution.
-}
-\item{summary}{
-a data frame with additional information about dataset, preprocessing, \eqn{c_{\mathrm{max}}}, information criterion type, 
-\eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, optimal \eqn{h_{i}},
-information criterion \eqn{\mathrm{IC}}, log likelihood \eqn{\mathrm{log}\, L} and degrees of freedom \eqn{M}.
-}
-\item{pos}{
-position in the \code{summary} data frame at which log likelihood \eqn{\mathrm{log}\, L} attains its maximum.
-}
-\item{opt.c}{
-a list of vectors containing numbers of components for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{opt.IC}{
-a list of vectors containing information criteria for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{opt.logL}{
-a list of vectors containing log likelihoods for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{opt.D}{
-a list of vectors containing totals of positive relative deviations for optimal \eqn{v} for the histogram and the Parzen window or for optimal number of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{all.K}{
-a list of vectors containing all processed numbers of bins \eqn{v} for the histogram and the Parzen window or all processed numbers of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{all.IC}{
-a list of vectors containing information criteria for all processed numbers of bins \eqn{v} for the histogram and the Parzen window or for all processed numbers of nearest
-neighbours \eqn{k} for the \emph{k}-nearest neighbour.
-}
-\item{call}{
-a function call used to create the object.
+\section{Methods}{
+\describe{
+\item{\code{signature(model = "REBMIX")}}{a character giving the default class name \code{"REBMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.}
+\item{\code{signature(model = "REBMVNORM")}}{a character giving the class name \code{"REBMVNORM"} for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices.}
+\item{\code{signature(object = "REBMIX")}}{an object of class \code{REBMIX}.}
+\item{\code{signature(object = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
 }
 }
+\author{Marko Nagode}
 \references{
 H. A. Sturges. The choice of a class interval. Journal of American Statistical Association, 21(153):
 65-66, 1926. \url{http://www.jstor.org/stable/2965501}.\cr\cr
@@ -134,56 +111,48 @@ Engineering & System Safety, 91(4):388-397, 2006. \url{http://dx.doi.org/10.1016
 M. Nagode and M. Fajdiga. The rebmix algorithm for the univariate finite mixture estimation.
 Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{http://dx.doi.org/10.1080/03610920903480890}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}.
+Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}.\cr\cr
+M. Nagode. Finite mixture modeling via REBMIX.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{http://www.academicpub.org/jao/paperInfo.aspx?PaperID=16625}.
 }
 \examples{
-\dontrun{
-## Generate the complex 1 dataset.
+# Generate and plot univariate normal dataset.
 
-n <- c(998, 263, 1086, 487, 213, 1076, 232, 
-  784, 840, 461, 773, 24, 811, 1091, 861)
+n <- c(998, 263, 1086, 487)
 
-Theta <- rbind(pdf = "normal",
-  theta1 = c(688.4, 265.1, 30.8, 934, 561.6, 854.9, 883.7, 
-  758.3, 189.3, 919.3, 98, 143, 202.5, 628, 977),
-  theta2 = c(12.4, 14.6, 14.8, 8.4, 11.7, 9.2, 6.3, 10.2,
-  9.5, 8.1, 14.7, 11.7, 7.4, 10.1, 14.6))
+Theta <- list(pdf1 = "n",
+  theta1.1 = c(688, 265, 30, 934),
+  theta2.1 = c(72, 54, 34, 28))
 
-complex1 <- RNGMIX(Dataset = "complex1",
+normal <- RNGMIX(Dataset.name = "complex1",
   rseed = -1,
   n = n,
   Theta = Theta)
   
-complex1
+normal 
 
-complex1$Dataset[[1]][1:20, ]  
+normal@Dataset[[1]][1:20,]  
 
-## Estimate number of components, component weights and component parameters. 
+# Estimate number of components, component weights and component parameters. 
 
-v <- c(as.integer(1 + log2(sum(n))), ## Minimum v follows the Sturges rule.
-  as.integer(2 * sum(n)^0.5)) ## Maximum v follows the RootN rule.
+K <- c(as.integer(1 + log2(sum(n))), # Minimum v follows Sturges rule.
+  as.integer(2 * sum(n)^0.5)) # Maximum v follows RootN rule.
 
-## Number of classes or nearest neighbours to be processed.
-
-N <- as.integer(log(v[2] / (v[1] + 1)) / log(1 + 1 / v[1]))
-
-K <- c(v[1], as.integer((v[1] + 1) * (1 + 1 / v[1])^(0:N)))
-
-complex1est <- REBMIX(Dataset = complex1$Dataset, 
-  Preprocessing = "histogram", 
-  cmax = 30, 
+normalest <- REBMIX(Dataset = normal@Dataset, 
+  Preprocessing = "h", 
+  cmax = 8, 
   Criterion = "BIC", 
-  Variables = "continuous",
-  pdf = "normal", 
-  K = K)
+  pdf = "n", 
+  K = K[1]:K[2])
                  
-complex1est
+normalest
 
-AIC(complex1est)
+BIC(normalest)
 
-## Plot the finite mixture.
+logL(normalest)
 
-plot(complex1est, npts = 1000)
-}
+# Plot finite mixture.
+
+plot(normalest, nrow = 2, what = c("den", "dis"), npts = 1000)
 }
 \keyword{parameter estimation}

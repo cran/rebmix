@@ -1,8 +1,10 @@
-.IC <- function(x, 
+setMethod(".IC",
+          signature(x = "REBMIX"),
+function(x, 
   Criterion = "AIC",
   pos = 1, ...)
 {
-  if (missing(x) || (class(x) != "REBMIX")) {
+  if (missing(x)) {
     stop(sQuote("x"), " object of class REBMIX is requested!", call. = FALSE)
   }
   
@@ -15,78 +17,60 @@
   if (!is.wholenumber(pos)) {
     stop(sQuote("pos"), " integer is requested!", call. = FALSE)
   }
+  
+  length(pos) <- 1
 
-  if ((pos < 1) || (pos > nrow(x$summary))) {
-    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x$summary), "!", call. = FALSE)
+  if ((pos < 1) || (pos > nrow(x@summary))) {
+    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
   }
 
-  Dataset <- as.character(x$summary[pos, "Dataset"])
+  Dataset <- as.character(x@summary[pos, "Dataset"])
 
-  X <- as.matrix(x$Dataset[[which(names(x$Dataset) == x$summary[pos, "Dataset"])]])
+  X <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
 
   n <- nrow(X)
   d <- ncol(X)
 
-  h <- as.double(x$summary[pos, paste("h", if (d > 1) 1:d else "", sep = "")])
+  h <- as.double(x@summary[pos, paste("h", if (d > 1) 1:d else "", sep = "")])
   
-  nrow <- nrow(x$Theta[[pos]])
-  ncol <- ncol(x$Theta[[pos]])
-
-  c <- ncol
-
-  pdf <- array(data = NA, dim = c(nrow, ncol), dimnames = NULL)
-  theta1 <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-  theta2 <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-
-  for (j in 1:ncol) {
-    M <- match(x$Theta[[pos]][, j], .rebmix$pdf)
-
-    d <- 1;
-
-    for (l in 1:length(M)) {
-      if (M[l] %in% which(.rebmix$pdf.nargs == 2)) {
-        pdf[d, j] <- x$Theta[[pos]][l, j]
-        theta1[d, j] <- as.numeric(x$Theta[[pos]][l + 1, j])
-        theta2[d, j] <- as.numeric(x$Theta[[pos]][l + 2, j])
-
-        d <- d + 1
-      }
-      else
-      if (M[l] %in% which(.rebmix$pdf.nargs == 1)) {
-        pdf[d, j] <- x$Theta[[pos]][l, j]
-        theta1[d, j] <- as.numeric(x$Theta[[pos]][l + 1, j])
-
-        d <- d + 1
-      }
-    }
-  }
-
-  d <- d - 1
-
-  pdf <- pdf[1:d, ]; dim(pdf) <- c(d, ncol)
+  Names <- names(x@Theta[[pos]])
   
-  theta1 <- theta1[1:d, ]; dim(theta1) <- c(d, ncol)
-  theta2 <- theta2[1:d, ]; dim(theta2) <- c(d, ncol)
+  c <- length(x@w[[pos]])
 
-  C <- x$summary[pos, "Preprocessing"]
+  pdf <- unlist(x@Theta[[pos]][grep("pdf", Names)])
+  
+  pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
+  
+  theta1 <- unlist(x@Theta[[pos]][grep("theta1", Names)])
+  
+  theta1[is.na(theta1)] <- 0
+
+  theta2 <- unlist(x@Theta[[pos]][grep("theta2", Names)])
+  
+  theta2[is.na(theta2)] <- 0
+
+  length(pdf) <- d
+
+  C <- x@summary[pos, "Preprocessing"]
 
   if (C == .rebmix$Preprocessing[1]) {
-    y0 <- as.double(x$summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
+    y0 <- as.double(x@summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
 
     output <- .C("RInformationCriterionH",
       h = as.double(h),
       y0 = as.double(y0),
-      pdf = as.character(x$call$pdf),
-      k = as.integer(x$summary[pos, "v/k"]),
-      n = as.integer(n),
+      k = as.integer(x@summary[pos, "v/k"]),
       d = as.integer(d),
-      x = as.double(X),
       Criterion = as.character(Criterion),
       c = as.integer(c),
-      W = as.double(x$w[[pos]]),
-      Theta.pdf = as.character(pdf),
-      Theta.Theta1 = as.double(theta1),
-      Theta.Theta2 = as.double(theta2),      
+      w = as.double(x@w[[pos]]),
+      length.pdf = as.integer(d),
+      length.Theta = as.integer(2),
+      length.theta = as.integer(c(d, d)),
+      pdf = as.character(pdf),
+      Theta = as.double(c(theta1, theta2)),
+      n = as.integer(n),
+      x = as.double(X),
       IC = double(1),
       logL = double(1),
       M = integer(1),
@@ -95,22 +79,24 @@
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in IC!", call. = FALSE); return(NA)
+      stop("in .IC!", call. = FALSE); return(NA)
     }
   } 
   else 
   if (C == .rebmix$Preprocessing[2]) {
     output <- .C("RInformationCriterionPW",
       h = as.double(h),
-      n = as.integer(n),
       d = as.integer(d),
-      x = as.double(X),
       Criterion = as.character(Criterion),
       c = as.integer(c),
-      W = as.double(x$w[[pos]]),
-      Theta.pdf = as.character(pdf),
-      Theta.Theta1 = as.double(theta1),
-      Theta.Theta2 = as.double(theta2),      
+      w = as.double(x@w[[pos]]),
+      length.pdf = as.integer(d),
+      length.Theta = as.integer(2),
+      length.theta = as.integer(c(d, d)),
+      pdf = as.character(pdf),
+      Theta = as.double(c(theta1, theta2)),
+      n = as.integer(n),
+      x = as.double(X),
       IC = double(1),
       logL = double(1),
       M = integer(1),
@@ -119,25 +105,27 @@
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in IC!", call. = FALSE); return(NA)
+      stop("in .IC!", call. = FALSE); return(NA)
     }
   } 
   else
   if (C == .rebmix$Preprocessing[3]) {
-    k <- as.integer(x$summary[pos, "v/k"]) 
+    k <- as.integer(x@summary[pos, "v/k"]) 
 
     output <- .C("RInformationCriterionKNN",
-      k = as.integer(x$summary[pos, "v/k"]),
       h = as.double(h),
-      n = as.integer(n),
+      k = as.integer(x@summary[pos, "v/k"]),
       d = as.integer(d),
-      x = as.double(X),
       Criterion = as.character(Criterion),
       c = as.integer(c),
-      W = as.double(x$w[[pos]]),
-      Theta.pdf = as.character(pdf),
-      Theta.Theta1 = as.double(theta1),
-      Theta.Theta2 = as.double(theta2),      
+      w = as.double(x@w[[pos]]),
+      length.pdf = as.integer(d),
+      length.Theta = as.integer(2),
+      length.theta = as.integer(c(d, d)),
+      pdf = as.character(pdf),
+      Theta = as.double(c(theta1, theta2)),
+      n = as.integer(n),
+      x = as.double(X),
       IC = double(1),
       logL = double(1),
       M = integer(1),
@@ -146,16 +134,26 @@
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in IC!", call. = FALSE); return(NA)
+      stop("in .IC!", call. = FALSE); return(NA)
     }
   }
   
   rm(list = ls()[!(ls() %in% c("output"))])
 
   invisible(output)
-} ## .IC
+}) ## .IC
 
-logL <- function(x, 
+setMethod(".IC",
+          signature(x = "REBMVNORM"),
+function(x, 
+  Criterion = "AIC",
+  pos = 1, ...)
+{
+}) ## .IC
+
+setMethod("logL",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -169,9 +167,11 @@ logL <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## logL
+}) ## logL
 
-AIC <- function(x, 
+setMethod("AIC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -185,9 +185,11 @@ AIC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## AIC
+}) ## AIC
 
-AIC3 <- function(x, 
+setMethod("AIC3",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -201,9 +203,11 @@ AIC3 <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## AIC3
+}) ## AIC3
 
-AIC4 <- function(x, 
+setMethod("AIC4",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -217,9 +221,11 @@ AIC4 <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## AIC4
+}) ## AIC4
 
-AICc <- function(x, 
+setMethod("AICc",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -233,9 +239,11 @@ AICc <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## AICc
+}) ## AICc
 
-BIC <- function(x, 
+setMethod("BIC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -249,9 +257,11 @@ BIC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## BIC
+}) ## BIC
 
-CAIC <- function(x, 
+setMethod("CAIC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -265,9 +275,11 @@ CAIC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## CAIC
+}) ## CAIC
 
-HQC <- function(x, 
+setMethod("HQC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -281,9 +293,11 @@ HQC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## HQC
+}) ## HQC
 
-MDL2 <- function(x, 
+setMethod("MDL2",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -297,9 +311,11 @@ MDL2 <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## MDL2
+}) ## MDL2
 
-MDL5 <- function(x, 
+setMethod("MDL5",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -313,9 +329,11 @@ MDL5 <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## MDL5
+}) ## MDL5
 
-AWE <- function(x, 
+setMethod("AWE",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -329,9 +347,11 @@ AWE <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## AWE
+}) ## AWE
 
-CLC <- function(x, 
+setMethod("CLC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -345,9 +365,11 @@ CLC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## CLC
+}) ## CLC
 
-ICL <- function(x, 
+setMethod("ICL",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -361,9 +383,11 @@ ICL <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## ICL
+}) ## ICL
 
-ICLBIC <- function(x, 
+setMethod("ICLBIC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -377,9 +401,11 @@ ICLBIC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## ICLBIC
+}) ## ICLBIC
 
-PRD <- function(x, 
+setMethod("PRD",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -393,9 +419,11 @@ PRD <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## PRD
+}) ## PRD
 
-SSE <- function(x, 
+setMethod("SSE",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -409,9 +437,11 @@ SSE <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## SSE
+}) ## SSE
 
-PC <- function(x, 
+setMethod("PC",
+          signature(x = "ANY"),
+function(x, 
   pos = 1, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
@@ -425,7 +455,7 @@ PC <- function(x,
   rm(list = ls()[!(ls() %in% c("output"))])
   
   output
-} ## PC
+}) ## PC
 
 
 

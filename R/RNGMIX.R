@@ -1,105 +1,30 @@
-RNGMIX <- function(Dataset = NULL,
-  rseed = -1,
-  n = NULL,
-  Theta = NULL)
-{
-  digits <- getOption("digits"); options(digits = 15)
+setMethod("RNGMIX",
+          signature(model = "RNGMIX"),
+function(model, ...)
+{ 
+  Names <- names(model@Theta)
 
-  message("RNGMIX Version 2.7.2");
-  flush.console()
+  pdf <- unlist(model@Theta[grep("pdf", Names)])
   
-  if (is.null(Dataset)) {
-    stop(sQuote("Dataset"), " must not be NULL!", call. = FALSE)
-  }
-
-  if (!is.character(Dataset)) {
-    stop(sQuote("Dataset"), " character vector is requested!", call. = FALSE)
-  }
-
-  if (!is.wholenumber(rseed)) {
-    stop(sQuote("rseed"), " integer is requested!", call. = FALSE)
-  }
-
-  if (rseed > -1) {
-    stop(sQuote("rseed"), " must be less than 0!", call. = FALSE)
-  }
-
-  if (is.null(n)) {
-    stop(sQuote("n"), " must not be NULL!", call. = FALSE)
-  }
-
-  if ((!is.wholenumber(n)) && (!is.data.frame(n))) {
-    stop(sQuote("n"), " integer or data frame is requested!", call. = FALSE)
-  }
+  theta1 <- unlist(model@Theta[grep("theta1", Names)])
   
-  if (!all(n > 0)) {
-    stop("all ", sQuote("n"), " must be greater than 0!", call. = FALSE)
-  }
+  theta1[is.na(theta1)] <- 0
 
-  if (is.null(Theta)) {
-    stop(sQuote("Theta"), " must not be NULL!", call. = FALSE)
-  }
-
-  if ((!is.character(Theta)) && (!is.data.frame(Theta))) {
-    stop(sQuote("Theta"), " character matrix or data frame is requested!", call. = FALSE)
-  }
+  theta2 <- unlist(model@Theta[grep("theta2", Names)])
   
-  if (length(n) != ncol(Theta)) {
-    stop("number of columns in ", sQuote("n"), " and ", sQuote("Theta"), " must match!", call. = FALSE)
-  }
-
-  nrow <- nrow(Theta)
-  ncol <- ncol(Theta)
-
-  c <- ncol
-
-  n <- rbind(n)
-
-  Theta <- rbind(Theta)
-
-  pdf <- array(data = NA, dim = c(nrow, ncol), dimnames = NULL)
-  theta1 <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-  theta2 <- array(data = 0.0, dim = c(nrow, ncol), dimnames = NULL)
-
-  for (i in 1:ncol) {
-    j <- 1; k <- 1
-    
-    while (j < nrow) {
-      pdf[k, i] <- match.arg(Theta[j, i], .rebmix$pdf)
-
-      if (pdf[k, i] %in% .rebmix$pdf[.rebmix$pdf.nargs == 2]) {
-        theta1[k, i] <- as.numeric(Theta[j + 1, i])
-        theta2[k, i] <- as.numeric(Theta[j + 2, i])
-
-        j <- j + 3; k <- k + 1
-      }
-      else
-      if (pdf[k, i] %in% .rebmix$pdf[.rebmix$pdf.nargs == 1]) {
-        theta1[k, i] <- as.numeric(Theta[j + 1, i])
-        theta2[k, i] <- as.numeric(0.0)
-
-        j <- j + 2; k <- k + 1
-      }
-    }
-  }
+  theta2[is.na(theta2)] <- 0
   
-  d <- k - 1; c <- ncol
+  c <- length(model@n); d <- length(model@Variables)
+  
+  length(pdf) <- d
+  
+  xmin <- rep(+Inf, d)
+  xmax <- rep(-Inf, d)  
 
-  pdf <- pdf[1:d, ]; dim(pdf) <- c(d, c)
-  theta1 <- theta1[1:d, ]; dim(theta1) <- c(d, c)
-  theta2 <- theta2[1:d, ]; dim(theta2) <- c(d, c)
+  IDum <- model@rseed
 
-  xmin <- rbind(rep(+Inf, d))
-  xmax <- rbind(rep(-Inf, d))
-
-  IDum <- rseed
-
-  RNGMIX <- list()
-
-  RNGMIX$Dataset <- list()
-    
-  for (i in 1:length(Dataset)) {
-    message("Dataset = ", Dataset[i])
+  for (i in 1:length(model@Dataset.name)) {
+    message("Dataset = ", model@Dataset.name[i])
 
     flush.console()
 
@@ -107,12 +32,15 @@ RNGMIX <- function(Dataset = NULL,
       IDum = as.integer(IDum), 
       d = as.integer(d),
       c = as.integer(c),
-      N = as.integer(n),
+      N = as.integer(model@n),
+      length.pdf = as.integer(d),
+      length.Theta = as.integer(2),
+      length.theta = as.integer(c(d, d)),
       pdf = as.character(pdf),
-      Theta1 = as.double(theta1),
-      Theta2 = as.double(theta2),
+      Theta = as.double(c(theta1, theta2)),
       n = integer(1),
-      Y = double(sum(n) * d),
+      Y = double(sum(model@n) * d),
+      Z = integer(sum(model@n)),      
       error = integer(1),
       PACKAGE = "rebmix")
 
@@ -125,81 +53,134 @@ RNGMIX <- function(Dataset = NULL,
     xmin <- as.numeric(apply(rbind(xmin, output$Y), 2, min))
     xmax <- as.numeric(apply(rbind(xmax, output$Y), 2, max))
 
-    RNGMIX$Dataset[[i]] <- as.data.frame(output$Y, stringsAsFactors = FALSE)
+    model@Dataset[[i]] <- as.data.frame(output$Y, stringsAsFactors = FALSE)
+    
+    if (i == 1) {
+      model@Zt <- factor(output$Z)
+    }  
 
     IDum <- IDum - 1
   }
   
-  names(RNGMIX$Dataset) <- Dataset
+  names(model@Dataset) <- model@Dataset.name
   
-  RNGMIX$w <- as.data.frame(rbind(n / output$n), stringsAsFactors = FALSE)
+  model@w <- model@n / output$n
+  
+  model@ymin <- xmin
+  model@ymax <- xmax  
 
-  rownames(RNGMIX$w) <- "w"
-  colnames(RNGMIX$w) <- paste("comp", if (c > 1) 1:c else "", sep = "")
+  rm(list = ls()[!(ls() %in% c("model"))])
 
-  RNGMIX$Theta <- rbind(pdf, theta1, theta2)
+  return(model)  
+}) ## RNGMIX
 
-  dim(RNGMIX$Theta) <- c(3 * d, c)
+setMethod("RNGMIX",
+          signature(model = "RNGMVNORM"),
+function(model, ...)
+{ 
+  Names <- names(model@Theta)
 
-  if (d > 1) {
-    rownames(RNGMIX$Theta) <- c(paste("pdf", 1:d, sep = ""),
-      paste("theta1.", 1:d, sep = ""),
-      paste("theta2.", 1:d, sep = ""))
-  }
-  else {
-    rownames(RNGMIX$Theta) <- c("pdf", "theta1", "theta2")
-  }
+  pdf <- unlist(model@Theta[grep("pdf", Names)])
+  
+  theta1 <- unlist(model@Theta[grep("theta1", Names)])
+  
+  theta1[is.na(theta1)] <- 0
 
-  Index <- NULL
+  theta2 <- unlist(model@Theta[grep("theta2", Names)])
+  
+  theta2[is.na(theta2)] <- 0
+  
+  c <- length(model@n); d <- length(model@Variables)
+  
+  length(pdf) <- 1
+  
+  xmin <- rep(+Inf, d)
+  xmax <- rep(-Inf, d)  
 
-  for (i in 1:d){
-    Index <- c(Index, seq(from = i, to = i + 2 * d, by = d))
-  }
+  IDum <- model@rseed
 
-  RNGMIX$Theta <- cbind(RNGMIX$Theta[Index, ])
+  for (i in 1:length(model@Dataset.name)) {
+    message("Dataset = ", model@Dataset.name[i])
 
-  M <- match(RNGMIX$Theta[, 1], .rebmix$pdf)
+    flush.console()
 
-  Index <- NULL
+    output <- .C("RRNGMVNORM",
+      IDum = as.integer(IDum), 
+      d = as.integer(d),
+      c = as.integer(c),
+      N = as.integer(model@n),
+      length.pdf = as.integer(d),
+      length.Theta = as.integer(3),
+      length.theta = as.integer(c(d, length(theta2) / c, -length(theta2) / c)),
+      pdf = as.character(pdf),
+      Theta = as.double(c(theta1, theta2)),
+      n = integer(1),
+      Y = double(sum(model@n) * d),
+      Z = integer(sum(model@n)),
+      error = integer(1),
+      PACKAGE = "rebmix")
 
-  for (i in 1:length(M)) {
-    if (M[i] %in% which(.rebmix$pdf.nargs == 1)) {
-      Index <- c(Index, i + 2)
+    if (output$error == 1) {
+      stop("in RNGMIX!", call. = FALSE); return(NA)
     }
+
+    dim(output$Y) <- c(output$n, d)
+
+    xmin <- as.numeric(apply(rbind(xmin, output$Y), 2, min))
+    xmax <- as.numeric(apply(rbind(xmax, output$Y), 2, max))
+
+    model@Dataset[[i]] <- as.data.frame(output$Y, stringsAsFactors = FALSE)
+    
+    if (i == 1) {
+      model@Zt <- factor(output$Z)
+    }  
+
+    IDum <- IDum - 1
   }
+  
+  names(model@Dataset) <- model@Dataset.name
+  
+  model@w <- model@n / output$n
+  
+  model@ymin <- xmin
+  model@ymax <- xmax  
 
-  if (is.null(Index)) {
-    RNGMIX$Theta <- as.data.frame(RNGMIX$Theta, stringsAsFactors = FALSE)
-  }
-  else {
-    RNGMIX$Theta <- as.data.frame(RNGMIX$Theta[-Index, ], stringsAsFactors = FALSE)
-  }
+  rm(list = ls()[!(ls() %in% c("model"))])
 
-  colnames(RNGMIX$Theta) <- paste("comp", if (c > 1) 1:c else "", sep = "")
+  return(model)  
+}) ## RNGMIX
 
-  RNGMIX$Variables <- rep(.rebmix$Variables[1], d)
+setMethod("RNGMIX",
+          signature(model = "ANY"),
+function(model,
+  Dataset.name,
+  rseed,
+  n,
+  Theta)
+{
+  digits <- getOption("digits"); options(digits = 15)
 
-  M <- na.omit(M)
-
-  for (i in 1:length(M)) {
-    if (M[i] %in% which(.rebmix$pdf.Variables == .rebmix$Variables[2])) {
-      RNGMIX$Variables[i] <- .rebmix$Variables[2]
-    }
-  }
-
-  RNGMIX$ymin <- xmin
-  RNGMIX$ymax <- xmax
-  RNGMIX$call <- list(
-    Dataset = Dataset,
+  message("RNGMIX Version 2.8.0")
+  
+  flush.console()
+  
+  model <- new(model,
+    Dataset.name = Dataset.name,
     rseed = rseed,
     n = n,
-    Theta = Theta)  
+    Theta = Theta)
+    
+  output <- RNGMIX(model = model)     
+  
+  model@Dataset <- output@Dataset
+  model@Zt <- output@Zt
+  model@w <- output@w
+  model@ymin <- output@ymin
+  model@ymax <- output@ymax
     
   options(digits = digits)  
 
-  rm(list = ls()[!(ls() %in% c("RNGMIX"))])
-
-  class(RNGMIX) <- "RNGMIX"
+  rm(list = ls()[!(ls() %in% c("model"))])
   
-  return(RNGMIX)
-} ## RNGMIX
+  return(model)
+}) ## RNGMIX

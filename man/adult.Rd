@@ -6,7 +6,7 @@
 The \code{adult} dataset containing 48842 instances with 16 continuous, binary and discrete variables was extracted from the census bureau database \url{http://www.census.gov/}. Extraction was done by Barry Becker from the 1994 census bureau database.
 }
 \usage{
-adult
+data("adult")
 }
 \format{
 \code{adult} is a data frame with 48842 cases (rows) and 16 variables (columns) named:
@@ -167,16 +167,11 @@ A. Asuncion and D. J. Newman. Uci machine learning repository, 2007. \url{http:/
 \examples{
 data("adult")
 
-## Find complete cases.
+# Find complete cases.
 
 adult <- adult[complete.cases(adult), ]
 
-## Map metric attributes.
-
-adult[["Capital.Loss"]] <- ordered(cut(adult[["Capital.Loss"]], 2000))
-adult[["Capital.Gain"]] <- ordered(cut(adult[["Capital.Gain"]], 2000))
-
-## Show level attributes for binary and discrete variables.
+# Show level attributes for binary and discrete variables.
 
 levels(adult[["Type"]])
 levels(adult[["Workclass"]])
@@ -189,43 +184,6 @@ levels(adult[["Sex"]])
 levels(adult[["Native.Country"]])
 levels(adult[["Income"]])
 
-## Replace levels with numbers.
-
-adult <- as.data.frame(data.matrix(adult))
-
-## Levels should start with 0 for discrete distributions except for the 
-## Dirac distribution.
-
-f <- c("Type", "Workclass", "Education", "Marital.Status", "Occupation", 
-  "Relationship", "Race", "Sex", "Native.Country", "Income")
-
-adult[, f] <- adult[, f] - 1
-
-## Split adult dataset into two train subsets for the two Incomes
-## and remove Type and Income columns.
-
-trainle50k <- subset(adult, subset = (Type == 1) & (Income == 0), 
-  select = c(-Type, -Income))
-traingt50k <- subset(adult, subset = (Type == 1) & (Income == 1), 
-  select = c(-Type, -Income))
-
-trainall <- subset(adult, subset = Type == 1, select = c(-Type, -Income))
-
-train <- as.factor(subset(adult, subset = Type == 1, select = c(Income))[, 1])
-
-## Extract test dataset form adult dataset and remove Type 
-## and Income columns.
-
-testle50k <- subset(adult, subset = (Type == 0) & (Income == 0), 
-  select = c(-Type, -Income))
-testgt50k <- subset(adult, subset = (Type == 0) & (Income == 1), 
-  select = c(-Type, -Income))
-
-testall <- subset(adult, subset = Type == 0, select = c(-Type, -Income))
-
-test <- as.factor(subset(adult, subset = Type == 0, select = c(Income))[, 1])
-
-save(trainall, file = "trainall.rda")
-save(testall, file = "testall.rda")
+save(adult, file = "adult_complete_cases.rda")
 }
 \keyword{datasets}

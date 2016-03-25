@@ -10,27 +10,18 @@ options(prompt = "> ", continue = "+ ", width = 70,
   useFancyQuotes = FALSE, digits = 3)
 
 ###################
-## Preliminaries ##
-###################
-
-## load packages.
-
-library("flexmix")
-library("rebmix")
-
-###################
 ## Truck dataset ##
 ###################
 
-## Load truck dataset.
-
-data("truck")
-
-set.seed(8)
+data("truck", package = "rebmix")
 
 ########## FlexMix ##########
 
-## Weibull-normal mixture model
+library("flexmix")
+
+set.seed(8)
+
+# Weibull-normal mixture model
 
 WNmodel <- function (formula = .~.) {    
   retval <- new("FLXMC", weighted = TRUE,
@@ -103,7 +94,7 @@ WNmodel <- function (formula = .~.) {
   retval
 } ## WNmodel
 
-## Estimate number of components, component weights and component parameters by FlexMix.
+# Estimate number of components, component weights and component parameters by FlexMix.
 
 timeFlexMix <- system.time(truckestFlexMix <- flexmix(as.matrix(truck) ~ 1, k = 5, model = WNmodel()))
 
@@ -114,22 +105,29 @@ summary(truckestFlexMix)
 
 ########## REBMIX ##########
 
-## Estimate number of components, component weights and component parameters.
+library("rebmix")
+
+# Estimate number of components, component weights and component parameters.
 
 n = nrow(truck)
 
-Sturges <- as.integer(1 + log2(n)) ## Minimum v follows the Sturges rule.
-Log10 <- as.integer(10 * log10(n)) ## Maximum v follows the Log10 rule.
+Sturges <- as.integer(1 + log2(n)) # Minimum v follows the Sturges rule.
+Log10 <- as.integer(10 * log10(n)) # Maximum v follows the Log10 rule.
 
 timerebmix <- system.time(truckestrebmix <- REBMIX(Dataset = 
   list(truck = truck),
   Preprocessing = "histogram", cmax = 10, Criterion = "AIC",
-  Variables = c("continuous", "continuous"), pdf = c("Weibull", "normal"),
+  pdf = c("Weibull", "normal"),
   K = kseq(Sturges, Log10, 0.07)))
 
-print(truckestrebmix)
+truckestrebmix
 AIC(truckestrebmix)
 timerebmix 
 
 plot(truckestrebmix, nrow = 2, ncol = 3, 
   what = c("density", "marginal", "IC", "logL"), npts = 1000)
+
+summary(truckestrebmix)
+
+detach("package:rebmix")
+detach("package:flexmix")

@@ -19,12 +19,12 @@ pemix <- function(x = NULL, lower.tail = TRUE, log.p = FALSE, ...)
 
   if (lower.tail == TRUE) {
     for (i in 1:n) {
-      y[i] <- sum(apply(x <= x[i, ], 1, all))
+      y[i] <- sum(apply(x <= x[i,], 1, all))
     }
   }
   else {
     for (i in 1:n) {
-      y[i] <- sum(apply(x > x[i, ], 1, all))
+      y[i] <- sum(apply(x > x[i,], 1, all))
     }
   }
 
@@ -36,7 +36,7 @@ pemix <- function(x = NULL, lower.tail = TRUE, log.p = FALSE, ...)
   
   output <- as.data.frame(cbind(x, y), stringsAsFactors = FALSE)
 
-  colnames(output) <- c(paste("y", if (d > 1) 1:d else "", sep = ""), "F")  
+  colnames(output) <- c(paste("x", if (d > 1) 1:d else "", sep = ""), "F")  
 
   options(digits = digits)
 

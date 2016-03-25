@@ -10,7 +10,7 @@ and empirical densities \eqn{f_{1}, \ldots, f_{v}} for the histogram preprocessi
 \eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}} and \eqn{\bar{\bm{y}} = (\bar{y}_{1}, \ldots, \bar{y}_{d})^{\top}}.
 }
 \usage{
-demix(x = NULL, Preprocessing = NULL, Variables = NULL, pdf = NULL,
+demix(x = NULL, Preprocessing = NULL, pdf = NULL,
       k = NULL, xmin = NULL, xmax = NULL, ...)
 }
 \arguments{
@@ -19,9 +19,6 @@ a vector, a matrix or a data frame containing continuous or discrete vector obse
 }
 \item{Preprocessing}{
 a preprocessing type. One of \code{"histogram"}, \code{"Parzen window"} or \code{"k-nearest neighbour"}.
-}
-\item{Variables}{
-a character vector of length \eqn{\leq d} containing types of variables. One of \code{"continuous"} or \code{"discrete"}.
 }
 \item{pdf}{
 a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
@@ -40,26 +37,26 @@ a vector of length \eqn{\leq d} containing maximum observations. The default val
 currently not used.
 }
 }
+\author{Marko Nagode}
 \examples{
-## Generate simulated dataset.
+# Generate simulated dataset.
 
-Theta <- rbind(pdf1 = rep("normal", 2),
+Theta <- list(pdf1 = rep("normal", 2),
   theta1.1 = c(10, 20),
-  theta2.1 = c(3.0, 2.0),
-  pdf1 = rep("normal", 2),
-  theta1.1 = c(3, 2),
-  theta2.1 = c(20, 10))
+  theta2.1 = c(3, 2),
+  pdf2 = rep("normal", 2),
+  theta1.2 = c(3, 2),
+  theta2.2 = c(20, 10))
 
-simulated <- RNGMIX(Dataset = "simulated",
+simulated <- RNGMIX(Dataset.name = "simulated",
   rseed = -1,
   n = c(15, 15),
   Theta = Theta)
 
-## Preprocess simulated dataset.
+# Preprocess simulated dataset.
 
-y1y2f <- demix(x = simulated$Dataset[[1]],
+y1y2f <- demix(x = simulated@Dataset[[1]],
   Preprocessing = "histogram",
-  Variables = c("continuous", "continuous"),
   pdf = c("normal", "normal"),
   k = 6)
   
@@ -69,6 +66,8 @@ y1y2f
 M. Nagode and M. Fajdiga. The rebmix algorithm for the univariate finite mixture estimation.
 Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{http://dx.doi.org/10.1080/03610920903480890}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}. 
+Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}.\cr\cr
+M. Nagode. Finite mixture modeling via REBMIX.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{http://www.academicpub.org/jao/paperInfo.aspx?PaperID=16625}.
 }
 \keyword{distributions}

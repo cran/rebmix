@@ -43,6 +43,10 @@
 #define LogPi (FLOAT)1.1447298858494001741434273513531
 #endif
 
+#ifndef LogSqrt2Pi
+#define LogSqrt2Pi (FLOAT)0.91893853320467274178032973640562
+#endif 
+
 #ifndef Euler       
 #define Euler (FLOAT)0.5772156649015328606065120900824
 #endif
@@ -110,14 +114,29 @@ typedef enum {
     pfGamma,     // Gamma distribution.
     pfBinomial,  // Binomial distribution.
     pfPoisson,   // Poisson distribution.
-    pfDirac,     // Dirac distribution.
+    pfDirac      // Dirac distribution.
 } ParametricFamilyType_e;
 
-typedef struct componentdistributiontype {
+typedef struct componetdistributiontype {
     ParametricFamilyType_e *pdf;    // Parametric family types.
     FLOAT                  *Theta1; // Component parameters.
     FLOAT                  *Theta2; // Component parameters.
 } ComponentDistributionType;
+
+class Base {
+public:
+    // Members.
+    int Trigger_;       // Trigger.
+    int length_pdf_;    // Length of pdf_. 
+    int length_Theta_;  // Length of Theta_.
+    int *length_theta_; // Length of Theta_[i].
+    // Constructor.
+    Base();
+    // Destructor.
+    ~Base();
+}; // Base
+
+FLOAT Ran1(int *IDum);
 
 // Inserts y into ascending list Y of length n. Set n = 0 initially.
 
@@ -172,5 +191,18 @@ int GammaInv(FLOAT Fy, FLOAT Theta, FLOAT Beta, FLOAT *y);
 
 int ErrorF(FLOAT y,     // Variable y.
            FLOAT *ErF); // Error function.
+
+// Returns the determinant and the inverse matrix of A. See http://www.nr.com/
+
+int LUinvdet(int   n,      // Size of square matrix.
+             FLOAT *A,     // Pointer to the square matrix A.
+             FLOAT *Ainv,  // Pointer to the inverse matrix of A.
+             FLOAT *Adet); // Pointer to the determinant of A.
+
+// Returns the Cholesky decomposition of matrix A. See http://www.nr.com/ 
+
+int Choldc(int   n,   // Size of square matrix.
+           FLOAT *A,  // Pointer to the square matrix A.
+           FLOAT *L); // Lower triangular factors.
 
 #endif
