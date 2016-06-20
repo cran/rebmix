@@ -51,9 +51,9 @@ proportion of all test observations that are classified correctly. \eqn{\mathrm{
 \item{\code{Error}:}{
 proportion of all test observations that are classified wrongly. \eqn{\mathrm{Error} = 1 - \mathrm{Accuracy}}.
 }
-\item{\code{Precission}:}{
+\item{\code{Precision}:}{
 a vector containing proportions of predictive observations in class \eqn{g} that are
-classified correctly into class \eqn{g}. \eqn{\mathrm{Precission}(g) = \frac{x_{gg}}{\sum_{q = 1}^{s} x_{qg}}}.
+classified correctly into class \eqn{g}. \eqn{\mathrm{Precision}(g) = \frac{x_{gg}}{\sum_{q = 1}^{s} x_{qg}}}.
 }
 \item{\code{Sensitivity}:}{
 a vector containing proportions of test observations in class \eqn{g} that are classified
@@ -62,6 +62,9 @@ correctly into class \eqn{g}. \eqn{\mathrm{Sensitivity}(g) = \frac{x_{gg}}{\sum_
 \item{\code{Specificity}:}{
 a vector containing proportions of test observations that are not in class \eqn{g} and
 are classified into the non \eqn{g} class. \eqn{\mathrm{Specificity}(g) = \frac{n_{\mathrm{test}} - \sum_{q = 1}^{s} x_{qg}}{n_{\mathrm{test}} - \sum_{q = 1}^{s} x_{gq}}}.
+}
+\item{\code{Chunks}:}{
+a vector containing selected chunks.
 }
 }
 }

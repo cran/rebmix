@@ -110,9 +110,8 @@ function(model, ...)
       c = as.integer(c),
       N = as.integer(model@n),
       length.pdf = as.integer(d),
-      length.Theta = as.integer(3),
-      length.theta = as.integer(c(d, length(theta2) / c, -length(theta2) / c)),
-      pdf = as.character(pdf),
+      length.Theta = as.integer(4),
+      length.theta = as.integer(c(d, d * d, -d * d, -1)),
       Theta = as.double(c(theta1, theta2)),
       n = integer(1),
       Y = double(sum(model@n) * d),
@@ -160,7 +159,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("RNGMIX Version 2.8.1")
+  message("RNGMIX Version 2.8.2")
   
   flush.console()
   

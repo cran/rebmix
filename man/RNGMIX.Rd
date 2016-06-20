@@ -10,7 +10,7 @@
 Random Univariate or Multivariate Finite Mixture Generation
 }
 \description{
-Returns as default the RNGMIX univariate or multivariate random datasets for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson or Dirac component densities.
+Returns as default the RNGMIX univariate or multivariate random datasets for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson, Dirac or uniform component densities.
 If \code{model} equals \code{"RNGMVNORM"} multivariate random datasets for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices are returned.
 }
 \usage{
@@ -33,7 +33,7 @@ For each next file the random seed is decremented \eqn{r_{\mathrm{seed}} = r_{\m
 a vector containing numbers of observations in classes \eqn{n_{l}}, where number of observations \eqn{n = \sum_{l = 1}^{c} n_{l}}.
 }
 \item{Theta}{
-a list containing \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
+a list containing \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"} or \code{"uniform"}.
 Component parameters \code{theta1.i} follow the parametric family types. One of \eqn{\mu_{il}} for normal and lognormal distributions and \eqn{\theta_{il}} for Weibull, gamma, binomial, Poisson and Dirac distributions.
 Component parameters \code{theta2.i} follow \code{theta1.i}. One of \eqn{\sigma_{il}} for normal and lognormal distributions, \eqn{\beta_{il}} for Weibull and gamma distributions and \eqn{p_{il}} for binomial distribution.
 }
@@ -60,6 +60,8 @@ W. H. Press, S. A. Teukolsky, W. T. Vetterling, and B. P. Flannery. Numerical Re
 of Scientific Computing. Cambridge University Press, Cambridge, 1992.
 }
 \examples{
+devAskNewPage(ask = TRUE)
+
 # Generate and print multivariate normal datasets with diagonal 
 # variance-covariance matrices.
 
@@ -88,6 +90,8 @@ simulated <- RNGMIX(Dataset.name = paste("simulated_", 1:25, sep = ""),
   
 simulated
 
+plot(simulated, pos = 22, nrow = 2, ncol = 3)
+
 # Generate and print multivariate normal datasets with unrestricted 
 # variance-covariance matrices.
 
@@ -111,7 +115,9 @@ simulated <- RNGMIX(model = "RNGMVNORM",
   
 simulated
 
-# Generate and print multivariate mixed continuous-discrete dataset.
+plot(simulated, pos = 2, nrow = 3, ncol = 1)
+
+# Generate and print multivariate mixed continuous-discrete datasets.
 
 n <- c(400, 100, 500)
 
@@ -130,7 +136,9 @@ simulated <- RNGMIX(Dataset.name = paste("simulated_", 1:5, sep = ""),
   n = n,
   Theta = Theta)
   
-simulated  
+simulated
+
+plot(simulated, pos = 4, nrow = 2, ncol = 3) 
 
 # Generate and print univariate mixed Weibull dataset.
 
@@ -158,6 +166,8 @@ simulated <- RNGMIX(Dataset.name = "simulated",
   Theta = Theta)
   
 simulated
+
+plot(simulated, pos = 1)
 }
 \keyword{random number generation}
 

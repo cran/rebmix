@@ -14,13 +14,13 @@ a list of data frames of size \eqn{n \times d} containing \emph{d}-dimensional d
 represents one random variable. Number of observations \eqn{n} equals the number of rows in the datasets.
 }
 \item{\code{Preprocessing}:}{
-a character vector, giving the preprocessing types. One of \code{"histogram"}, \code{"Parzen window"} or \code{"k-nearest neighbour"}.
+a character vector giving the preprocessing types. One of \code{"histogram"}, \code{"Parzen window"} or \code{"k-nearest neighbour"}.
 }
 \item{\code{cmax}:}{
 maximum number of components \eqn{c_{\mathrm{max}} > 0}. The default value is \code{15}.
 }
 \item{\code{Criterion}:}{
-a character vector giving the infromation criterion types. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"}, 
+a character vector giving the information criterion types. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"}, 
 Bayesian \code{"BIC"}, consistent Akaike \code{"CAIC"}, Hannan-Quinn \code{"HQC"}, minimum description length \code{"MDL2"} or \code{"MDL5"}, 
 approximate weight of evidence \code{"AWE"}, classification likelihood \code{"CLC"}, 
 integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition coefficient \code{"PC"}, 
@@ -66,13 +66,13 @@ The rigid restraints are obsolete and applicable for well separated components o
 a list of vectors of length \eqn{c} containing component weights \eqn{w_{l}} summing to 1.
 }
 \item{\code{Theta}:}{
-a list of lists each containing  \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
+a list of lists each containing \eqn{c} parametric family types \code{pdfi}. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"} or \code{"Dirac"}.
 Component parameters \code{theta1.i} follow the parametric family types. One of \eqn{\mu_{il}} for normal and lognormal distributions and \eqn{\theta_{il}} for Weibull, gamma, binomial, Poisson and Dirac distributions.
 Component parameters \code{theta2.i} follow \code{theta1.i}. One of \eqn{\sigma_{il}} for normal and lognormal distributions, \eqn{\beta_{il}} for Weibull and gamma distributions and \eqn{p_{il}} for binomial distribution.
 }
 \item{\code{summary}:}{
 a data frame with additional information about dataset, preprocessing, \eqn{c_{\mathrm{max}}}, information criterion type, 
-\eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, optimal \eqn{h_{i}},
+\eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, \eqn{y_{i\mathrm{min}}}, \eqn{y_{i\mathrm{max}}}, optimal \eqn{h_{i}},
 information criterion \eqn{\mathrm{IC}}, log likelihood \eqn{\mathrm{log}\, L} and degrees of freedom \eqn{M}.
 }
 \item{\code{pos}:}{

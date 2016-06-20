@@ -1,5 +1,5 @@
 Package: rebmix
-Version: 2.8.1
+Version: 2.8.2
 Authors@R: c(person("Marko", "Nagode", role = c("aut", "cre"),
                      email = "marko.nagode@fs.uni-lj.si"))
 Title: Finite Mixture Modeling, Clustering & Classification
@@ -10,7 +10,7 @@ License: GPL (>= 2)
 Author: Marko Nagode [aut, cre]
 Maintainer: Marko Nagode <marko.nagode@fs.uni-lj.si>
 NeedsCompilation: yes
-Packaged: 2016-03-27 07:49:18 UTC; NagodeMarko
+Packaged: 2016-06-19 17:05:11 UTC; NagodeMarko
 Depends: R (>= 2.10)
 Repository: CRAN
-Date/Publication: 2016-03-27 17:39:42
+Date/Publication: 2016-06-20 07:55:12

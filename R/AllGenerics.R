@@ -1,4 +1,4 @@
-setGeneric("RNGMIX",
+setGeneric("RNGMIX", 
   function(model = "RNGMIX",
     Dataset.name = character(),
     rseed = -1,
@@ -6,7 +6,7 @@ setGeneric("RNGMIX",
     Theta = list(), ...)
   standardGeneric("RNGMIX"))
 
-setGeneric("REBMIX",
+setGeneric("REBMIX", 
   function(model = "REBMIX",
     Dataset = list(),
     Preprocessing = character(),
@@ -23,12 +23,12 @@ setGeneric("REBMIX",
     Restraints = "loose", ...)
   standardGeneric("REBMIX"))
   
-setGeneric("coef",
-  function(object = NULL,
+setGeneric("coef", 
+  function(x = NULL,
     pos = 1, ...)
   standardGeneric("coef"))
   
-setGeneric(".IC", function(x = NULL, Criterion = "AIC", pos = 1, ...) standardGeneric(".IC"))
+setGeneric(".IC", function(x = NULL, Criterion = "AIC", pos = 1, ...) standardGeneric(".IC")) 
   
 setGeneric("logL", function(x = NULL, pos = 1, ...) standardGeneric("logL")) 
 setGeneric("AIC", function(x = NULL, pos = 1, ...) standardGeneric("AIC"))     
@@ -48,7 +48,48 @@ setGeneric("PRD", function(x = NULL, pos = 1, ...) standardGeneric("PRD"))
 setGeneric("SSE", function(x = NULL, pos = 1, ...) standardGeneric("SSE"))   
 setGeneric("PC", function(x = NULL, pos = 1, ...) standardGeneric("PC"))
 
-setGeneric("boot",
+setGeneric("demix", 
+  function(x = NULL, 
+    pos = 1, 
+    variables = expression(1:d), ...)
+  standardGeneric("demix"))
+
+setGeneric("pemix", 
+  function(x = NULL,
+    pos = 1, 
+    variables = expression(1:d),
+    lower.tail = TRUE, 
+    log.p = FALSE, ...) 
+  standardGeneric("pemix"))
+  
+setGeneric("dfmix",  
+  function(x = NULL,
+    Dataset = data.frame(),
+    pos = 1, 
+    variables = expression(1:d), ...)
+  standardGeneric("dfmix"))
+  
+setGeneric("pfmix",  
+  function(x = NULL,
+    Dataset = data.frame(),  
+    pos = 1, 
+    variables = expression(1:d),
+    lower.tail = TRUE, 
+    log.p = FALSE, ...) 
+  standardGeneric("pfmix"))
+  
+setGeneric("split", 
+  function(p = NULL,
+    Dataset = data.frame(),  
+    class = numeric(), ...) 
+  standardGeneric("split"))
+  
+setGeneric("chunk", 
+  function(x = NULL,
+    variables = expression(1:d)) 
+  standardGeneric("chunk"))    
+
+setGeneric("boot", 
   function(x = NULL,
     pos = 1,
     Bootstrap = "parametric",
@@ -58,17 +99,25 @@ setGeneric("boot",
     prob = numeric(), ...)
   standardGeneric("boot"))
   
-setGeneric("RCLRMIX",
+setGeneric("RCLRMIX", 
   function(model = "RCLRMIX",
     x = NULL,
     pos = 1, 
     Zt = factor(), ...)
   standardGeneric("RCLRMIX"))  
 
-setGeneric("RCLSMIX",
+setGeneric("RCLSMIX", 
   function(model = "RCLSMIX",
     x = list(),
     Dataset = data.frame(), 
     Zt = factor(), ...)
   standardGeneric("RCLSMIX"))
+  
+setGeneric("BFSMIX",
+  function(model = "RCLSMIX",
+    x = list(),
+    Dataset = data.frame(),
+    Zt = factor(), ...)
+  standardGeneric("BFSMIX"))
+
 

@@ -11,15 +11,15 @@ Prints Univariate or Multivariate REBMIX Coefficients
 Returns the \code{w} and \code{Theta} output at \code{pos}.
 }
 \usage{
-\S4method{coef}{REBMIX}(object = NULL, pos = 1, ...)
+\S4method{coef}{REBMIX}(x = NULL, pos = 1, ...)
 ## ... and for other signatures
 }
 \arguments{
-\item{object}{
+\item{x}{
 see Methods section below.
 }
 \item{pos}{
-a desired row number in \code{summary} to be printed. The default value is \code{1}.
+a desired row number in \code{x@summary} to be printed. The default value is \code{1}.
 }
 \item{\dots}{
 currently not used..
@@ -27,8 +27,8 @@ currently not used..
 }
 \section{Methods}{
 \describe{
-\item{\code{signature(object = "REBMIX")}}{an object of class \code{REBMIX}.}
-\item{\code{signature(object = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
+\item{\code{signature(x = "REBMIX")}}{an object of class \code{REBMIX}.}
+\item{\code{signature(x = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
 }
 }
 \author{Marko Nagode}
@@ -61,5 +61,5 @@ coef(simulatedest, pos = 3)
 
 plot(simulatedest)
 }
-\keyword{coef}
+\keyword{parameter estimation}
 

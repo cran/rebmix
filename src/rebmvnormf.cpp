@@ -896,11 +896,11 @@ int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointe
         EnhanTheta->Theta_[1][o] = Sum / nl;
 
         if (EnhanTheta->Theta_[1][o] <= FLOAT_MIN) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         if (EnhanTheta->Theta_[1][o] < RigidTheta->Theta_[1][o]) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         for (ii = 0; ii < i; ii++) {
@@ -969,11 +969,11 @@ int Rebmvnorm::EnhancedEstimationPW(FLOAT                **Y,         // Pointer
         EnhanTheta->Theta_[1][o] = Sum / nl;
 
         if (EnhanTheta->Theta_[1][o] <= FLOAT_MIN) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         if (EnhanTheta->Theta_[1][o] < RigidTheta->Theta_[1][o]) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         for (ii = 0; ii < i; ii++) {
@@ -1043,11 +1043,11 @@ int Rebmvnorm::EnhancedEstimationH(int                  k,           // Total nu
         EnhanTheta->Theta_[1][o] = Sum / nl;
 
         if (EnhanTheta->Theta_[1][o] <= FLOAT_MIN) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         if (EnhanTheta->Theta_[1][o] < RigidTheta->Theta_[1][o]) {
-            Error = 1; if (Error) goto E0;
+            Error = 1; goto E0;
         }
 
         for (ii = 0; ii < i; ii++) {
@@ -1354,9 +1354,9 @@ int Rebmvnorm::ComponentDist(FLOAT                *Y,        // Pointer to the i
     return Error;
 } // ComponentDist
 
-int Rebmvnorm::DegreesOffreedom(int                  c,          // Number of components.
-                                CompnentDistribution **MixTheta, // Mixture parameters.
-                                int                  *M)         // Degrees of freedom.
+int Rebmvnorm::DegreesOffreedom(int c,                  // Number of components.
+                                CompnentDistribution**, // Mixture parameters.
+                                int *M)                 // Degrees of freedom.
 {
     int i;
     int Error = 0;

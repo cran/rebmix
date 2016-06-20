@@ -1,7 +1,8 @@
 setMethod("plot", 
-          signature(x = "RCLSMIX", y = "missing"),
+          signature(x = "RNGMIX", y = "missing"),
 function(x,
   y,
+  pos = 1,  
   nrow = 1,
   ncol = 1,
   cex = 0.8,
@@ -14,8 +15,18 @@ function(x,
   plot.pch = 19, ...)
 {
   if (missing(x)) {
-    stop(sQuote("x"), " object of class RCLSMIX is requested!", call. = FALSE)
+    stop(sQuote("x"), " object of class RNGMIX is requested!", call. = FALSE)
   }
+  
+  if (!is.wholenumber(pos)) {
+    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
+  }
+  
+  length(pos) <- 1
+
+  if ((pos < 1) || (pos > length(x@Dataset))) {
+    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", length(x@Dataset), "!", call. = FALSE)
+  }  
 
   if (!is.wholenumber(nrow)) {
     stop(sQuote("nrow"), " integer is requested!", call. = FALSE)
@@ -33,7 +44,7 @@ function(x,
     stop(sQuote("ncol"), " must be greater than 0!", call. = FALSE)
   }
 
-  d <- ncol(x@Dataset)
+  d <- ncol(x@Dataset[[pos]])
 
   nrow <- max(1, nrow)
   ncol <- max(1, ncol)
@@ -55,19 +66,17 @@ function(x,
 
   par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
 
-  ey <- as.matrix(x@Dataset); ep <- as.numeric(x@Zp) - 1
-  
-  error <- is.error(x@Zt, x@Zp)
+  ey <- as.matrix(x@Dataset[[pos]]); et <- as.numeric(x@Zt) - 1
   
   ramp <- colorRamp(colors = c("magenta", "blue", "cyan", "green", "yellow", "red"),
     space = "rgb",
     interpolate = "linear")
     
-  s <- length(levels(x@Zp))
+  s <- length(levels(x@Zt))
   
-  zlim <- c(0, max(1, s - 1)); zmax <- zlim[2]
+  zlim <- c(0, s - 1); zmax <- zlim[2]
       
-  plot.col <- rgb(ramp(ep / zmax), maxColorValue = 255);
+  plot.col <- rgb(ramp(et / zmax), maxColorValue = 255);
   
   legend.col <- rgb(ramp(zlim[1]:zlim[2] / zmax), maxColorValue = 255)
   
@@ -78,8 +87,8 @@ function(x,
 
     for (i in 1:(d - 1)) {
       for (j in (i + 1):d) {
-        plot(x = ey[which(error != 1), i],
-          y = ey[which(error != 1), j],
+        plot(x = ey[, i],
+          y = ey[, j],
           type = "p",
           main = "",
           sub = "",
@@ -87,23 +96,11 @@ function(x,
           ylab = "",
           xlim = range(ey[, i]),
           ylim = range(ey[, j]),
-          col = plot.col[which(error != 1)],
+          col = plot.col,
           axes = FALSE,
           lwd = 1,
           cex = plot.cex,
           pch = plot.pch)
-          
-        points(x = ey[which(error == 1), i],
-          y = ey[which(error == 1), j],
-          type = "p",
-          main = "",
-          sub = "",
-          xlab = "",
-          ylab = "",
-          col = "black",
-          lwd = 1,
-          cex = plot.cex * 2,
-          pch = 1)          
 
         box(col = fg, lty = "solid", lwd = 1)
 
@@ -146,7 +143,7 @@ function(x,
           
           plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
           
-         .legendA(s = s, col = legend.col, pch = legend.pch, error = sum(error) != 0)
+          .legendA(s = s, col = legend.col, pch = legend.pch, error = 0)
   
           par(mfrow = c(nrow, ncol),
             cex = cex,
@@ -169,32 +166,20 @@ function(x,
     }
   }
   else {
-    plot(x = ey[which(error != 1), 1],
-      y = ep[which(error != 1)] + 1,
+    plot(x = ey[, 1],
+      y = et + 1,
       type = "p",
       main = "",
       sub = "",
       xlab = "",
       ylab = "",
       xlim = range(ey[, 1]),
-      ylim = range(ep + 1),      
-      col = plot.col[which(error != 1)],
+      ylim = range(et + 1),      
+      col = plot.col,
       axes = FALSE,
       lwd = 1,
       cex = plot.cex,
       pch = plot.pch)
-          
-    points(x = ey[which(error == 1), 1],
-      y = ep[which(error == 1)] + 1,
-      type = "p",
-      main = "",
-      sub = "",
-      xlab = "",
-      ylab = "",
-      col = "black",
-      lwd = 1,
-      cex = plot.cex * 2,
-      pch = 1)       
 
     box(col = fg, lty = "solid", lwd = 1)
 
@@ -213,10 +198,10 @@ function(x,
       padj = 1.0)
 
     if (.Device == "tikz output") {
-      text <- paste("$y_{1}$", "$\\; - \\;$", "$Z_{p}(y_{1})$", sep = "")
+      text <- paste("$y_{1}$", "$\\; - \\;$", "$Z_{t}(y_{1})$", sep = "")
     }
     else {
-      text <- bquote(y[1] - Z[p](y[1]))
+      text <- bquote(y[1] - Z[t](y[1]))
     }
 
     mtext(text = text,
@@ -234,7 +219,7 @@ function(x,
           
     plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
           
-    .legendA(s = s, col = legend.col, pch = legend.pch, error = sum(error) != 0)
+    .legendA(s = s, col = legend.col, pch = legend.pch, error = 0)
       
     par(mfrow = c(nrow, ncol),
       cex = cex,
@@ -249,18 +234,19 @@ function(x,
       
     par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
     
-    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1        
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1    
   }
   
   rm(list = ls()[!(ls() %in% c("opar"))])
 
   invisible(opar)
-}) # plot         
+}) # plot
 
 setMethod("plot", 
-          signature(x = "RCLSMVNORM", y = "missing"),
+          signature(x = "RNGMVNORM", y = "missing"),
 function(x,
   y,
+  pos = 1,  
   nrow = 1,
   ncol = 1,
   cex = 0.8,
@@ -273,8 +259,18 @@ function(x,
   plot.pch = 19, ...)
 {
   if (missing(x)) {
-    stop(sQuote("x"), " object of class RCLSMVNORM is requested!", call. = FALSE)
+    stop(sQuote("x"), " object of class RNGMVNORM is requested!", call. = FALSE)
   }
+  
+  if (!is.wholenumber(pos)) {
+    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
+  }
+  
+  length(pos) <- 1
+
+  if ((pos < 1) || (pos > length(x@Dataset))) {
+    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", length(x@Dataset), "!", call. = FALSE)
+  }  
 
   if (!is.wholenumber(nrow)) {
     stop(sQuote("nrow"), " integer is requested!", call. = FALSE)
@@ -292,7 +288,7 @@ function(x,
     stop(sQuote("ncol"), " must be greater than 0!", call. = FALSE)
   }
 
-  d <- ncol(x@Dataset)
+  d <- ncol(x@Dataset[[pos]])
 
   nrow <- max(1, nrow)
   ncol <- max(1, ncol)
@@ -314,31 +310,29 @@ function(x,
 
   par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
 
-  ey <- as.matrix(x@Dataset); ep <- as.numeric(x@Zp) - 1
-  
-  error <- is.error(x@Zt, x@Zp)
+  ey <- as.matrix(x@Dataset[[pos]]); et <- as.numeric(x@Zt) - 1
   
   ramp <- colorRamp(colors = c("magenta", "blue", "cyan", "green", "yellow", "red"),
     space = "rgb",
     interpolate = "linear")
     
-  s <- length(levels(x@Zp))
+  s <- length(levels(x@Zt))
   
-  zlim <- c(0, max(1, s - 1)); zmax <- zlim[2]
+  zlim <- c(0, s - 1); zmax <- zlim[2]
       
-  plot.col <- rgb(ramp(ep / zmax), maxColorValue = 255);
+  plot.col <- rgb(ramp(et / zmax), maxColorValue = 255);
   
   legend.col <- rgb(ramp(zlim[1]:zlim[2] / zmax), maxColorValue = 255)
   
-  legend.pch <- rep(plot.pch, s)
+  legend.pch <- rep(plot.pch, s)  
   
   if (N > 0) {
     figno <- 0
 
     for (i in 1:(d - 1)) {
       for (j in (i + 1):d) {
-        plot(x = ey[which(error != 1), i],
-          y = ey[which(error != 1), j],
+        plot(x = ey[, i],
+          y = ey[, j],
           type = "p",
           main = "",
           sub = "",
@@ -346,23 +340,11 @@ function(x,
           ylab = "",
           xlim = range(ey[, i]),
           ylim = range(ey[, j]),
-          col = plot.col[which(error != 1)],
+          col = plot.col,
           axes = FALSE,
           lwd = 1,
           cex = plot.cex,
           pch = plot.pch)
-          
-        points(x = ey[which(error == 1), i],
-          y = ey[which(error == 1), j],
-          type = "p",
-          main = "",
-          sub = "",
-          xlab = "",
-          ylab = "",
-          col = "black",
-          lwd = 1,
-          cex = plot.cex * 2,
-          pch = 1)          
 
         box(col = fg, lty = "solid", lwd = 1)
 
@@ -405,7 +387,7 @@ function(x,
           
           plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
           
-          .legendA(s = s, col = legend.col, pch = legend.pch, error = sum(error) != 0)
+          .legendA(s = s, col = legend.col, pch = legend.pch, error = 0)
   
           par(mfrow = c(nrow, ncol),
             cex = cex,
@@ -423,37 +405,25 @@ function(x,
           figno <- 0
         }
         
-        opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1            
+        opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1        
       }
     }
   }
   else {
-    plot(x = ey[which(error != 1), 1],
-      y = ep[which(error != 1)] + 1,
+    plot(x = ey[, 1],
+      y = et + 1,
       type = "p",
       main = "",
       sub = "",
       xlab = "",
       ylab = "",
       xlim = range(ey[, 1]),
-      ylim = range(ep + 1),      
-      col = plot.col[which(error != 1)],
+      ylim = range(et + 1),      
+      col = plot.col,
       axes = FALSE,
       lwd = 1,
       cex = plot.cex,
       pch = plot.pch)
-          
-    points(x = ey[which(error == 1), 1],
-      y = ep[which(error == 1)] + 1,
-      type = "p",
-      main = "",
-      sub = "",
-      xlab = "",
-      ylab = "",
-      col = "black",
-      lwd = 1,
-      cex = plot.cex * 2,
-      pch = 1)       
 
     box(col = fg, lty = "solid", lwd = 1)
 
@@ -472,10 +442,10 @@ function(x,
       padj = 1.0)
 
     if (.Device == "tikz output") {
-      text <- paste("$y_{1}$", "$\\; - \\;$", "$Z_{p}(y_{1})$", sep = "")
+      text <- paste("$y_{1}$", "$\\; - \\;$", "$Z_{t}(y_{1})$", sep = "")
     }
     else {
-      text <- bquote(y[1] - Z[p](y[1]))
+      text <- bquote(y[1] - Z[t](y[1]))
     }
 
     mtext(text = text,
@@ -493,7 +463,7 @@ function(x,
           
     plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
           
-    .legendA(s = s, col = legend.col, pch = legend.pch, error = sum(error) != 0)
+    .legendA(s = s, col = legend.col, pch = legend.pch, error = 0)
       
     par(mfrow = c(nrow, ncol),
       cex = cex,
@@ -508,7 +478,7 @@ function(x,
       
     par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
     
-    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1    
   }
   
   rm(list = ls()[!(ls() %in% c("opar"))])

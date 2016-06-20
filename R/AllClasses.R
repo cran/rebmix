@@ -772,7 +772,11 @@ setClass("RCLRMIX",
 slots = c(x = "ANY",
   pos = "numeric",
   Zt = "factor",
-  Zp = "factor"),
+  Zp = "factor",
+  from = "numeric",
+  to = "numeric", 
+  EN = "numeric",
+  ED = "numeric"),
 prototype = list(pos = 1))
 
 setMethod("initialize", "RCLRMIX", 
@@ -833,9 +837,25 @@ function(object)
   
   cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")  
   
-  cat("Slot \"Zp\":", sep = "")
+  cat("Slot \"Zp\":", "\n", sep = "")
 
   print(object@Zp, quote = FALSE)
+  
+  cat("Slot \"from\":", "\n", sep = "")
+
+  print(object@from, quote = FALSE)
+  
+  cat("Slot \"to\":", "\n", sep = "")
+
+  print(object@to, quote = FALSE)
+  
+  cat("Slot \"EN\":", "\n", sep = "")
+
+  print(object@EN, quote = FALSE)
+  
+  cat("Slot \"ED\":", "\n", sep = "")
+
+  print(object@ED, quote = FALSE)  
 
   rm(list = ls())
 }) ## show
@@ -854,12 +874,39 @@ function(object)
   
   cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")  
   
-  cat("Slot \"Zp\":", sep = "")
+  cat("Slot \"Zp\":", "\n", sep = "")
 
   print(object@Zp, quote = FALSE)
+  
+  cat("Slot \"from\":", "\n", sep = "")
 
+  print(object@from, quote = FALSE)
+  
+  cat("Slot \"to\":", "\n", sep = "")
+
+  print(object@to, quote = FALSE)
+  
+  cat("Slot \"EN\":", "\n", sep = "")
+
+  print(object@EN, quote = FALSE)
+  
+  cat("Slot \"ED\":", "\n", sep = "")
+
+  print(object@ED, quote = FALSE)
+  
   rm(list = ls())
 }) ## show
+
+## Class RCLS.chunk
+
+setClass("RCLS.chunk",
+slots = c(s = "numeric",
+  levels = "character",
+  ntrain = "numeric",
+  train = "list",
+  ntest = "numeric",
+  test = "data.frame",
+  Zt = "factor"))
 
 ## Class RCLSMIX
 
@@ -876,9 +923,10 @@ slots = c(x = "list",
   CM = "table",
   Accuracy = "numeric",
   Error = "numeric",
-  Precission = "numeric",
+  Precision = "numeric",
   Sensitivity = "numeric",
-  Specificity = "numeric"),
+  Specificity = "numeric",
+  Chunks = "numeric"),
 prototype = list(CM = table(0)))
 
 setMethod("initialize", "RCLSMIX", 
@@ -973,7 +1021,7 @@ function(object)
   
   cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")  
   
-  cat("Slot \"CM\":", sep = "")
+  cat("Slot \"CM\":", "\n", sep = "")
 
   print(object@CM, quote = FALSE)
   
@@ -981,11 +1029,11 @@ function(object)
 
   print(object@Error, quote = FALSE)
   
-  cat("Slot \"Precission\":", "\n", sep = "")
+  cat("Slot \"Precision\":", "\n", sep = "")
   
-  names(object@Precission) <- NULL
+  names(object@Precision) <- NULL
 
-  print(object@Precission, quote = FALSE) 
+  print(object@Precision, quote = FALSE) 
   
   cat("Slot \"Sensitivity\":", "\n", sep = "")
   
@@ -997,7 +1045,13 @@ function(object)
   
   names(object@Specificity) <- NULL
 
-  print(object@Specificity, quote = FALSE)      
+  print(object@Specificity, quote = FALSE)
+  
+  cat("Slot \"Chunks\":", "\n", sep = "")  
+  
+  names(object@Chunks) <- NULL
+
+  print(object@Chunks, quote = FALSE)          
 
   rm(list = ls())
 }) ## show
@@ -1016,7 +1070,7 @@ function(object)
   
   cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")  
   
-  cat("Slot \"CM\":", sep = "")
+  cat("Slot \"CM\":", "\n", sep = "")
 
   print(object@CM, quote = FALSE)
   
@@ -1024,11 +1078,11 @@ function(object)
 
   print(object@Error, quote = FALSE)
   
-  cat("Slot \"Precission\":", "\n", sep = "")
+  cat("Slot \"Precision\":", "\n", sep = "")
   
-  names(object@Precission) <- NULL
+  names(object@Precision) <- NULL
 
-  print(object@Precission, quote = FALSE) 
+  print(object@Precision, quote = FALSE) 
   
   cat("Slot \"Sensitivity\":", "\n", sep = "")
   
@@ -1040,7 +1094,13 @@ function(object)
   
   names(object@Specificity) <- NULL
 
-  print(object@Specificity, quote = FALSE)      
+  print(object@Specificity, quote = FALSE)
+  
+  cat("Slot \"Chunks\":", "\n", sep = "")  
+  
+  names(object@Chunks) <- NULL
+
+  print(object@Chunks, quote = FALSE)              
 
   rm(list = ls())
 }) ## show

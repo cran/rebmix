@@ -89,7 +89,13 @@ gamma3est <- REBMIX(Dataset = gamma3@Dataset,
 
 
 ###################################################
-### code chunk number 5: rebmix-code
+### code chunk number 5: gamma2-fig
+###################################################
+plot(gamma2est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
+
+
+###################################################
+### code chunk number 6: rebmix-code
 ###################################################
 summary(gamma2est)
 
@@ -97,7 +103,7 @@ coef(gamma3est)
 
 
 ###################################################
-### code chunk number 6: rebmix-code
+### code chunk number 7: rebmix-code
 ###################################################
 ## Bootstrap finite mixture.
 gamma3boot <- boot(x = gamma3est, pos = 1, Bootstrap = "p", B = 10)
@@ -105,12 +111,6 @@ gamma3boot <- boot(x = gamma3est, pos = 1, Bootstrap = "p", B = 10)
 gamma3boot
 
 summary(gamma3boot)
-
-
-###################################################
-### code chunk number 7: gamma2-fig
-###################################################
-plot(gamma2est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
 
 
 ###################################################
@@ -151,7 +151,21 @@ poissonest <- REBMIX(Dataset = poisson@Dataset,
 
 
 ###################################################
-### code chunk number 10: rebmix-code
+### code chunk number 10: poisson-fig
+###################################################
+plot(poissonest, pos = 7, what = c("dens", "marg", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
+
+
+###################################################
+### code chunk number 11: poisson-clu-fig
+###################################################
+poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = poisson@Zt)
+
+plot(poissonclu)
+
+
+###################################################
+### code chunk number 12: rebmix-code
 ###################################################
 ## Visualize results.
 
@@ -161,24 +175,14 @@ coef(poissonest, pos = 9)
 
 
 ###################################################
-### code chunk number 11: poisson-fig
-###################################################
-plot(poissonest, pos = 7, what = c("dens", "marg", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
-
-
-###################################################
-### code chunk number 12: poisson-clu-fig
-###################################################
-poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = poisson@Zt)
-
-plot(poissonclu)
-
-
-###################################################
 ### code chunk number 13: rebmix-code
 ###################################################
 data("wreath", package = "mclust")
 
+
+###################################################
+### code chunk number 14: rebmix-code
+###################################################
 ## Estimate number of components, component weights and component parameters.
 
 n <- nrow(wreath)
@@ -196,7 +200,7 @@ wreathest <- REBMIX(model = "REBMVNORM",
 
 
 ###################################################
-### code chunk number 14: rebmix-code
+### code chunk number 15: rebmix-code
 ###################################################
 summary(wreathest)
 
@@ -204,24 +208,34 @@ coef(wreathest)
 
 
 ###################################################
-### code chunk number 15: wreath-fig
+### code chunk number 16: wreath-fig
 ###################################################
 plot(wreathest)
 
 
 ###################################################
-### code chunk number 16: wreath-clu-fig
+### code chunk number 17: wreath-clu-fig
 ###################################################
 wreathclu <- RCLRMIX(model = "RCLRMVNORM", x = wreathest)
 
-plot(wreathclu)
+plot(wreathclu, s = 14)
 
 
 ###################################################
-### code chunk number 17: rebmix-code
+### code chunk number 18: rebmix-code
+###################################################
+summary(wreathclu)
+
+
+###################################################
+### code chunk number 19: rebmix-code
 ###################################################
 data("Baudry_etal_2010_JCGS_examples", package = "mclust")
 
+
+###################################################
+### code chunk number 20: rebmix-code
+###################################################
 ## Estimate number of components, component weights and component parameters.
 
 n <- nrow(ex4.1)
@@ -239,19 +253,19 @@ ex4.1est <- REBMIX(model = "REBMVNORM",
 
 
 ###################################################
-### code chunk number 18: rebmix-code
+### code chunk number 21: rebmix-code
 ###################################################
 summary(ex4.1est)
 
 
 ###################################################
-### code chunk number 19: ex4_1-fig
+### code chunk number 22: ex4_1-fig
 ###################################################
 plot(ex4.1est, pos = 1, what = c("dens"), nrow = 1, ncol = 1)
 
 
 ###################################################
-### code chunk number 20: ex4_1-clu-fig
+### code chunk number 23: ex4_1-clu-fig
 ###################################################
 ex4.1clu <- RCLRMIX(model = "RCLRMVNORM", x = ex4.1est)
 
@@ -259,7 +273,7 @@ plot(ex4.1clu)
 
 
 ###################################################
-### code chunk number 21: rebmix-code
+### code chunk number 24: rebmix-code
 ###################################################
 data("iris")
 
@@ -267,63 +281,28 @@ data("iris")
 
 levels(iris[["Class"]])
 
-# Split iris dataset into three subsets for three Classes
-# and remove Class column.
-
-iris_set <- subset(iris, subset = Class == "iris-setosa", select = c(-Class))
-iris_ver <- subset(iris, subset = Class == "iris-versicolor", select = c(-Class))
-iris_vir <- subset(iris, subset = Class == "iris-virginica", select = c(-Class))
-
-
-###################################################
-### code chunk number 22: rebmix-code
-###################################################
-# Split datasets into train (75%) and test (25%) subsets.
+# Split dataset into train (75%) and test (25%) subsets.
 
 set.seed(5)
 
-Prob <- 0.75
-
-n_set <- nrow(iris_set); s_set <- sample.int(n = n_set, size = as.integer(n_set * Prob))
-
-iris_set_train <- iris_set[s_set,]; iris_set_test <- iris_set[-s_set,]
-
-n_ver <- nrow(iris_ver); s_ver <- sample.int(n = n_ver, size = as.integer(n_ver * Prob))
-
-iris_ver_train <- iris_ver[s_ver,]; iris_ver_test <- iris_ver[-s_ver,]
-
-n_vir <- nrow(iris_vir); s_vir <- sample.int(n = n_vir, size = as.integer(n_vir * Prob))
-
-iris_vir_train <- iris_vir[s_vir,]; iris_vir_test <- iris_vir[-s_vir,]
-
-iris_test = rbind(iris_set_test, iris_ver_test, iris_vir_test)
+Iris <- split(p = 0.75, Dataset = iris, class = 5)
 
 
 ###################################################
-### code chunk number 23: rebmix-code
-###################################################
-Zt <- factor(c(rep(0, nrow(iris_set_test)),
-  rep(1, nrow(iris_ver_test)),
-  rep(2, nrow(iris_vir_test))))
-
-
-###################################################
-### code chunk number 24: rebmix-code
+### code chunk number 25: rebmix-code
 ###################################################
 # Estimate number of components, component weights and component
 # parameters for train subsets.
 
-n <- range(nrow(iris_set_train), nrow(iris_ver_train), nrow(iris_vir_train))
+n <- range(Iris@ntrain)
 
-K <- c(as.integer(1 + log2(sum(n[1]))), # Minimum v follows Sturges rule.
+K <- c(as.integer(1 + log2(n[1])), # Minimum v follows Sturges rule.
   as.integer(10 * log10(n[2]))) # Maximum v follows log10 rule.
 
 K <- c(floor(K[1]^(1/4)), ceiling(K[2]^(1/4)))
 
 irisest <- REBMIX(model = "REBMVNORM",
-  Dataset = list(iris_set_train = iris_set_train,
-                 iris_ver_train = iris_ver_train,
-                 iris_vir_train = iris_vir_train),
+  Dataset = Iris@train,
   Preprocessing = "Parzen window",
   cmax = 10,
   Criterion = "ICL-BIC",
@@ -332,16 +311,26 @@ irisest <- REBMIX(model = "REBMVNORM",
 
 
 ###################################################
-### code chunk number 25: rebmix-code
+### code chunk number 26: rebmix-code
 ###################################################
+# Selected features.
+
 iriscla <- RCLSMIX(model = "RCLSMVNORM",
   x = list(irisest),
-  Dataset = iris_test,
-  Zt = Zt)
+  Dataset = Iris@test,
+  Zt = Iris@Zt)
 
 
 ###################################################
-### code chunk number 26: rebmix-code
+### code chunk number 27: iris-cla-fig
+###################################################
+# Plot selected features.
+
+plot(iriscla, nrow = 3, ncol = 2)
+
+
+###################################################
+### code chunk number 28: rebmix-code
 ###################################################
 iriscla
 
@@ -349,13 +338,7 @@ summary(iriscla)
 
 
 ###################################################
-### code chunk number 27: iris-cla-fig
-###################################################
-plot(iriscla, nrow = 3, ncol = 2)
-
-
-###################################################
-### code chunk number 28: rebmix-code
+### code chunk number 29: rebmix-code
 ###################################################
 data("adult")
 
@@ -369,113 +352,67 @@ adult <- as.data.frame(data.matrix(adult))
 
 
 ###################################################
-### code chunk number 29: rebmix-code
-###################################################
-# Split adult dataset into two train subsets for two Incomes
-# and remove Type and Income columns.
-
-trainle50k <- subset(adult, subset = (Type == 2) & (Income == 1),
-  select = c(-Type, -Income))
-traingt50k <- subset(adult, subset = (Type == 2) & (Income == 2),
-  select = c(-Type, -Income))
-
-trainall <- subset(adult, subset = Type == 2, select = c(-Type, -Income))
-
-train <- as.factor(subset(adult, subset = Type == 2, select = c(Income))[, 1])
-
-
-###################################################
 ### code chunk number 30: rebmix-code
 ###################################################
-# Extract test dataset form adult dataset and remove Type
-# and Income columns.
+# Find numbers of levels.
 
-testle50k <- subset(adult, subset = (Type == 1) & (Income == 1),
-  select = c(-Type, -Income))
-testgt50k <- subset(adult, subset = (Type == 1) & (Income == 2),
-  select = c(-Type, -Income))
+cmax <- unlist(lapply(apply(adult[, c(-1, -16)], 2, unique), length))
 
-testall <- subset(adult, subset = Type == 1, select = c(-Type, -Income))
-
-test <- as.factor(subset(adult, subset = Type == 1, select = c(Income))[, 1])
+cmax
 
 
 ###################################################
 ### code chunk number 31: rebmix-code
 ###################################################
-# Estimate number of components, component weights and component
-# parameters for Naive Bayes.
+# Split adult dataset into train and test subsets for two Incomes
+# and remove Type and Income columns.
 
-cmax <- unlist(lapply(apply(trainall, 2, unique), length))
-
-adultest <- list(0)
-
-for (i in 1:14) {
-  adultest[[i]] <- REBMIX(Dataset = list(as.data.frame(trainle50k[, i]),
-    as.data.frame(traingt50k[, i])),
-    Preprocessing = "histogram",
-    cmax = if (cmax[i] > 120) 12 else cmax[i],
-    Criterion = "BIC",
-    pdf = if (cmax[i] > 120) "normal" else "Dirac",
-    K = if (cmax[i] > 120) 13:43 else 1)
-}
+Adult <- split(p = list(type = 1, train = 2, test = 1),
+  Dataset = adult, class = 16)
 
 
 ###################################################
 ### code chunk number 32: rebmix-code
 ###################################################
-# Best-first feature subset selection.
+# Estimate number of components, component weights and component parameters
+# for the set of chunks 1:14.
 
-c <- NULL; rvs <- 1:14; Error <- 1.0
+adultest <- list()
 
 for (i in 1:14) {
-  k <- NA
-
-  for (j in rvs) {
-    adultcla <- RCLSMIX(x = adultest[c(c, j)],
-      Dataset = as.data.frame(trainall[, c(c, j)]),
-      Zt = train)
-
-    if (adultcla@Error < Error) {
-      Error <- adultcla@Error; k <- j
-    }
-  }
-
-  if (is.na(k)) {
-    break
-  }
-  else {
-    c <- c(c, k); rvs <- rvs[-which(rvs == k)]
-  }
+  adultest[[i]] <- REBMIX(Dataset = chunk(Adult, i)@train,
+    Preprocessing = "histogram",
+    cmax = min(120, cmax[i]),
+    Criterion = "BIC",
+    pdf = "Dirac",
+    K = 1)
 }
-
-# Error on train dataset.
-
-Error
 
 
 ###################################################
 ### code chunk number 33: rebmix-code
 ###################################################
-# Selected features.
+# Class membership prediction based upon the best first search algorithm.
 
-adultcla <- RCLSMIX(x = adultest[c],
-  Dataset = as.data.frame(testall[, c]),
-  Zt = test)
+adultcla <- BFSMIX(x = adultest,
+  Dataset = Adult@test,
+  Zt = Adult@Zt)
 
 
 ###################################################
-### code chunk number 34: rebmix-code
+### code chunk number 34: adult-cla-fig
+###################################################
+# Plot selected chunks.
+
+plot(adultcla, nrow = 5, ncol = 2)
+
+
+###################################################
+### code chunk number 35: rebmix-code
 ###################################################
 adultcla
 
 summary(adultcla)
-
-
-###################################################
-### code chunk number 35: adult-cla-fig
-###################################################
-plot(adultcla, nrow = 5, ncol = 2)
 
 
 ###################################################

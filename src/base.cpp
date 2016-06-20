@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#pragma warning(disable: 4514)
+#endif
+
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>
@@ -258,7 +262,9 @@ int GammaSer(FLOAT a,       // Constant a > 0.
     *Gamln = Gammaln(a);
 
     if (y <= FLOAT_MIN) {
-        if (y < (FLOAT)0.0) Error = 1; if (Error) goto E0;
+        if (y < (FLOAT)0.0) {
+            Error = 1; goto E0;
+        }
 
         *GamSer = (FLOAT)0.0;
     }
@@ -296,7 +302,9 @@ int GammaCfg(FLOAT a,       // Constant a > 0.
     *Gamln = Gammaln(a);
 
     if (y <= FLOAT_MIN) {
-        if (y < (FLOAT)0.0) Error = 1; if (Error) goto E0;
+        if (y < (FLOAT)0.0) {
+            Error = 1; goto E0;
+        }
 
         *GamCfg = (FLOAT)0.0;
     }
@@ -342,7 +350,7 @@ int GammaP(FLOAT a,       // Constant a > 0.
     int   Error = 0;
 
     if ((y < (FLOAT)0.0) || (a <= FLOAT_MIN)) {
-        *GamP = (FLOAT)0.0; Error = 1; if (Error) goto E0;
+        *GamP = (FLOAT)0.0; Error = 1; goto E0;
     }
     else
     if (y < a + (FLOAT)1.0) {
@@ -542,7 +550,7 @@ int LUinvdet(int   n,     // Size of square matrix.
     FLOAT *b = NULL, *B = NULL;
     int   Error = 0;
 
-    indx = (int*)calloc(n, sizeof(int));
+    indx = (int*)calloc((size_t)n, sizeof(int));
 
     Error = NULL == indx; if (Error) goto E0;
 

@@ -1,6 +1,11 @@
 #ifndef REBMIXF_H_INCLUDED
 #define REBMIXF_H_INCLUDED
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4514)
+#pragma warning(disable: 4820)
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -48,13 +53,15 @@ typedef struct roughparametertype {
 } RoughParameterType;
 
 typedef struct summaryparametertype {
-    int   c;    // Optimal number of components.
-    int   k;    // Optimal v or optimal k.
-    FLOAT *y0;  // Optimal origins of length d.
-    FLOAT *h;   // Optimal class widths of length d.
-    FLOAT IC;   // Optimal information criterion.
-    FLOAT logL; // Log-likelihood.
-    int   M;    // Degrees of freedom.
+    int   c;     // Optimal number of components.
+    int   k;     // Optimal v or optimal k.
+    FLOAT *y0;   // Optimal origins of length d.
+    FLOAT *ymin; // Minimum observations.
+    FLOAT *ymax; // Maximum observations.
+    FLOAT *h;    // Optimal class widths of length d.
+    FLOAT IC;    // Optimal information criterion.
+    FLOAT logL;  // Log-likelihood.
+    int   M;     // Degrees of freedom.
 } SummaryParameterType;
 
 typedef struct additinalparametertype {
@@ -99,7 +106,7 @@ public:
     char                       *save_;         // Path to the save data file.
     PreprocessingType_e        Preprocessing_; // Preprocessing type.
     int                        cmax_;          // Maximum number of components.
-    InformationCriterionType_e Criterion_;     // Infromation criterion type.
+    InformationCriterionType_e Criterion_;     // Information criterion type.
     VariablesType_e            *Variables_;    // Types of variables.
     CompnentDistribution       *IniTheta_;     // Initial component parameters.
     int                        length_K_;      // Length of K_.
@@ -129,7 +136,7 @@ public:
     // Constructor.
     Rebmix();
     // Destructor.
-    ~Rebmix();
+    virtual ~Rebmix();
     // Methods.
     int PreprocessingKNN(int k, FLOAT *h, FLOAT **Y);
     int PreprocessingPW(FLOAT *h, FLOAT **Y);
@@ -150,6 +157,9 @@ public:
     int InformationCriterionKNN(int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
     int InformationCriterionPW(FLOAT V, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
     int InformationCriterionH(FLOAT V, int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
+    int CombineComponentsKNN(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
+    int CombineComponentsPW(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
+    int CombineComponentsH(int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
     int REBMIX();
     int RunTemplateFile(char *file);
 }; // Rebmix

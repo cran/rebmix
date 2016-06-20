@@ -16,12 +16,7 @@ function(model, ...)
     n <- nrow(X)
     d <- ncol(X)
 
-    if (as.integer(length(model@pdf)) > 0) {
-      length.pdf <- +d
-    }
-    else {
-      length.pdf <- -d
-    }
+    length.pdf <- d
     
     if (length(model@theta1) > 0) {
       length.theta1 <- +d; theta1 <- model@theta1; theta1[is.na(theta1)] <- 0
@@ -46,7 +41,7 @@ function(model, ...)
       length.pdf = length.pdf,
       pdf = as.character(model@pdf),
       length.Theta = as.integer(2),
-      length.theta = as.integer(c(d, d)),
+      length.theta = as.integer(c(length.theta1, length.theta2)),
       Theta = as.double(c(theta1, theta2)),
       length.K = as.integer(length(model@K)),
       K = as.integer(model@K),
@@ -62,7 +57,9 @@ function(model, ...)
       Y = as.double(X),
       summary.k = integer(1),
       summary.h = double(d),
-      summary.y0 = double(d),      
+      summary.y0 = double(d),  
+      summary.ymin = double(d),  
+      summary.ymax = double(d),  
       summary.IC = double(1),
       summary.logL = double(1),
       summary.M = integer(1), 
@@ -149,6 +146,8 @@ function(model, ...)
         output$summary.k,
         output$K,
         output$summary.y0,
+        output$summary.ymin,
+        output$summary.ymax,        
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -165,6 +164,8 @@ function(model, ...)
         output$summary.c,
         output$summary.k,
         output$K,
+        output$summary.ymin,
+        output$summary.ymax,        
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -180,6 +181,8 @@ function(model, ...)
         output$summary.c,
         output$summary.k,
         output$K,
+        output$summary.ymin,
+        output$summary.ymax,        
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -206,7 +209,9 @@ function(model, ...)
       "c", 
       "v/k", 
       "K",       
-      paste("y0", if (d > 1) 1:d else "", sep = ""), 
+      paste("y0", if (d > 1) 1:d else "", sep = ""),
+      paste("ymin", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymax", if (d > 1) 1:d else "", sep = ""),        
       paste("h", if (d > 1) 1:d else "", sep = ""), 
       "IC", 
       "logL",
@@ -222,7 +227,9 @@ function(model, ...)
       "Restraints", 
       "c", 
       "v/k",
-      "K", 
+      "K",
+      paste("ymin", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymax", if (d > 1) 1:d else "", sep = ""),        
       paste("h", if (d > 1) 1:d else "", sep = ""), 
       "IC", 
       "logL",
@@ -237,7 +244,9 @@ function(model, ...)
       "Restraints", 
       "c", 
       "v/k",
-      "K",        
+      "K",   
+      paste("ymin", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymax", if (d > 1) 1:d else "", sep = ""),            
       paste("h", if (d > 1) 1:d else "", sep = ""),
       "IC", 
       "logL",
@@ -267,12 +276,7 @@ function(model, ...)
     n <- nrow(X)
     d <- ncol(X)
 
-    if (as.integer(length(model@pdf)) > 0) {
-      length.pdf <- +d
-    }
-    else {
-      length.pdf <- -d
-    }
+    length.pdf <- d
     
     if (length(model@theta1) > 0) {
       length.theta1 <- +d; theta1 <- model@theta1; theta1[is.na(theta1)] <- 0
@@ -282,10 +286,10 @@ function(model, ...)
     }    
     
     if (length(model@theta2) > 0) {
-      length.theta2 <- +d; theta2 <- model@theta2; theta2[is.na(theta2)] <- 0
+      length.theta2 <- +d * d; length.theta3 <- +1; theta2 <- model@theta2; theta2[is.na(theta2)] <- 0
     }
     else {
-      length.theta2 <- -d; theta2 <- numeric()
+      length.theta2 <- -d * d; length.theta3 <- -1; theta2 <- numeric()
     }
         
     output <- .C("RREBMVNORM",
@@ -297,7 +301,7 @@ function(model, ...)
       length.pdf = length.pdf,
       pdf = as.character(model@pdf),
       length.Theta = as.integer(4),
-      length.theta = as.integer(c(d, d * d, d * d, 1)),
+      length.theta = as.integer(c(length.theta1, length.theta2, length.theta2, length.theta3)),
       Theta = as.double(c(theta1, theta2)),
       length.K = as.integer(length(model@K)),
       K = as.integer(model@K),
@@ -313,7 +317,9 @@ function(model, ...)
       Y = as.double(X),
       summary.k = integer(1),
       summary.h = double(d),
-      summary.y0 = double(d),      
+      summary.y0 = double(d), 
+      summary.ymin = double(d),  
+      summary.ymax = double(d),           
       summary.IC = double(1),
       summary.logL = double(1),
       summary.M = integer(1), 
@@ -400,6 +406,8 @@ function(model, ...)
         output$summary.k,
         output$K,
         output$summary.y0,
+        output$summary.ymin,
+        output$summary.ymax,
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -416,6 +424,8 @@ function(model, ...)
         output$summary.c,
         output$summary.k,
         output$K,
+        output$summary.ymin,
+        output$summary.ymax,        
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -431,6 +441,8 @@ function(model, ...)
         output$summary.c,
         output$summary.k,
         output$K,
+        output$summary.ymin,
+        output$summary.ymax,        
         output$summary.h,
         output$summary.IC,
         output$summary.logL,
@@ -458,6 +470,8 @@ function(model, ...)
       "v/k", 
       "K",       
       paste("y0", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymin", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymax", if (d > 1) 1:d else "", sep = ""), 
       paste("h", if (d > 1) 1:d else "", sep = ""), 
       "IC", 
       "logL",
@@ -473,7 +487,9 @@ function(model, ...)
       "Restraints", 
       "c", 
       "v/k",
-      "K", 
+      "K",
+      paste("ymin", if (d > 1) 1:d else "", sep = ""),
+      paste("ymax", if (d > 1) 1:d else "", sep = ""),      
       paste("h", if (d > 1) 1:d else "", sep = ""), 
       "IC", 
       "logL",
@@ -488,7 +504,9 @@ function(model, ...)
       "Restraints", 
       "c", 
       "v/k",
-      "K",        
+      "K",
+      paste("ymin", if (d > 1) 1:d else "", sep = ""), 
+      paste("ymax", if (d > 1) 1:d else "", sep = ""),               
       paste("h", if (d > 1) 1:d else "", sep = ""),
       "IC", 
       "logL",
@@ -519,7 +537,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("REBMIX Version 2.8.1")
+  message("REBMIX Version 2.8.2")
  
   flush.console()
   

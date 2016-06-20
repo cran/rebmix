@@ -24,7 +24,7 @@ function(x,
   if (missing(x)) {
     stop(sQuote("x"), " object of class REBMIX is requested!", call. = FALSE)
   }
-
+  
   if (!is.wholenumber(pos)) {
     stop(sQuote("pos"), " integer is requested!", call. = FALSE)
   }
@@ -84,7 +84,9 @@ function(x,
 
   N <- d * (d - 1) / 2
   
-  opar <- par(mfrow = c(nrow, ncol),
+  opar <- list(); ipar <- 1
+  
+  par(mfrow = c(nrow, ncol),
     cex = cex,
     cex.axis = 1.0,
     fg = fg,
@@ -290,7 +292,7 @@ function(x,
     }
 
     if (Variables[i] == .rebmix$Variables[2]) {
-      py[[i]] <- seq(from = lim[1, i], to = lim[2, i], by = 1.0)
+      py[[i]] <- sort(unique(ey[, i]))
     }
     else {
       py[[i]] <- seq(from = lim[1, i], to = lim[2, i], length.out = npts)
@@ -322,7 +324,7 @@ function(x,
           }
 
           pdens <- outer(py[[i]], py[[j]], ".dfmix.xy", w, Theta[i,], Theta[j,])
- 
+         
           zlim <- range(edens$z, finite = TRUE); zmax <- max(zlim[2], pdens)
 
           zlim <- zlim / zmax
@@ -341,12 +343,14 @@ function(x,
             pch = plot.pch)
 
           if ((Variables[i] == .rebmix$Variables[2]) && (Variables[j] == .rebmix$Variables[2])) {
-            points(x = rep(py[[i]], length(py[[j]])),
-              y = rep(py[[j]], each = length(py[[i]])),
+            z <- as.vector(pdens); z <- z != 0.0
+          
+            points(x = rep(py[[i]], length(py[[j]]))[z],
+              y = rep(py[[j]], each = length(py[[i]]))[z],
               type = "p",
               xlab = "",
               ylab = "",
-              col = rgb(ramp(pdens / zmax), maxColorValue = 255),
+              col = rgb(ramp(pdens[z] / zmax), maxColorValue = 255),
               lwd = 1,
               cex = plot.cex * 0.5,
               pch = plot.pch)
@@ -357,7 +361,7 @@ function(x,
               tx <- rep(py[[i]][l], length(py[[j]]))
               ty <- py[[j]]
 
-              s <- 1:(length(tx)-1)
+              s <- 1:(length(tx) - 1)
 
               segments(x0 = tx[s],
                 y0 = ty[s],
@@ -375,7 +379,7 @@ function(x,
               tx <- py[[i]]
               ty <- rep(py[[j]][l], length(py[[i]]))
 
-              s <- 1:(length(tx)-1)
+              s <- 1:(length(tx) - 1)
 
               segments(x0 = tx[s],
                 y0 = ty[s],
@@ -392,11 +396,11 @@ function(x,
 
             contour(x = py[[i]],
               y = py[[j]],
-              z = pdens / zmax,
-              levels = levels,
+              z = pdens,
+              levels = levels * zmax,
               xlim = lim[, i],
               ylim = lim[, j],
-              zlim = zlim,
+              zlim = zlim * zmax,
               labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
               axes = FALSE, frame.plot = FALSE,
               col = rgb(ramp(levels), maxColorValue = 255),
@@ -449,6 +453,8 @@ function(x,
 
             figno <- 0
           }
+          
+          opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
         }
       }
     }
@@ -465,7 +471,7 @@ function(x,
           edist <- .dist.xy(ey[, i], ey[, j], n)
 
           pdist <- outer(py[[i]], py[[j]], ".pfmix.xy", w, Theta[i,], Theta[j,])
- 
+          
           zlim <- range(edist$z, finite = TRUE); zmax <- max(zlim[2], pdist)
 
           zlim <- zlim / zmax
@@ -500,7 +506,7 @@ function(x,
               tx <- rep(py[[i]][l], length(py[[j]]))
               ty <- py[[j]]
 
-              s <- 1:(length(tx)-1)
+              s <- 1:(length(tx) - 1)
 
               segments(x0 = tx[s],
                 y0 = ty[s],
@@ -518,7 +524,7 @@ function(x,
               tx <- py[[i]]
               ty <- rep(py[[j]][l], length(py[[i]]))
 
-              s <- 1:(length(tx)-1)
+              s <- 1:(length(tx) - 1)
 
               segments(x0 = tx[s],
                 y0 = ty[s],
@@ -535,11 +541,11 @@ function(x,
 
             contour(x = py[[i]],
               y = py[[j]],
-              z = pdist / zmax,
-              levels = levels,
+              z = pdist,
+              levels = levels * zmax,
               xlim = lim[, i],
               ylim = lim[, j],
-              zlim = zlim,
+              zlim = zlim * zmax,
               labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
               axes = FALSE, frame.plot = FALSE,
               col = rgb(ramp(levels), maxColorValue = 255),
@@ -592,6 +598,8 @@ function(x,
 
             figno <- 0
           }
+          
+          opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
         }
       }
     }
@@ -672,7 +680,9 @@ function(x,
           adj = 0.5,
           padj = 0.2,
           cex = cex)
-      }        
+      }
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
     
     if (any(match(.rebmix.plot$what[6], what, nomatch = 0))) {
@@ -740,7 +750,9 @@ function(x,
           adj = 0.5,
           padj = 0.2,
           cex = cex)
-      }        
+      } 
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
   }
   
@@ -830,6 +842,8 @@ function(x,
       else {
         m <- m - 1
       }
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
   }
   
@@ -896,7 +910,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    } 
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   if (any(match(.rebmix.plot$what[4], what, nomatch = 0))) {
@@ -962,7 +978,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    } 
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }  
   
   if (any(match(.rebmix.plot$what[5], what, nomatch = 0))) {
@@ -1028,7 +1046,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   if (any(match(.rebmix.plot$what[7], what, nomatch = 0))) {
@@ -1094,7 +1114,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   rm(list = ls()[!(ls() %in% c("opar"))])
@@ -1188,7 +1210,9 @@ function(x,
 
   N <- d * (d - 1) / 2
   
-  opar <- par(mfrow = c(nrow, ncol),
+  opar <- list(); ipar <- 1
+  
+  par(mfrow = c(nrow, ncol),
     cex = cex,
     cex.axis = 1.0,
     fg = fg,
@@ -1393,12 +1417,7 @@ function(x,
       lim[, i] <- c(0.0, 1.0)
     }
 
-    if (Variables[i] == .rebmix$Variables[2]) {
-      py[[i]] <- seq(from = lim[1, i], to = lim[2, i], by = 1.0)
-    }
-    else {
-      py[[i]] <- seq(from = lim[1, i], to = lim[2, i], length.out = npts)
-    }
+    py[[i]] <- seq(from = lim[1, i], to = lim[2, i], length.out = npts)
   }
 
   w <- as.numeric(x@w[[pos]])
@@ -1444,68 +1463,19 @@ function(x,
             cex = plot.cex,
             pch = plot.pch)
 
-          if ((Variables[i] == .rebmix$Variables[2]) && (Variables[j] == .rebmix$Variables[2])) {
-            points(x = rep(py[[i]], length(py[[j]])),
-              y = rep(py[[j]], each = length(py[[i]])),
-              type = "p",
-              xlab = "",
-              ylab = "",
-              col = rgb(ramp(pdens / zmax), maxColorValue = 255),
-              lwd = 1,
-              cex = plot.cex * 0.5,
-              pch = plot.pch)
-          }
-          else
-          if ((Variables[i] == .rebmix$Variables[2]) && (Variables[j] == .rebmix$Variables[1])) {
-            for (l in 1:length(py[[i]])) {
-              tx <- rep(py[[i]][l], length(py[[j]]))
-              ty <- py[[j]]
+          levels <- 10^seq(from = log(zlim[1]), to = log(zlim[2]), length.out = contour.nlevels)
 
-              s <- 1:(length(tx)-1)
-
-              segments(x0 = tx[s],
-                y0 = ty[s],
-                x1 = tx[s + 1],
-                y1 = ty[s + 1],
-                xlab = "",
-                ylab = "",
-                col = rgb(ramp((pdens[l, s] + pdens[l, s + 1]) / zmax / 2.0), maxColorValue = 255),
-                cex = plot.cex)
-            }
-          }
-          else
-          if ((Variables[i] == .rebmix$Variables[1]) && (Variables[j] == .rebmix$Variables[2])) {
-            for (l in 1:length(py[[j]])) {
-              tx <- py[[i]]
-              ty <- rep(py[[j]][l], length(py[[i]]))
-
-              s <- 1:(length(tx)-1)
-
-              segments(x0 = tx[s],
-                y0 = ty[s],
-                x1 = tx[s + 1],
-                y1 = ty[s + 1],
-                xlab = "",
-                ylab = "",
-                col = rgb(ramp((pdens[s, l] + pdens[s + 1, l]) / zmax / 2.0), maxColorValue = 255),
-                cex = plot.cex)
-            }
-          }
-          else {
-            levels <- 10^seq(from = log(zlim[1]), to = log(zlim[2]), length.out = contour.nlevels)
-
-            contour(x = py[[i]],
-              y = py[[j]],
-              z = pdens / zmax,
-              levels = levels,
-              xlim = lim[, i],
-              ylim = lim[, j],
-              zlim = zlim,
-              labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
-              axes = FALSE, frame.plot = FALSE,
-              col = rgb(ramp(levels), maxColorValue = 255),
-              add = TRUE)
-          }
+          contour(x = py[[i]],
+            y = py[[j]],
+            z = pdens,
+            levels = levels * zmax,
+            xlim = lim[, i],
+            ylim = lim[, j],
+            zlim = zlim * zmax,
+            labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
+            axes = FALSE, frame.plot = FALSE,
+            col = rgb(ramp(levels), maxColorValue = 255),
+            add = TRUE)
 
           box(col = fg, lty = "solid", lwd = 1)
 
@@ -1553,6 +1523,8 @@ function(x,
 
             figno <- 0
           }
+          
+          opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
         }
       }
     }
@@ -1587,68 +1559,19 @@ function(x,
             cex = plot.cex,
             pch = plot.pch)
 
-          if ((Variables[i] == .rebmix$Variables[2]) && (Variables[j] == .rebmix$Variables[2])) {
-            points(x = rep(py[[i]], length(py[[j]])),
-              y = rep(py[[j]], each = length(py[[i]])),
-              type = "p",
-              xlab = "",
-              ylab = "",
-              col = rgb(ramp(pdist / zmax), maxColorValue = 255),
-              lwd = 1,
-              cex = plot.cex * 0.5,
-              pch = plot.pch)
-          }
-          else
-          if ((Variables[i] == .rebmix$Variables[2]) && (Variables[j] == .rebmix$Variables[1])) {
-            for (l in 1:length(py[[i]])) {
-              tx <- rep(py[[i]][l], length(py[[j]]))
-              ty <- py[[j]]
+          levels <- 10^seq(from = log(zlim[1]), to = log(zlim[2]), length.out = contour.nlevels)
 
-              s <- 1:(length(tx)-1)
-
-              segments(x0 = tx[s],
-                y0 = ty[s],
-                x1 = tx[s + 1],
-                y1 = ty[s + 1],
-                xlab = "",
-                ylab = "",
-                col = rgb(ramp((pdist[l, s] + pdist[l, s + 1]) / zmax / 2.0), maxColorValue = 255),
-                cex = plot.cex)
-            }
-          }
-          else
-          if ((Variables[i] == .rebmix$Variables[1]) && (Variables[j] == .rebmix$Variables[2])) {
-            for (l in 1:length(py[[j]])) {
-              tx <- py[[i]]
-              ty <- rep(py[[j]][l], length(py[[i]]))
-
-              s <- 1:(length(tx)-1)
-
-              segments(x0 = tx[s],
-                y0 = ty[s],
-                x1 = tx[s + 1],
-                y1 = ty[s + 1],
-                xlab = "",
-                ylab = "",
-                col = rgb(ramp((pdist[s, l] + pdist[s + 1, l]) / zmax / 2.0), maxColorValue = 255),
-                cex = plot.cex)
-            }
-          }
-          else {
-            levels <- 10^seq(from = log(zlim[1]), to = log(zlim[2]), length.out = contour.nlevels)
-
-            contour(x = py[[i]],
-              y = py[[j]],
-              z = pdist / zmax,
-              levels = levels,
-              xlim = lim[, i],
-              ylim = lim[, j],
-              zlim = zlim,
-              labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
-              axes = FALSE, frame.plot = FALSE,
-              col = rgb(ramp(levels), maxColorValue = 255),
-              add = TRUE)
-          }
+          contour(x = py[[i]],
+            y = py[[j]],
+            z = pdist,
+            levels = levels * zmax,
+            xlim = lim[, i],
+            ylim = lim[, j],
+            zlim = zlim * zmax,
+            labcex = contour.labcex, drawlabels = contour.drawlabels, method = contour.method,
+            axes = FALSE, frame.plot = FALSE,
+            col = rgb(ramp(levels), maxColorValue = 255),
+            add = TRUE)
 
           box(col = fg, lty = "solid", lwd = 1)
 
@@ -1696,6 +1619,8 @@ function(x,
 
             figno <- 0
           }
+          
+          opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
         }
       }
     }
@@ -1776,7 +1701,9 @@ function(x,
           adj = 0.5,
           padj = 0.2,
           cex = cex)
-      }        
+      }
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
     
     if (any(match(.rebmix.plot$what[6], what, nomatch = 0))) {
@@ -1844,7 +1771,9 @@ function(x,
           adj = 0.5,
           padj = 0.2,
           cex = cex)
-      }        
+      }
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
   }
   
@@ -1934,6 +1863,8 @@ function(x,
       else {
         m <- m - 1
       }
+      
+      opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
     }
   }
   
@@ -2000,7 +1931,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   if (any(match(.rebmix.plot$what[4], what, nomatch = 0))) {
@@ -2066,7 +1999,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }  
   
   if (any(match(.rebmix.plot$what[5], what, nomatch = 0))) {
@@ -2132,7 +2067,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   if (any(match(.rebmix.plot$what[7], what, nomatch = 0))) {
@@ -2198,7 +2135,9 @@ function(x,
     }
     else {
       m <- m - 1
-    }      
+    }
+    
+    opar[[ipar]] <- par(no.readonly = TRUE); ipar <- ipar + 1
   }
   
   rm(list = ls()[!(ls() %in% c("opar"))])

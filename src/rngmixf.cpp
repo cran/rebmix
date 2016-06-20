@@ -44,7 +44,7 @@ Rngmix::~Rngmix()
             if (MixTheta_[i]) delete MixTheta_[i];
         }
 
-        delete MixTheta_;
+        delete[] MixTheta_;
     }
 
     if (N_) free(N_);
@@ -92,7 +92,7 @@ int Rngmix::WriteDataFile()
 
 E0: if (fp) fclose(fp);
 
-    if (Z_) free(Z_);
+    if (Z_) free(Z_); Z_ = NULL;
 
     if (Y_) {
         for (i = 0; i < n_; i++) {
@@ -325,6 +325,8 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
             Y[i] = CmpDist->Theta_[0][i];
 
             break;
+        case pfUniform: 
+           Y[i] = CmpDist->Theta_[0][i] + Ran1(&IDum_) * (CmpDist->Theta_[1][i] - CmpDist->Theta_[0][i]);
         default:;
         }
     }
@@ -390,7 +392,7 @@ int Rngmix::RunTemplateFile(char *file)
     }
 
     #if (_REBMIXEXE)
-    printf("RNGMIX Version 2.8.1\n");
+    printf("RNGMIX Version 2.8.2\n");
     #endif
 
 S0: while (fgets(line, 2048, fp) != NULL) {
@@ -543,6 +545,9 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 else
                 if (!strcmp(pchar, "DIRAC"))
                     IniTheta_->pdf_[i] = pfDirac;
+                else
+                if (!strcmp(pchar, "UNIFORM"))
+                    IniTheta_->pdf_[i] = pfUniform;
                 else {
                     Error = 1; goto E0;
                 }
@@ -564,7 +569,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
             Error = isI < 1; if (Error) goto E0;
 
-            MixTheta = new CompnentDistribution* [c_ + 1];
+            MixTheta = new CompnentDistribution* [(unsigned int)(c_ + 1)];
 
             Error = NULL == MixTheta; if (Error) goto E0;
 
@@ -576,7 +581,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 MixTheta[i] = MixTheta_[i];
             }
 
-            if (MixTheta_) delete MixTheta_;
+            if (MixTheta_) delete[] MixTheta_;
 
             MixTheta_ = MixTheta;
 

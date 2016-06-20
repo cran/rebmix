@@ -21,9 +21,25 @@ a factor of true cluster membership.
 \item{\code{Zp}:}{
 a factor of predictive cluster membership.
 }
+\item{\code{from}:}{
+a vector of length \eqn{c} containing clusters merged to \code{to} clusters.
+}
+\item{\code{to}:}{
+a vector of length \eqn{c} containing clusters originating from \code{from} clusters.
+}
+\item{\code{EN}:}{
+a vector of length \eqn{c} containing entropies for combined clusters.
+}
+\item{\code{ED}:}{
+a vector of length \eqn{c} containing decrease of entropies for combined clusters.
+}
 }
 }
 \author{Marko Nagode}
+\references{
+J. P. Baudry, A. E. Raftery, G. Celeux, K. Lo and R. Gottardo. Combining mixture components for clustering.
+Journal of Computational and Graphical Statistics, 19(2):332-353, 2010. \url{http://dx.doi.org/10.1198/jcgs.2010.08111}
+}
 \examples{
 devAskNewPage(ask = TRUE)
 
@@ -46,7 +62,7 @@ normal <- RNGMIX(model = "RNGMVNORM", Dataset.name = "normal_1", n = n, Theta = 
 # Number of classes or nearest neighbours to be processed.
 
 K <- c(as.integer(1 + log2(sum(n))), # Minimum v follows Sturges rule.
-  as.integer(10 * log10(n))) # Maximum v follows log10 rule.
+  as.integer(10 * log10(sum(n)))) # Maximum v follows log10 rule.
 
 # Estimate number of components, component weights and component parameters.
 
@@ -71,5 +87,7 @@ normalclu <- RCLRMIX(model = "RCLRMVNORM", x = normalest, Zt = normal@Zt)
 # Plot clusters.
 
 plot(normalclu)
+
+summary(normalclu)
 }
-\keyword{clusters}
+\keyword{classes}

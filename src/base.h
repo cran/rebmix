@@ -59,6 +59,10 @@
 #define Eps (FLOAT)0.000001
 #endif
 
+#ifndef TLA_MAX_LN 
+#define TLA_MAX_LN 46.0
+#endif
+
 #ifndef ItMax
 #define ItMax 1000
 #endif
@@ -114,7 +118,8 @@ typedef enum {
     pfGamma,     // Gamma distribution.
     pfBinomial,  // Binomial distribution.
     pfPoisson,   // Poisson distribution.
-    pfDirac      // Dirac distribution.
+    pfDirac,     // Dirac distribution.
+    pfUniform    // Uniform distribution.
 } ParametricFamilyType_e;
 
 typedef struct componetdistributiontype {

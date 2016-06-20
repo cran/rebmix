@@ -3,26 +3,33 @@
 \alias{plot-methods}
 \alias{plot,REBMIX,missing-method}
 \alias{plot,REBMVNORM,missing-method}
+\alias{plot,RNGMIX,missing-method}
+\alias{plot,RNGMVNORM,missing-method}
 \alias{plot,RCLRMIX,missing-method}
 \alias{plot,RCLRMVNORM,missing-method}
 \alias{plot,RCLSMIX,missing-method}
 \alias{plot,RCLSMVNORM,missing-method}
 \title{
-Plots Univariate or Multivariate REBMIX Output
+Plots RNGMIX, REBMIX, RCLRMIX and RCLSMIX Output
 }
 \description{
-Plots empirical and predictive univariate \eqn{d = 1} mixture densities
-or pairs of empirical and predictive bivariate marginal mixture densities for \eqn{d > 1}. The empirical
-densities follow the histogram, Parzen window or \emph{k}-nearest neighbour approach.
+Plots true clusters if \code{x} equals \code{"RNGMIX"}. Plots the REBMIX output 
+depending on \code{what} argument if \code{x} equals \code{"REBMIX"}. 
+Plots predictive clusters if \code{x} equals \code{"RCLRMIX"}. 
+Wrongly clustered observations are plotted only if \code{x@Zt} is available.
+Plots predictive classes and wrongly classified observations if \code{x} equals \code{"RCLSMIX"}.
 }
 \usage{
+\S4method{plot}{RNGMIX,missing}(x, y, pos = 1, nrow = 1, ncol = 1, cex = 0.8,
+     fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
+     plot.cex = 0.8, plot.pch = 19, ...) 
 \S4method{plot}{REBMIX,missing}(x, y, pos = 1, what = c("density"),
      nrow = 1, ncol = 1, npts = 200, n = 200, cex = 0.8, fg = "black",
      lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
      plot.cex = 0.8, plot.pch = 19, contour.drawlabels = FALSE, 
      contour.labcex = 0.8, contour.method = "flattest", 
      contour.nlevels = 12, ...)
-\S4method{plot}{RCLRMIX,missing}(x, y, nrow = 1, ncol = 1, cex = 0.8,
+\S4method{plot}{RCLRMIX,missing}(x, y, s = expression(c), nrow = 1, ncol = 1, cex = 0.8,
      fg = "black", lty = "solid", lwd = 1, pty = "m", tcl = 0.5, 
      plot.cex = 0.8, plot.pch = 19, ...)        
 \S4method{plot}{RCLSMIX,missing}(x, y, nrow = 1, ncol = 1, cex = 0.8,
@@ -38,23 +45,26 @@ see Methods section below.
 currently not used.
 }
 \item{pos}{
-a desired row number in \code{x$summary} to be ploted. The default value is \code{1}.
+a desired row number in \code{x@summary} or a desired element number in \code{x@Dataset} to be plotted. The default value is \code{1}.
+}
+\item{s}{
+a desired number of clusters to be plotted. The default value is \code{expression(c)}.
 }
 \item{what}{
-a character vector, giving the plot types. One of \code{"density"} for probability density function, \code{"marginal"} for marginal probability density function, \code{"IC"} for information criterion depending on numbers of components \eqn{c}, \code{"logL"} for log likelihood, \code{"D"} for total of positive relative deviations, \code{"distribution"} for distribution function or \code{"K"} for information criterion depending on bins \eqn{v} or numbers of nearest neighbours \eqn{k}.
+a character vector giving the plot types. One of \code{"density"} for probability density function, \code{"marginal"} for marginal probability density function, \code{"IC"} for information criterion depending on numbers of components \eqn{c}, \code{"logL"} for log likelihood, \code{"D"} for total of positive relative deviations, \code{"distribution"} for distribution function or \code{"K"} for information criterion depending on bins \eqn{v} or numbers of nearest neighbours \eqn{k}.
 The default value is \code{"density"}.
 }
 \item{nrow}{
-a desired number of rows in which the empirical and predictive densities are to be ploted. The default value is \code{1}.
+a desired number of rows in which the empirical and predictive densities are to be plotted. The default value is \code{1}.
 }
 \item{ncol}{
-a desired number of columns in which the empirical and predictive densities are to be ploted. The default value is \code{1}.
+a desired number of columns in which the empirical and predictive densities are to be plotted. The default value is \code{1}.
 }
 \item{npts}{
-a number of points at which the predictive densities are to be ploted. The default value is \code{200}.
+a number of points at which the predictive densities are to be plotted. The default value is \code{200}.
 }
 \item{n}{
-a number of observations to be ploted. The default value is \code{200}.
+a number of observations to be plotted. The default value is \code{200}.
 }
 \item{cex}{
 a numerical value giving the amount by which the plotting text and symbols should be magnified
@@ -106,11 +116,12 @@ further arguments to \code{\link[graphics]{par}}.
 }
 }
 \value{
-\code{par} is returned in an invisible named list. Such a list
-can be passed as an argument to \code{\link[graphics]{par}} to restore the parameter values.
+Returns (invisibly) a list containing graphical parameters \code{par}. Such a list can be passed as an argument to \code{\link[graphics]{par}} to restore the parameter values.
 }
 \section{Methods}{
 \describe{
+\item{\code{signature(x = "RNGMIX", y = "missing")}}{an object of class \code{RNGMIX}.}
+\item{\code{signature(x = "RNGMVNORM", y = "missing")}}{an object of class \code{RNGMVNORM}.}
 \item{\code{signature(x = "REBMIX", y = "missing")}}{an object of class \code{REBMIX}.}
 \item{\code{signature(x = "REBMVNORM", y = "missing")}}{an object of class \code{REBMVNORM}.}
 \item{\code{signature(x = "RCLRMIX", y = "missing")}}{an object of class \code{RCLRMIX}.}
