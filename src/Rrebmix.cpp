@@ -24,7 +24,7 @@ void RRNGMIX(int    *IDum,         // Random seed.
              int    *Z,            // Component membership. 
              int    *Error)        // Error code.
 {
-    Rngmix *rngmix;
+    Rngmix *rngmix = NULL;
     int    i, j, k, l;
 
     rngmix = new Rngmix;
@@ -420,6 +420,16 @@ void RREBMIX(char   **Preprocessing, // Preprocessing type.
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
         *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+    }
+
+    rebmix->X_ = (FLOAT**)malloc(rebmix->n_ * sizeof(FLOAT*));
+
+    *Error = NULL == rebmix->X_; if (*Error) goto E0;
+
+    for (i = 0; i < rebmix->n_; i++) {
+        rebmix->X_[i] = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
+
+        *Error = NULL == rebmix->X_[i]; if (*Error) goto E0;
     }
 
     i = 0;
@@ -1226,7 +1236,7 @@ void RCLRMIX(int    *n,      // Total number of independent observations.
         Z[i] = 1; MaxCmpDist = (FLOAT)0.0;
          
         for (j = 0; j < *c; j++) {
-            *Error = rebmix->ComponentDist(Y, Theta[j], &CmpDist);
+            *Error = rebmix->ComponentDist(Y, Theta[j], &CmpDist, NULL);
 
             if (*Error) goto E0;
 

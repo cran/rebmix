@@ -1,5 +1,14 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.8.3}{ 
+\itemize{
+\item Fixed convergence bug in C++ code.
+\item Bayes classification is improved by introducing outliers.
+\item Method \code{plot} is improved.
+\item Fixed bug in C++ functions \code{RoughEstimationKNN()}, \code{RoughEstimationPW()} and \code{RoughEstimationH()}.
+\item Improved C++ functions \code{GlobalModeKNN()}, \code{GlobalModePW()} and \code{GlobalModeH()}.
+}
+}
 \section{Changes in version 2.8.2}{ 
 \itemize{
 \item Fixed information criterion bug in C++ and R code.

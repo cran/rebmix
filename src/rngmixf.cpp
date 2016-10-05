@@ -24,7 +24,6 @@ Rngmix::Rngmix()
     c_ = 0;
     IniTheta_ = NULL;
     n_ = 0;
-    Dataset_ = NULL;
     Y_ = NULL;
     N_ = NULL;
     MixTheta_ = NULL;
@@ -392,7 +391,7 @@ int Rngmix::RunTemplateFile(char *file)
     }
 
     #if (_REBMIXEXE)
-    printf("RNGMIX Version 2.8.2\n");
+    printf("RNGMIX Version 2.8.3\n");
     #endif
 
 S0: while (fgets(line, 2048, fp) != NULL) {

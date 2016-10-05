@@ -279,7 +279,7 @@ int GammaSer(FLOAT a,       // Constant a > 0.
             i++;
         }
 
-        if (Error) goto E0;
+        if (Error) Error = 0; // ItMax too small.
 
         *GamSer = Sum * (FLOAT)exp(-y + a * log(y) - *Gamln);
     }
@@ -331,7 +331,7 @@ int GammaCfg(FLOAT a,       // Constant a > 0.
             i++;
         }
 
-        if (Error) goto E0;
+        if (Error) Error = 0; // ItMax too small.
 
         *GamCfg = (FLOAT)exp(-y + a * log(y) - *Gamln) * G;
     }
@@ -409,6 +409,17 @@ int GammaInv(FLOAT Fy, FLOAT Theta, FLOAT Beta, FLOAT *y)
 
 E0: return (Error);
 } // GammaInv
+
+// Returns the inverse of the Weibull c.d.f. for the specified Theta and Beta.
+
+FLOAT WeibullInv(FLOAT Fy, FLOAT Theta, FLOAT Beta)
+{
+    FLOAT y;
+
+    y = Theta * (FLOAT)pow(-(FLOAT)log((FLOAT)1.0 - Fy), (FLOAT)1.0 / Beta);
+
+    return (y);
+} // WeibullInv
 
 // Returns the error function erf(y). See http://www.nr.com/.
 
@@ -578,10 +589,6 @@ int LUinvdet(int   n,     // Size of square matrix.
         if (Error) goto E0;
 
         for (i = 0; i < n; i++) Ainv[i * n + j] = b[i];
-
-        if (Ainv[j * n + j] <= FLOAT_MIN) {
-            Error = 1; goto E0;
-        }
     }
 
 E0: if (B) free(B);	
@@ -636,6 +643,4 @@ int Choldc(int   n,   // Size of square matrix.
     if (p) free(p);
 
 E0: return (Error);
-} // Choldc 
-
-
+} // Choldc

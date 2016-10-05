@@ -90,9 +90,9 @@ public:
 class Rebmix : public Base {
     // Methods.
     int Golden();
-    int GlobalModeKNN(int *m, FLOAT **Y);
-    int GlobalModePW(int *m, FLOAT **Y);
-    int GlobalModeH(int *m, int k, FLOAT **Y);
+    int GlobalModeKNN(int *m, FLOAT *ymin, FLOAT *ymax, FLOAT **Y);
+    int GlobalModePW(int *m, FLOAT *ymin, FLOAT *ymax, FLOAT **Y);
+    int GlobalModeH(int *m, FLOAT *ymin, FLOAT *ymax, int k, FLOAT **Y);
     int REBMIXKNN();
     int REBMIXPW();
     int REBMIXH();
@@ -100,6 +100,8 @@ class Rebmix : public Base {
     int WriteDataFile();
 public:
     // Input members.
+    FLOAT                      p_value_;       // Probability of obtaining a result equal to or "more extreme" than what was actually observed.
+    FLOAT                      ChiSqr_;        // Critical Chi square value for outlier detection and p = 2.0 * p_value_. 
     char                       *curr_;         // Path to the currently open data file.
     int                        o_;             // Number of paths.
     char                       **open_;        // Paths to open data files.
@@ -118,8 +120,8 @@ public:
     PestraintsType_e           Restraints_;    // Restraints type.
     // Input members.
     int                        n_;             // Number of observations.
-    char                       *Dataset_;      // Dataset name.
     FLOAT                      **Y_;           // Dataset.
+    FLOAT                      **X_;           // Temporary dataset.
     // Output members.
     FLOAT                      *W_;            // Component weights.
     CompnentDistribution       **MixTheta_;    // Mixture parameters.
@@ -138,13 +140,14 @@ public:
     // Destructor.
     virtual ~Rebmix();
     // Methods.
+    virtual int Initialize();
     int PreprocessingKNN(int k, FLOAT *h, FLOAT **Y);
     int PreprocessingPW(FLOAT *h, FLOAT **Y);
     int PreprocessingH(FLOAT *h, FLOAT *y0, int *k, FLOAT **Y);
     virtual int RoughEstimationKNN(FLOAT **Y, int k, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int RoughEstimationPW(FLOAT **Y, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int RoughEstimationH(int k, FLOAT **Y, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
-    virtual int ComponentDist(FLOAT *Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist);
+    virtual int ComponentDist(FLOAT *Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist, int *Outlier);
     virtual int EnhancedEstimationKNN(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int EnhancedEstimationPW(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int EnhancedEstimationH(int k, FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);

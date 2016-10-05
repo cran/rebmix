@@ -89,9 +89,9 @@ gamma3est <- REBMIX(Dataset = gamma3@Dataset,
 
 
 ###################################################
-### code chunk number 5: gamma2-fig
+### code chunk number 5: gamma3-fig
 ###################################################
-plot(gamma2est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
+plot(gamma3est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
 
 
 ###################################################

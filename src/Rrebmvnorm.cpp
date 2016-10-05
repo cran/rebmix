@@ -23,7 +23,7 @@ void RRNGMVNORM(int    *IDum,         // Random seed.
                 int    *Z,            // Component membership. 
                 int    *Error)        // Error code.
 {
-    Rngmvnorm *rngmvnorm;
+    Rngmvnorm *rngmvnorm = NULL;
     int       i, j, k, l;
 
     rngmvnorm = new Rngmvnorm;
@@ -354,6 +354,16 @@ void RREBMVNORM(char   **Preprocessing, // Preprocessing type.
         rebmvnorm->Y_[i] = (FLOAT*)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT));
 
         *Error = NULL == rebmvnorm->Y_[i]; if (*Error) goto E0;
+    }
+
+    rebmvnorm->X_ = (FLOAT**)malloc(rebmvnorm->n_ * sizeof(FLOAT*));
+
+    *Error = NULL == rebmvnorm->X_; if (*Error) goto E0;
+
+    for (i = 0; i < rebmvnorm->n_; i++) {
+        rebmvnorm->X_[i] = (FLOAT*)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT));
+
+        *Error = NULL == rebmvnorm->X_[i]; if (*Error) goto E0;
     }
 
     i = 0;
@@ -745,7 +755,7 @@ void RCLRMVNORM(int    *n,      // Total number of independent observations.
         Z[i] = 1; MaxCmpDist = (FLOAT)0.0;
          
         for (j = 0; j < *c; j++) {
-            *Error = rebmvnorm->ComponentDist(Y, Theta[j], &CmpDist);
+            *Error = rebmvnorm->ComponentDist(Y, Theta[j], &CmpDist, NULL);
 
             if (*Error) goto E0;
 
