@@ -86,7 +86,7 @@ function(.Object, ...,
   
   length(grep("pdf", Names))  
   
-  j <- 0; length.pdf <- length(Theta[[1]])
+  j <- 0; length.pdf <- length(Theta[[grep("pdf", Names)[1]]])
   
   for (i in grep("pdf", Names)) {  
     pdf <- as.character(Theta[[i]])
@@ -104,7 +104,7 @@ function(.Object, ...,
     stop(sQuote("pdfi"), " in " , sQuote("Theta"), " and ", sQuote("n"), " must match!", call. = FALSE)
   } 
   
-  j <- 0; length.theta1 <- length(Theta[[2]])
+  j <- 0; length.theta1 <- length(Theta[[grep("theta1", Names)[1]]])
   
   for (i in grep("theta1", Names)) {  
     theta1 <- as.numeric(Theta[[i]])
@@ -120,7 +120,7 @@ function(.Object, ...,
     stop(sQuote("theta1.i"), " in " , sQuote("Theta"), " and ", sQuote("n"), " must match!", call. = FALSE)
   } 
   
-  j <- 0; length.theta2 <- length(Theta[[3]])
+  j <- 0; length.theta2 <- length(Theta[[grep("theta2", Names)[1]]])
   
   for (i in grep("theta2", Names)) {  
     theta2 <- as.numeric(Theta[[i]])
@@ -320,18 +320,23 @@ function(.Object, ...,
   
   # pdf.
   
-  if (missing(pdf) || (length(pdf) == 0)) {
-    stop(sQuote("pdf"), " must not be empty!", call. = FALSE)
+  if (.Object@class[1] == "REBMVNORM") {
+    pdf <- rep(.rebmix$pdf[1], d)
   }
+  else {
+    if (missing(pdf) || (length(pdf) == 0)) {
+      stop(sQuote("pdf"), " must not be empty!", call. = FALSE)
+    }
 
-  if (!is.character(pdf)) {
-    stop(sQuote("pdf"), " character vector is requested!", call. = FALSE)
-  } 
+    if (!is.character(pdf)) {
+      stop(sQuote("pdf"), " character vector is requested!", call. = FALSE)
+    } 
 
-  pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
+    pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
 
-  if (length(pdf) != d) {
-    stop("lengths of ", sQuote("pdf"), " and ", sQuote("d"), " must match!", call. = FALSE)
+    if (length(pdf) != d) {
+      stop("lengths of ", sQuote("pdf"), " and ", sQuote("d"), " must match!", call. = FALSE)
+    }
   }
   
   # theta1.
@@ -390,7 +395,7 @@ function(.Object, ...,
     }
   }
   else {
-    stop(sQuote("K"), " list of integer vectors or integer vector is requested!", call. = FALSE)
+    K <- "auto"
   }
   
   # y0.
@@ -773,6 +778,8 @@ slots = c(x = "ANY",
   pos = "numeric",
   Zt = "factor",
   Zp = "factor",
+  c = "numeric",
+  prob = "numeric",
   from = "numeric",
   to = "numeric", 
   EN = "numeric",

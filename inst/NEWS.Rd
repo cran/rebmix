@@ -1,5 +1,16 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.8.4}{ 
+\itemize{
+\item Method \code{Zp} is added.
+\item Fixed bugs in \code{plot} method.
+\item Fixed bugs in \code{split} method.
+\item Fixed bugs in \code{RCLRMIX} method.
+\item Fixed bugs in \code{RCLSMIX} method.
+\item Improved C++ functions \code{GlobalModeKNN()}, \code{GlobalModePW()} and \code{GlobalModeH()}.
+\item Improved C++ functions \code{REBMIXKNN()}, \code{REBMIXPW()} and \code{REBMIXH()}.
+}
+}
 \section{Changes in version 2.8.3}{ 
 \itemize{
 \item Fixed convergence bug in C++ code.
