@@ -32,8 +32,8 @@ The \pkg{rebmix} package provides R functions for random univariate and multivar
 \end{abstract}
 \section{Introduction}
 To cite the REBMIX algorithm please refer to \citep{Nagode_Fajdiga_2011a, Nagode_Fajdiga_2011b, Nagode_2015}. For theoretical backgrounds please upload also \url{http://doi.org/10.5963/JAO0302001}.
-\section{What's new in version \texttt{2.8.4}}
-This version is thoroughly debugged and improved version 2.8.0. The R code is extended and rewritten in S4 class system. The background C code is extended and rewritten as object-oriented C\texttt{++} code, too. The package can easier be extended to other parametric families. Multivariate normal mixtures with unrestricted variance-covariance matrices are added. Clustering is added and classification is improved.
+\section{What's new in version \texttt{2.9.0}}
+This version is further debugged version 2.8.4. The R code is extended and rewritten in S4 class system. The background C code is extended and rewritten as object-oriented C\texttt{++} code, too. The package can easier be extended to other parametric families. Multivariate normal mixtures with unrestricted variance-covariance matrices are added. Clustering is added and classification is improved.
 \section{Examples}
 To illustrate the use of the REBMIX algorithm, univariate and multivariate datasets are considered. The \pkg{rebmix} is loaded and the prompt before starting new page is set to \texttt{TRUE}.
 <<rebmix-code, split = FALSE, echo = FALSE, keep.source = FALSE>>=
@@ -216,7 +216,7 @@ poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = poisson@Zt)
 
 plot(poissonclu)
 @
-\caption{Poisson dataset. Predictive cluster membership (coloured circles), error (large circles).}
+\caption{Poisson dataset. Predictive cluster membership (coloured circles), error (black circles).}
 \end{figure}
 \subsubsection{Summary and coef methods}
 <<rebmix-code, split = FALSE, keep.source = FALSE>>=
@@ -350,7 +350,7 @@ summary(iriscla)
 
 plot(iriscla, nrow = 3, ncol = 2)
 @
-\caption{Dataset \texttt{iris}. Predictive class membership (coloured circles), error (large circles).}
+\caption{Dataset \texttt{iris}. Predictive class membership (coloured circles), error (black circles).}
 \end{figure}
 \subsection{Multivariate \texttt{adult} dataset}
 The \texttt{adult} dataset containing $48842$ instances with $16$ continuous, binary and discrete variables was extracted from the census bureau database \citet{Asuncion_Newman_2007}. Extraction was done by Barry Becker from the 1994 census bureau database. The \texttt{adult} dataset is loaded, complete cases are extracted and levels are replaced with numbers.
@@ -420,7 +420,7 @@ summary(adultcla)
 
 plot(adultcla, nrow = 5, ncol = 2)
 @
-\caption{Dataset \texttt{adult}. Predictive class membership (coloured circles), error (large circles).}
+\caption{Dataset \texttt{adult}. Predictive class membership (coloured circles), error (black circles).}
 \end{figure}
 <<rebmix-code, split = FALSE, echo = FALSE, results = hide, keep.source = FALSE>>=
 rm(list = ls())
