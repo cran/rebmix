@@ -1,5 +1,11 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.9.3}{ 
+\itemize{
+\item Acceleration rate has been improved. It is now progressively increasing.
+\item The Newton-Raphson root finding in C++ functions has been improved. It affects only \code{"Weibull"}, \code{"gamma"} and \code{"vonMises"} parametric families.
+}
+}
 \section{Changes in version 2.9.2}{ 
 \itemize{
 \item Continuous circular parametric family \code{"vonMises"} is added.

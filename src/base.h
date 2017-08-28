@@ -1,6 +1,11 @@
 #ifndef BASE_H_INCLUDED
 #define BASE_H_INCLUDED
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4514)
+#pragma warning(disable: 4820)
+#endif
+
 #include <float.h>
 
 #ifndef _MEMORY_LEAK_SWITCH
@@ -60,7 +65,7 @@
 #endif  
 
 #ifndef Eps
-#define Eps (FLOAT)0.000001
+#define Eps (FLOAT)0.00001
 #endif
 
 #ifndef TLA_MAX_LN 
