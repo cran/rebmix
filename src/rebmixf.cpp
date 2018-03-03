@@ -99,6 +99,9 @@ int CompnentDistribution::Memmove(CompnentDistribution *CmpTheta)
 Rebmix::Rebmix()
 {
     p_value_ = (FLOAT)0.0;
+    min_dist_mul_ = (FLOAT)0.0;
+    var_mul_ = (FLOAT)0.0;
+    kmax_ = (FLOAT)0.0;
     ChiSqr_ = (FLOAT)0.0;
     curr_ = NULL;
     o_ = 0;
@@ -128,6 +131,7 @@ Rebmix::Rebmix()
     opt_logL_ = NULL;
     opt_D_ = NULL;
     all_length_ = 0;
+    all_I_ = NULL;
     all_K_ = NULL;
     all_IC_ = NULL;
     memset(&additional_, 0, sizeof(AdditionalParameterType));
@@ -142,6 +146,8 @@ Rebmix::~Rebmix()
     if (all_IC_) free(all_IC_);
 
     if (all_K_) free(all_K_);
+
+    if (all_I_) free(all_I_);
 
     if (opt_D_) free(opt_D_);
 
@@ -208,7 +214,7 @@ Rebmix::~Rebmix()
     }
 } // ~Rebmix
 
-// Adds number of classes or k-nearest neighbours to be processed.Returns 0 if none is added.Otherwise 1 is returned.
+// Adds number of classes or k-nearest neighbours to be processed. Returns 0 if none is added. Otherwise 1 is returned.
 
 int Rebmix::Golden()
 {
@@ -224,7 +230,7 @@ int Rebmix::Golden()
             }
         }
 
-        additional_.a = 0; additional_.d = all_length_ - 1;
+        additional_.a = 0; additional_.b = all_length_ - 1;
 
         for (i = 0; i < all_length_; i++) if (all_K_[i]) {
             if (i < iopt) {
@@ -232,39 +238,35 @@ int Rebmix::Golden()
             }
             else
             if (i > iopt) {
-                additional_.d = i; break;
+                additional_.b = i; break;
             }
         }
 
-        additional_.b = Max(additional_.a, additional_.d - (int)ceil((additional_.d - additional_.a) / Phi));
-        additional_.c = Min(additional_.d, additional_.a + (int)ceil((additional_.d - additional_.a) / Phi));
+        additional_.c = additional_.b - (int)ceil((additional_.b - additional_.a) / Phi);
+        additional_.d = additional_.a + (int)ceil((additional_.b - additional_.a) / Phi);
 
-        all_K_[additional_.b] = additional_.b + all_K_[0];
         all_K_[additional_.c] = additional_.c + all_K_[0];
+        all_K_[additional_.d] = additional_.d + all_K_[0];
 
         additional_.Bracket = 0;
     }
     else {
-        if (all_IC_[additional_.c] > all_IC_[additional_.b]) {
-            additional_.d = additional_.c;
-            additional_.c = additional_.b;
-            additional_.b = Max(additional_.a, additional_.d - (int)ceil((additional_.d - additional_.a) / Phi));
-
-            all_K_[additional_.b] = additional_.b + all_K_[0];
+        if (all_IC_[additional_.c] <= all_IC_[additional_.d]) {
+            additional_.b = additional_.d;
         }
         else {
-            additional_.a = additional_.b;
-            additional_.b = additional_.c;
-            additional_.c = Min(additional_.d, additional_.a + (int)ceil((additional_.d - additional_.a) / Phi));
-
-            all_K_[additional_.c] = additional_.c + all_K_[0];
+            additional_.a = additional_.c;
         }
 
-        Stop = additional_.d - additional_.a < 4;
+        additional_.c = additional_.b - (int)ceil((additional_.b - additional_.a) / Phi);
+        additional_.d = additional_.a + (int)ceil((additional_.b - additional_.a) / Phi);
 
-        if (Stop) for (i = additional_.a + 1; i < additional_.d; i++) if (all_IC_[i] == FLOAT_MAX) {
-            all_K_[i] = i + all_K_[0]; Stop = 0;
-        }
+        Stop = additional_.b - additional_.a < 3;
+
+        all_K_[additional_.a] = additional_.a + all_K_[0];
+        all_K_[additional_.b] = additional_.b + all_K_[0];
+        all_K_[additional_.c] = additional_.c + all_K_[0];
+        all_K_[additional_.d] = additional_.d + all_K_[0];
     }
 
     return (Stop);
@@ -282,8 +284,10 @@ int Rebmix::Initialize()
 
     var_mul_ = (FLOAT)0.0625;
 
-    Error = GammaInv((FLOAT)1.0 - (FLOAT)2.0 * p_value_, (FLOAT)2.0, length_pdf_ / (FLOAT)2.0, &ChiSqr_);
+    kmax_ = ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_) * (FLOAT)pow((FLOAT)n_, (FLOAT)1.0 / ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_));
 
+    Error = GammaInv((FLOAT)1.0 - (FLOAT)2.0 * p_value_, (FLOAT)2.0, length_pdf_ / (FLOAT)2.0, &ChiSqr_);
+    
     return (Error);
 } // Initialize
 
@@ -352,7 +356,7 @@ E0: if (Dk) free(Dk);
 int Rebmix::PreprocessingPW(FLOAT *h,   // Sides of the hypersquare.
                             FLOAT **Y)  // Pointer to the input array [y0,...,yd-1,kl,k].
 {
-    int i, j, k;
+    int i, j, l;
     int Error = n_ < 1;
 
     if (Error) goto E0;
@@ -363,7 +367,7 @@ int Rebmix::PreprocessingPW(FLOAT *h,   // Sides of the hypersquare.
 
     for (i = 0; i < n_; i++) {
         for (j = i; j < n_; j++) {
-            for (k = 0; k < length_pdf_; k++) if ((FLOAT)fabs(Y[i][k] - Y[j][k]) > (FLOAT)0.5 * h[k]) goto S0;
+            for (l = 0; l < length_pdf_; l++) if ((FLOAT)fabs(Y[i][l] - Y[j][l]) > (FLOAT)0.5 * h[l]) goto S0;
 
             Y[i][length_pdf_ + 1] += (FLOAT)1.0; if (i != j) Y[j][length_pdf_ + 1] += (FLOAT)1.0;
 S0:;
@@ -375,10 +379,10 @@ E0: return Error;
 
 // Preprocessing of observations for histogram.
 
-int Rebmix::PreprocessingH(FLOAT *h,   // Sides of the hypersquare.
-                           FLOAT *y0,  // Origins.
-                           int   *k,   // Total number of bins.
-                           FLOAT **Y)  // Pointer to the input array [y0,...,yd-1,kl].
+int Rebmix::PreprocessingH(FLOAT *h,  // Sides of the hypersquare.
+                           FLOAT *y0, // Origins.
+                           int   *k,  // Total number of bins.
+                           FLOAT **Y) // Pointer to the input array [y0,...,yd-1,kl].
 {
     int i, j, l;
     int Error = n_ < 1;
@@ -402,6 +406,46 @@ S0:;
         }
 
         Y[*k][length_pdf_] = (FLOAT)1.0; (*k)++;
+S1:;
+    }
+       
+E0: return Error;
+} // PreprocessingH
+
+// Preprocessing of observations for histogram.
+
+int Rebmix::PreprocessingH(FLOAT *h,     // Sides of the hypersquare.
+                           FLOAT *y0,    // Origins.
+                           int   *k,     // Total number of bins.
+                           FLOAT **Y,    // Pointer to the input array [y0,...,yd-1,kl].
+                           int   *State) // State variable.
+{
+    int i, j, l;
+    int Error = n_ < 1;
+
+    if (Error) goto E0;
+
+    *k = 0;
+
+    for (i = 0; i < n_; i++) {
+        for (j = 0; j < length_pdf_; j++) {
+            l = (int)floor((Y_[i][j] - y0[j]) / h[j] + (FLOAT)0.5);
+
+            Y[*k][j] = y0[j] + l * h[j];
+        }
+
+        for (j = 0; j < *k; j++) {
+            for (l = 0; l < length_pdf_; l++) if ((FLOAT)fabs(Y[j][l] - Y[*k][l]) >(FLOAT)0.5 * h[l]) goto S0;
+
+            Y[j][length_pdf_] += (FLOAT)1.0; goto S1;
+S0:;
+        }
+
+        Y[*k][length_pdf_] = (FLOAT)1.0; (*k)++;
+
+        if ((*State) && (*k > kmax_)) {
+            *State = 2; goto E0;
+        }
 S1:;
     }
 
@@ -4276,6 +4320,10 @@ int Rebmix::REBMIXKNN()
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
 
+    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+
+    Error = NULL == all_I_; if (Error) goto E0;
+
     all_K_ = (int*)calloc((size_t)all_length_, sizeof(int));
 
     Error = NULL == all_K_; if (Error) goto E0;
@@ -4451,12 +4499,14 @@ int Rebmix::REBMIXKNN()
 
     if (Error) goto E0;
 
-    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_IC_[i] == FLOAT_MAX)) {
+    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_I_[i] == 0)) {
         // Preprocessing of observations.
 
         Error = PreprocessingKNN(all_K_[i], h, Y);
 
         if (Error) goto E0;
+
+        all_I_[i] = 1;
 
         Found = 0; Dmin = (FLOAT)1.0; J = 1;
 
@@ -4770,6 +4820,10 @@ int Rebmix::REBMIXPW()
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
 
+    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+
+    Error = NULL == all_I_; if (Error) goto E0;
+
     all_K_ = (int*)calloc((size_t)all_length_, sizeof(int));
 
     Error = NULL == all_K_; if (Error) goto E0;
@@ -4940,7 +4994,7 @@ int Rebmix::REBMIXPW()
 
     if (Error) goto E0;
 
-    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_IC_[i] == FLOAT_MAX)) {
+    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_I_[i] == 0)) {
         // Preprocessing of observations.
 
         V = (FLOAT)1.0;
@@ -4959,6 +5013,8 @@ int Rebmix::REBMIXPW()
         Error = PreprocessingPW(h, Y);
 
         if (Error) goto E0;
+
+        all_I_[i] = 1;
 
         Found = 0; Dmin = (FLOAT)1.0; J = 1;
 
@@ -5217,7 +5273,7 @@ int Rebmix::REBMIXH()
     int                  c = 0, i, I, j, J, k, l, m, M;
     FLOAT                V, Dmin, r, nl, elp, eln, epsilonlmax, fl, Dl, f, IC, logL, D;
     FLOAT                A = (FLOAT)0.0, ar;
-    int                  Error = 0, Stop = 0, Found = 0, Outlier = 0;
+    int                  Error = 0, Stop = 0, Found = 0, Outlier = 0, State = 0;
 
     // Allocation and initialisation.
 
@@ -5276,6 +5332,10 @@ int Rebmix::REBMIXH()
     Error = NULL == opt_D_; if (Error) goto E0;
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
+
+    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+
+    Error = NULL == all_I_; if (Error) goto E0;
 
     all_K_ = (int*)calloc((size_t)all_length_, sizeof(int));
 
@@ -5469,7 +5529,7 @@ int Rebmix::REBMIXH()
 
     if (Error) goto E0;
 
-    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_IC_[i] == FLOAT_MAX)) {
+    do for (i = 0; i < all_length_; i++) if (all_K_[i] && (all_I_[i] == 0)) {
         // Preprocessing of observations.
 
         k = all_K_[i]; V = (FLOAT)1.0; 
@@ -5494,9 +5554,19 @@ int Rebmix::REBMIXH()
             }
         }
 
-        Error = PreprocessingH(h, y0, &all_K_[i], Y);
+        State = i > 0;
+
+        Error = PreprocessingH(h, y0, &all_K_[i], Y, &State);
 
         if (Error) goto E0;
+
+        all_I_[i] = 1;
+
+        if (State == 2) {
+            for (j = i; j < all_length_; j++) all_I_[j] = 2;
+            
+            goto E1;
+        }
 
         for (j = 0; j < all_K_[i]; j++) K[j] = Y[j][length_pdf_];
 
@@ -5671,7 +5741,7 @@ int Rebmix::REBMIXH()
             memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
         }
 
-        all_K_[i] = k;
+E1:     all_K_[i] = k;
     }
     while (!Golden());
 
@@ -6275,7 +6345,7 @@ int Rebmix::RunTemplateFile(char *file)
     int   Error = 0;
 
     #if (_REBMIXEXE)
-    printf("REBMIX Version 2.9.3\n");
+    printf("REBMIX Version 2.10.0\n");
     #endif
 
     if ((fp = fopen(file, "r")) == NULL) {
