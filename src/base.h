@@ -52,6 +52,10 @@
 #define LogPi (FLOAT)1.1447298858494001741434273513531
 #endif
 
+#ifndef LogPi2
+#define LogPi2 (FLOAT)1.8378770664093454835606594728112
+#endif
+
 #ifndef LogSqrtPi2
 #define LogSqrtPi2 (FLOAT)0.91893853320467274178032973640562
 #endif 
@@ -217,6 +221,13 @@ int LUinvdet(int   n,      // Size of square matrix.
 int Choldc(int   n,   // Size of square matrix.
            FLOAT *A,  // Pointer to the square matrix A.
            FLOAT *L); // Lower triangular factors.
+
+// Returns the determinant and the inverse matrix of A. See http ://www.nr.com/ 
+
+int Cholinvdet(int   n,         // Size of square matrix.
+               FLOAT *A,        // Pointer to the symmetric square matrix A.
+               FLOAT *Ainv,     // Pointer to the inverse matrix of A.
+               FLOAT *logAdet); // Pointer to the logarithm of determinant of A.
 
 // Returns modified Bessel function of order 0. See http://people.math.sfu.ca/~cbm/aands/page_378.htm 
 

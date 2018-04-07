@@ -25,7 +25,7 @@ function(model, ...)
         K <- unique(K)
       }
       else {
-        Sturges <- ceiling(1.0 + log2(n)); RootN <- ceiling(2.0 * n^0.5 - 1)
+        Sturges <- ceiling(1.0 + log2(n)); RootN <- ceiling(2.0 * n^0.5)
         
         K <- kseq(Sturges, RootN, f = 0.25)
         
@@ -303,7 +303,7 @@ function(model, ...)
         K <- unique(K)
       }
       else {
-        Sturges <- ceiling(1.0 + log2(n)); RootN <- ceiling(2.0 * n^0.5 - 1)
+        Sturges <- ceiling(1.0 + log2(n)); RootN <- ceiling(2.0 * n^0.5)
         
         K <- kseq(Sturges, RootN, f = 0.25)
         
@@ -573,7 +573,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("REBMIX Version 2.10.0")
+  message("REBMIX Version 2.10.1")
  
   flush.console()
   

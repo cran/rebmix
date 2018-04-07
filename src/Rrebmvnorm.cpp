@@ -582,7 +582,7 @@ void RCLSMVNORM(int    *n,      // Total number of independent observations.
     for (j = 0; j < *s; j++) {
         for (k = 0; k < *o; k++) {
             for (l = 0; l < C[j][k]; l++) {
-                *Error = LUinvdet(d[k], Theta[j][k][l]->Theta_[1], Theta[j][k][l]->Theta_[2], Theta[j][k][l]->Theta_[3]);
+                *Error = Cholinvdet(d[k], Theta[j][k][l]->Theta_[1], Theta[j][k][l]->Theta_[2], Theta[j][k][l]->Theta_[3]);
 
                 if (*Error) goto E0;
             }
@@ -738,7 +738,7 @@ void RCLRMVNORM(int    *n,      // Total number of independent observations.
     }
 
     for (j = 0; j < *c; j++) {
-        *Error = LUinvdet(*d, Theta[j]->Theta_[1], Theta[j]->Theta_[2], Theta[j]->Theta_[3]);
+        *Error = Cholinvdet(*d, Theta[j]->Theta_[1], Theta[j]->Theta_[2], Theta[j]->Theta_[3]);
 
         if (*Error) goto E0;
     }
@@ -1169,7 +1169,7 @@ void RInformationCriterionKNNMVNORM(double *h,            // Sides of the hypers
     rebmvnorm->cmax_ = *c;
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }
@@ -1216,7 +1216,7 @@ void RInformationCriterionPWMVNORM(double *h,            // Sides of the hypersq
 {
     Rebmvnorm *rebmvnorm = NULL;
     FLOAT     **Y = NULL;
-    FLOAT     V;
+    FLOAT     logV;
     int       i, j, l, m;
 
     rebmvnorm = new Rebmvnorm;
@@ -1375,19 +1375,19 @@ void RInformationCriterionPWMVNORM(double *h,            // Sides of the hypersq
  
     rebmvnorm->cmax_ = *c;
 
-    V = (FLOAT)1.0;
+    logV = (FLOAT)0.0;
 
     for (i = 0; i < rebmvnorm->length_pdf_; i++) {
-        V *= h[i];
+        logV += (FLOAT)log(h[i]);
     }
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }
 
-    *Error = rebmvnorm->InformationCriterionPW(V, 
+    *Error = rebmvnorm->InformationCriterionPW(logV, 
                                                Y, 
                                                *c, 
                                                rebmvnorm->W_, 
@@ -1431,7 +1431,7 @@ void RInformationCriterionHMVNORM(double *h,            // Sides of the hypersqu
 {
     Rebmvnorm *rebmvnorm = NULL;
     FLOAT     **Y = NULL;
-    FLOAT     V;
+    FLOAT     logV;
     int       i, j, l, m;
 
     rebmvnorm = new Rebmvnorm;    
@@ -1588,19 +1588,19 @@ void RInformationCriterionHMVNORM(double *h,            // Sides of the hypersqu
 
     rebmvnorm->cmax_ = *c;
 
-    V = (FLOAT)1.0;
+    logV = (FLOAT)0.0;
 
     for (i = 0; i < rebmvnorm->length_pdf_; i++) {
-        V *= h[i];
+        logV += (FLOAT)log(h[i]);
     }
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }
 
-    *Error = rebmvnorm->InformationCriterionH(V, 
+    *Error = rebmvnorm->InformationCriterionH(logV, 
                                               *k, 
                                               Y, 
                                               *c, 
@@ -1751,7 +1751,7 @@ void RCombineComponentsKNNMVNORM(double *h,            // Sides of the hypersqua
     rebmvnorm->cmax_ = *c;
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }
@@ -1904,7 +1904,7 @@ void RCombineComponentsPWMVNORM(double *h,            // Sides of the hypersquar
     rebmvnorm->cmax_ = *c;
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }
@@ -2057,7 +2057,7 @@ void RCombineComponentsHMVNORM(double *h,            // Sides of the hypersquare
     rebmvnorm->cmax_ = *c;
 
     for (i = 0; i < *c; i++) {
-        *Error = LUinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
+        *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
 
         if (*Error) goto E0;
     }

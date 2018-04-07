@@ -158,7 +158,7 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
                     C[2] = C[0] * C[0] + C[1] * C[1];
                 } while ((C[2] >= (FLOAT)1.0) || (C[2] == (FLOAT)0.0));
 
-                C[3] = (FLOAT)sqrt(-(FLOAT)2.0 * log(C[2]) / C[2]);
+                C[3] = (FLOAT)sqrt(-(FLOAT)2.0 * (FLOAT)log(C[2]) / C[2]);
 
                 y = C[3] * C[0];
 
@@ -180,7 +180,7 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
                     C[2] = C[0] * C[0] + C[1] * C[1];
                 } while ((C[2] >= (FLOAT)1.0) || (C[2] == (FLOAT)0.0));
 
-                C[3] = (FLOAT)sqrt(-(FLOAT)2.0 * log(C[2]) / C[2]);
+                C[3] = (FLOAT)sqrt(-(FLOAT)2.0 * (FLOAT)log(C[2]) / C[2]);
 
                 y = C[3] * C[0];
 
@@ -194,7 +194,7 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
 
             break;
         case pfWeibull:
-            Y[i] = CmpDist->Theta_[0][i] * (FLOAT)exp(log(log((FLOAT)1.0 / Ran1(&IDum_))) / CmpDist->Theta_[1][i]);
+            Y[i] = CmpDist->Theta_[0][i] * (FLOAT)exp((FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_))) / CmpDist->Theta_[1][i]);
 
             break;
         case pfGamma:
@@ -397,7 +397,7 @@ int Rngmix::RunTemplateFile(char *file)
     }
 
     #if (_REBMIXEXE)
-    printf("RNGMIX Version 2.10.0\n");
+    printf("RNGMIX Version 2.10.1\n");
     #endif
 
 S0: while (fgets(line, 2048, fp) != NULL) {
