@@ -69,6 +69,7 @@ Rngmix::~Rngmix()
     }
 } // ~Rngmix
 
+#if (_MAINTAIN_SWITCH)
 // Writes data file.
 
 int Rngmix::WriteDataFile()
@@ -91,7 +92,9 @@ int Rngmix::WriteDataFile()
 
 E0: if (fp) fclose(fp);
 
-    if (Z_) free(Z_); Z_ = NULL;
+    if (Z_) free(Z_); 
+    
+    Z_ = NULL;
 
     if (Y_) {
         for (i = 0; i < n_; i++) {
@@ -103,11 +106,14 @@ E0: if (fp) fclose(fp);
 
     return Error;
 } // WriteDataFile
+#endif
 
+#if (_MAINTAIN_SWITCH)
 // Writes parameters file:
 
 int Rngmix::WriteParameterFile()
 {
+    char line[65536];
     char path[FILENAME_MAX];
     char ext[FILENAME_MAX];
     char *pchar = NULL;
@@ -125,9 +131,9 @@ int Rngmix::WriteParameterFile()
         strcpy(ext, "");
     }
         
-    sprintf(path, "%s%s%s", path, "_1", ext);
+    sprintf(line, "%s%s%s", path, "_1", ext);
 
-    if ((fp = fopen(path, "w")) == NULL) {
+    if ((fp = fopen(line, "w")) == NULL) {
         Error = 1; goto E0;
     }
 
@@ -139,6 +145,7 @@ E0: if (fp) fclose(fp);
 
     return Error;
 } // WriteParameterFile
+#endif
 
 int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
 {
@@ -381,6 +388,7 @@ int Rngmix::RNGMIX()
 E0: return Error;
 } // RNGMIX
 
+#if (_MAINTAIN_SWITCH)
 // Runs template file.
 
 int Rngmix::RunTemplateFile(char *file)
@@ -396,9 +404,7 @@ int Rngmix::RunTemplateFile(char *file)
         Error = 1; goto E0;
     }
 
-    #if (_REBMIXEXE)
-    printf("RNGMIX Version 2.10.1\n");
-    #endif
+    printf("RNGMIX Version 2.10.2\n");
 
 S0: while (fgets(line, 2048, fp) != NULL) {
         pchar = strtok(line, "\n"); 
@@ -460,9 +466,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             for (k = 0; k < o_; k++) {
                 curr_ = open_[k]; 
 
-                #if (_REBMIXEXE)
                 printf("Dataset = %s\n", curr_);
-                #endif
 
                 Error = RNGMIX();
 
@@ -625,3 +629,4 @@ E0: if (fp) fclose(fp);
 
     return Error;
 } // RunTemplateFile
+#endif

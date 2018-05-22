@@ -4767,7 +4767,9 @@ int Rebmix::REBMIXKNN()
                                 elp += E[j];
                             }
                             else {
-                                if (E[j] < -R[j]) E[j] = -R[j]; eln -= E[j];
+                                if (E[j] < -R[j]) E[j] = -R[j]; 
+                                
+                                eln -= E[j];
                             }
                         }
                     }
@@ -5275,7 +5277,9 @@ int Rebmix::REBMIXPW()
                                 elp += E[j];
                             }
                             else {
-                                if (E[j] < -R[j]) E[j] = -R[j]; eln -= E[j];
+                                if (E[j] < -R[j]) E[j] = -R[j]; 
+                                
+                                eln -= E[j];
                             }
                         }
                     }
@@ -5829,7 +5833,9 @@ int Rebmix::REBMIXH()
                                 elp += E[j];
                             }
                             else {
-                                if (E[j] < -R[j]) E[j] = -R[j]; eln -= E[j];
+                                if (E[j] < -R[j]) E[j] = -R[j]; 
+                                
+                                eln -= E[j];
                             }
                         }
                     }
@@ -6026,6 +6032,7 @@ E0: if (O) free(O);
     return Error;
 } // REBMIXH
 
+#if (_MAINTAIN_SWITCH)
 // Reads data file.
 
 int Rebmix::ReadDataFile()
@@ -6120,7 +6127,9 @@ E0: if (fp) fclose(fp);
 
     return Error;
 } // ReadDataFile
+#endif
 
+#if (_MAINTAIN_SWITCH)
 // Writes data file.
 
 int Rebmix::WriteDataFile()
@@ -6150,9 +6159,9 @@ int Rebmix::WriteDataFile()
         strcpy(ext, "");
     }
         
-    sprintf(path, "%s%s%s", path, "_1", ext);
+    sprintf(line, "%s%s%s", path, "_1", ext);
 
-    if ((fp0 = fopen(path, mode)) == NULL) {
+    if ((fp0 = fopen(line, mode)) == NULL) {
         Error = 1; goto E0;
     }
 
@@ -6167,9 +6176,9 @@ int Rebmix::WriteDataFile()
         strcpy(ext, "");
     }
         
-    sprintf(path, "%s%s%s", path, "_2", ext);
+    sprintf(line, "%s%s%s", path, "_2", ext);
 
-    if ((fp1 = fopen(path, mode)) == NULL) {
+    if ((fp1 = fopen(line, mode)) == NULL) {
         Error = 1; goto E0;
     }
 
@@ -6542,7 +6551,9 @@ E0: if (fp0) fclose(fp0);
 
     return Error;
 } // WriteDataFile
+#endif
 
+#if (_MAINTAIN_SWITCH)
 // Runs template file.
 
 int Rebmix::RunTemplateFile(char *file)
@@ -6554,9 +6565,7 @@ int Rebmix::RunTemplateFile(char *file)
     FILE  *fp = NULL;
     int   Error = 0;
 
-    #if (_REBMIXEXE)
-    printf("REBMIX Version 2.10.1\n");
-    #endif
+    printf("REBMIX Version 2.10.2\n");
 
     if ((fp = fopen(file, "r")) == NULL) {
         Error = 1; goto E0;
@@ -6622,9 +6631,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
                 if (Error) goto E0;
 
-                #if (_REBMIXEXE)
                 printf("Dataset = %s\n", curr_);
-                #endif
 
                 Error = REBMIX();
 
@@ -6999,6 +7006,7 @@ E0: if (fp) fclose(fp);
 
     return Error;
 } // RunTemplateFile
+#endif
 
 // REBMIX algorithm.
 
