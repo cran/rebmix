@@ -1,5 +1,5 @@
 #include <math.h>
-#include <float.h> 
+#include <float.h>
 
 #include <stdio.h>
 #include <ctype.h>
@@ -37,7 +37,7 @@ int Rebmvnorm::ComponentConditionalDist(int                  i,           // Ind
     FLOAT y, Mean, Stdev;
     int   Error = 0;
 
-    Mean = CmpTheta->Theta_[0][i]; 
+    Mean = CmpTheta->Theta_[0][i];
 
     o = i * length_pdf_ + i;
 
@@ -142,7 +142,7 @@ S1:;
     if (nl >= length_pdf_) {
         for (i = 0; i < length_pdf_; i++) {
             Sum = (FLOAT)0.0;
-        
+
             for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                 Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][i] - Mode[i].ym);
             }
@@ -151,7 +151,7 @@ S1:;
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][ii] - Mode[ii].ym);
                 }
@@ -163,7 +163,7 @@ S1:;
         // Correlation matrix.
 
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; 
+            o = i * length_pdf_ + i;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i; r = ii * length_pdf_ + ii;
@@ -177,7 +177,7 @@ S1:;
         }
 
         for (i = 0; i < length_pdf_; i++) {
-            C[i * length_pdf_ + i] = (FLOAT)1.0; 
+            C[i * length_pdf_ + i] = (FLOAT)1.0;
         }
 
         Error = Cholinvdet(length_pdf_, C, Cinv, &logCdet);
@@ -186,7 +186,7 @@ S1:;
     }
     else {
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0; 
+            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
@@ -226,23 +226,23 @@ S1:;
 
     epsilon = (FLOAT)exp(-(FLOAT)2.0 * (LogSqrtPi2 + logflm / length_pdf_) - RigidTheta->Theta_[3][0] / length_pdf_);
 
-    if (epsilon > (FLOAT)1.0) {
-        RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
+//  if (epsilon > (FLOAT)1.0) {
+    RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
 
-        for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i;
+    for (i = 0; i < length_pdf_; i++) {
+        o = i * length_pdf_ + i;
 
-            RigidTheta->Theta_[1][o] *= epsilon;
-            RigidTheta->Theta_[2][o] /= epsilon;
+        RigidTheta->Theta_[1][o] *= epsilon;
+        RigidTheta->Theta_[2][o] /= epsilon;
 
-            for (ii = 0; ii < i; ii++) {
-                p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
+        for (ii = 0; ii < i; ii++) {
+            p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
 
-                RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
-                RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
-            }
+            RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
+            RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
         }
     }
+//  }
 
     Error = LooseTheta->Memmove(RigidTheta);
 
@@ -338,14 +338,14 @@ E0: if (Cinv) free(Cinv);
     return Error;
 } // RoughEstimationKNN
 
-// Rough component parameter estimation for Parzen window.
+// Rough component parameter estimation for kernel density estimation.
 
-int Rebmvnorm::RoughEstimationPW(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
-                                 FLOAT                *h,          // Sides of the hypersquare.
-                                 FLOAT                nl,          // Total number of observations in class l.
-                                 int                  m,           // Mode index.
-                                 CompnentDistribution *RigidTheta, // Rigid parameters.
-                                 CompnentDistribution *LooseTheta) // Loose parameters.
+int Rebmvnorm::RoughEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+                                  FLOAT                *h,          // Sides of the hypersquare.
+                                  FLOAT                nl,          // Total number of observations in class l.
+                                  int                  m,           // Mode index.
+                                  CompnentDistribution *RigidTheta, // Rigid parameters.
+                                  CompnentDistribution *LooseTheta) // Loose parameters.
 {
     int                i, ii, j, l, o, p, q, r, *N = NULL;
     RoughParameterType *Mode = NULL;
@@ -374,7 +374,7 @@ int Rebmvnorm::RoughEstimationPW(FLOAT                **Y,         // Pointer to
             for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                 for (l = 0; l < length_pdf_; l++) if ((i != l) && ((FLOAT)fabs(Y[j][l] - Y[m][l]) > (FLOAT)0.5 * h[l])) goto S0;
 
-                Mode[i].klm += Y[j][length_pdf_]; 
+                Mode[i].klm += Y[j][length_pdf_];
 
                 X_[N[i]][i] = Y[m][i] + (int)floor((Y[j][i] - Y[m][i]) / h[i] + (FLOAT)0.5) * h[i];
 
@@ -419,7 +419,7 @@ S1:;
     if (nl >= length_pdf_) {
         for (i = 0; i < length_pdf_; i++) {
             Sum = (FLOAT)0.0;
-        
+
             for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                 Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][i] - Mode[i].ym);
             }
@@ -428,7 +428,7 @@ S1:;
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][ii] - Mode[ii].ym);
                 }
@@ -440,7 +440,7 @@ S1:;
         // Correlation matrix.
 
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; 
+            o = i * length_pdf_ + i;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i; r = ii * length_pdf_ + ii;
@@ -454,7 +454,7 @@ S1:;
         }
 
         for (i = 0; i < length_pdf_; i++) {
-            C[i * length_pdf_ + i] = (FLOAT)1.0; 
+            C[i * length_pdf_ + i] = (FLOAT)1.0;
         }
 
         Error = Cholinvdet(length_pdf_, C, Cinv, &logCdet);
@@ -463,7 +463,7 @@ S1:;
     }
     else {
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0; 
+            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
@@ -503,23 +503,23 @@ S1:;
 
     epsilon = (FLOAT)exp(-(FLOAT)2.0 * (LogSqrtPi2 + logflm / length_pdf_) - RigidTheta->Theta_[3][0] / length_pdf_);
 
-    if (epsilon > (FLOAT)1.0) {
-        RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
+//  if (epsilon > (FLOAT)1.0) {
+    RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
 
-        for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i;
+    for (i = 0; i < length_pdf_; i++) {
+        o = i * length_pdf_ + i;
 
-            RigidTheta->Theta_[1][o] *= epsilon;
-            RigidTheta->Theta_[2][o] /= epsilon;
+        RigidTheta->Theta_[1][o] *= epsilon;
+        RigidTheta->Theta_[2][o] /= epsilon;
 
-            for (ii = 0; ii < i; ii++) {
-                p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
+        for (ii = 0; ii < i; ii++) {
+            p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
 
-                RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
-                RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
-            }
+            RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
+            RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
         }
     }
+//  }
 
     Error = LooseTheta->Memmove(RigidTheta);
 
@@ -611,7 +611,7 @@ E0: if (Cinv) free(Cinv);
     if (Mode) free(Mode);
 
     return Error;
-} // RoughEstimationPW
+} // RoughEstimationKDE
 
 // Rough component parameter estimation for histogram.
 
@@ -680,7 +680,7 @@ S0:;
     if (nl >= length_pdf_) {
         for (i = 0; i < length_pdf_; i++) {
             Sum = (FLOAT)0.0;
-        
+
             for (j = 0; j < k; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                 Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][i] - Mode[i].ym);
             }
@@ -689,7 +689,7 @@ S0:;
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < k; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - Mode[i].ym) * (Y[j][ii] - Mode[ii].ym);
                 }
@@ -701,7 +701,7 @@ S0:;
         // Correlation matrix.
 
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; 
+            o = i * length_pdf_ + i;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i; r = ii * length_pdf_ + ii;
@@ -715,7 +715,7 @@ S0:;
         }
 
         for (i = 0; i < length_pdf_; i++) {
-            C[i * length_pdf_ + i] = (FLOAT)1.0; 
+            C[i * length_pdf_ + i] = (FLOAT)1.0;
         }
 
         Error = Cholinvdet(length_pdf_, C, Cinv, &logCdet);
@@ -724,7 +724,7 @@ S0:;
     }
     else {
         for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0; 
+            o = i * length_pdf_ + i; C[o] = Cinv[o] = (FLOAT)1.0;
 
             for (ii = 0; ii < i; ii++) {
                 p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
@@ -764,23 +764,23 @@ S0:;
 
     epsilon = (FLOAT)exp(-(FLOAT)2.0 * (LogSqrtPi2 + logflm / length_pdf_) - RigidTheta->Theta_[3][0] / length_pdf_);
 
-    if (epsilon > (FLOAT)1.0) {
-        RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
+//  if (epsilon > (FLOAT)1.0) {
+    RigidTheta->Theta_[3][0] += length_pdf_ * (FLOAT)log(epsilon);
 
-        for (i = 0; i < length_pdf_; i++) {
-            o = i * length_pdf_ + i;
+    for (i = 0; i < length_pdf_; i++) {
+        o = i * length_pdf_ + i;
 
-            RigidTheta->Theta_[1][o] *= epsilon;
-            RigidTheta->Theta_[2][o] /= epsilon;
+        RigidTheta->Theta_[1][o] *= epsilon;
+        RigidTheta->Theta_[2][o] /= epsilon;
 
-            for (ii = 0; ii < i; ii++) {
-                p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
+        for (ii = 0; ii < i; ii++) {
+            p = i * length_pdf_ + ii; q = ii * length_pdf_ + i;
 
-                RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
-                RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
-            }
+            RigidTheta->Theta_[1][p] = RigidTheta->Theta_[1][q] *= epsilon;
+            RigidTheta->Theta_[2][p] = RigidTheta->Theta_[2][q] /= epsilon;
         }
     }
+//  }
 
     Error = LooseTheta->Memmove(RigidTheta);
 
@@ -922,7 +922,7 @@ int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointe
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - EnhanTheta->Theta_[0][i]) * (Y[j][ii] - EnhanTheta->Theta_[0][ii]);
                 }
@@ -948,12 +948,12 @@ E0: if (EnhanTheta) delete EnhanTheta;
     return Error;
 } // EnhancedEstimationKNN
 
-// Enhanced component parameter estimation for Parzen window.
+// Enhanced component parameter estimation for kernel density estimation.
 
-int Rebmvnorm::EnhancedEstimationPW(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
-                                    FLOAT                nl,          // Total number of observations in class l.
-                                    CompnentDistribution *RigidTheta, // Rigid parameters.
-                                    CompnentDistribution *LooseTheta) // Loose parameters.
+int Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+                                     FLOAT                nl,          // Total number of observations in class l.
+                                     CompnentDistribution *RigidTheta, // Rigid parameters.
+                                     CompnentDistribution *LooseTheta) // Loose parameters.
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                Sum;
@@ -996,7 +996,7 @@ int Rebmvnorm::EnhancedEstimationPW(FLOAT                **Y,         // Pointer
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < n_; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - EnhanTheta->Theta_[0][i]) * (Y[j][ii] - EnhanTheta->Theta_[0][ii]);
                 }
@@ -1020,7 +1020,7 @@ int Rebmvnorm::EnhancedEstimationPW(FLOAT                **Y,         // Pointer
 E0: if (EnhanTheta) delete EnhanTheta;
 
     return Error;
-} // EnhancedEstimationPW
+} // EnhancedEstimationKDE
 
 // Enhanced component parameter estimation for histogram.
 
@@ -1071,7 +1071,7 @@ int Rebmvnorm::EnhancedEstimationH(int                  k,           // Total nu
 
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
-        
+
                 for (j = 0; j < k; j++) if (Y[j][length_pdf_] > FLOAT_MIN) {
                     Sum += Y[j][length_pdf_] * (Y[j][i] - EnhanTheta->Theta_[0][i]) * (Y[j][ii] - EnhanTheta->Theta_[0][ii]);
                 }
@@ -1161,7 +1161,7 @@ int Rebmvnorm::BayesClassificationKNN(FLOAT                **Y,        // Pointe
             if (Outlier) {
                 N += Y[i][length_pdf_];
             }
-            else { 
+            else {
                 dW = Y[i][length_pdf_] / n_; W[l] += dW;
 
                 for (j = 0; j < length_pdf_; j++) {
@@ -1206,14 +1206,14 @@ int Rebmvnorm::BayesClassificationKNN(FLOAT                **Y,        // Pointe
 E0: return Error;
 } // BayesClassificationKNN
 
-// Bayes classification of the remaining observations for Parzen window.
+// Bayes classification of the remaining observations for kernel density estimation.
 
-int Rebmvnorm::BayesClassificationPW(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                     int                  c,          // Number of components.
-                                     FLOAT                *W,         // Component weights.
-                                     CompnentDistribution **MixTheta, // Mixture parameters.
-                                     FLOAT                **FirstM,   // First moments.
-                                     FLOAT                **SecondM)  // Second moments.
+int Rebmvnorm::BayesClassificationKDE(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
+                                      int                  c,          // Number of components.
+                                      FLOAT                *W,         // Component weights.
+                                      CompnentDistribution **MixTheta, // Mixture parameters.
+                                      FLOAT                **FirstM,   // First moments.
+                                      FLOAT                **SecondM)  // Second moments.
 {
     int   i, j, jj, l, o, p, q, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
@@ -1244,7 +1244,7 @@ int Rebmvnorm::BayesClassificationPW(FLOAT                **Y,        // Pointer
             if (Outlier) {
                 N += Y[i][length_pdf_];
             }
-            else { 
+            else {
                 dW = Y[i][length_pdf_] / n_; W[l] += dW;
 
                 for (j = 0; j < length_pdf_; j++) {
@@ -1287,7 +1287,7 @@ int Rebmvnorm::BayesClassificationPW(FLOAT                **Y,        // Pointer
     }
 
 E0: return Error;
-} // BayesClassificationPW
+} // BayesClassificationKDE
 
 // Bayes classification of the remaining observations for histogram.
 
@@ -1321,14 +1321,14 @@ int Rebmvnorm::BayesClassificationH(int                  k,          // Total nu
                 Tmp = W[j] * CmpDist;
 
                 if (Tmp > Max) {
-                    l = j; Max = Tmp; Outlier = outlier; 
+                    l = j; Max = Tmp; Outlier = outlier;
                 }
             }
 
             if (Outlier) {
                 N += Y[i][length_pdf_];
             }
-            else { 
+            else {
                 dW = Y[i][length_pdf_] / n_; W[l] += dW;
 
                 for (j = 0; j < length_pdf_; j++) {

@@ -38,27 +38,30 @@ devAskNewPage(ask = TRUE)
 
 n <- c(100, 100, 100, 100)
 
-Theta <- list(pdf1 = "gamma",
-  theta1.1 = c(1/100, 1/100, 1/100, 1/100),
-  theta2.1 = c(200, 400, 600, 800))
+Theta <- new("RNGMIX.Theta", c = 4, pdf = "gamma")
 
-gamma1 <- RNGMIX(Dataset.name = "gamma1", n = n, Theta = Theta)
+a.theta1(Theta) <- rep(1/100, 4)
+a.theta2(Theta) <- c(200, 400, 600, 800)
+
+gamma1 <- RNGMIX(Dataset.name = "gamma1", n = n, Theta = a.Theta(Theta))
 
 n <- c(40, 360)
 
-Theta <- list(pdf1 = "gamma",
-  theta1.1 = c(1/27, 1/270),
-  theta2.1 = c(9, 90))
+Theta <- new("RNGMIX.Theta", c = 2, pdf = "gamma")
 
-gamma2 <- RNGMIX(Dataset.name = "gamma2", n = n, Theta = Theta)
+a.theta1(Theta) <- c(1/27, 1 / 270)
+a.theta2(Theta) <- c(9, 90)
+
+gamma2 <- RNGMIX(Dataset.name = "gamma2", n = n, Theta = a.Theta(Theta))
 
 n <- c(80, 240, 80)
 
-Theta <- list(pdf1 = "gamma",
-  theta1.1 = c(1/20, 1, 1/20),
-  theta2.1 = c(40, 6, 200))
+Theta <- new("RNGMIX.Theta", c = 3, pdf = "gamma")
 
-gamma3 <- RNGMIX(Dataset.name = "gamma3", rseed = -4, n = n, Theta = Theta)
+a.theta1(Theta) <- c(1/20, 1, 1/20)
+a.theta2(Theta) <- c(40, 6, 200)
+
+gamma3 <- RNGMIX(Dataset.name = "gamma3", rseed = -4, n = n, Theta = a.Theta(Theta))
 
 
 ###################################################
@@ -66,19 +69,19 @@ gamma3 <- RNGMIX(Dataset.name = "gamma3", rseed = -4, n = n, Theta = Theta)
 ###################################################
 ## Estimate number of components, component weights and component parameters.
 
-gamma1est <- REBMIX(Dataset = gamma1@Dataset,
-  Preprocessing = "Parzen window",
+gamma1est <- REBMIX(Dataset = a.Dataset(gamma1),
+  Preprocessing = "kernel density estimation",
   cmax = 8,
   Criterion = c("AIC", "BIC"),
   pdf = "gamma")
 
-gamma2est <- REBMIX(Dataset = gamma2@Dataset,
+gamma2est <- REBMIX(Dataset = a.Dataset(gamma2),
   Preprocessing = "histogram",
   cmax = 8,
   Criterion = "BIC",
   pdf = "gamma")
 
-gamma3est <- REBMIX(Dataset = gamma3@Dataset,
+gamma3est <- REBMIX(Dataset = a.Dataset(gamma3),
   Preprocessing = "histogram",
   cmax = 8,
   Criterion = "BIC",
@@ -97,7 +100,9 @@ plot(gamma3est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
 ###################################################
 summary(gamma2est)
 
-coef(gamma1est, pos = 2)
+a.theta1.all(gamma1est, pos = 2)
+
+a.theta2.all(gamma1est, pos = 2)
 
 
 ###################################################
@@ -123,17 +128,13 @@ summary(gamma3boot)
 
 n <- c(200, 200, 200)
 
-Theta <- list(pdf1 = rep("Poisson", 2),
-  theta1.1 = c(3, 2),
-  theta2.1 = c(NA, NA),
-  pdf2 = rep("Poisson", 2),
-  theta1.2 = c(9, 10),
-  theta2.2 = c(NA, NA),
-  pdf3 = rep("Poisson", 2),
-  theta1.3 = c(15, 16),
-  theta2.3 = c(NA, NA))
+Theta <- new("RNGMIX.Theta", c = 3, pdf = rep("Poisson", 2))
 
-poisson <- RNGMIX(Dataset.name = paste("Poisson_", 1:10, sep = ""), n = n, Theta = Theta)
+a.theta1(Theta, 1) <- c(3, 2)
+a.theta1(Theta, 2) <- c(9, 10)
+a.theta1(Theta, 3) <- c(15, 16)
+
+poisson <- RNGMIX(Dataset.name = paste("Poisson_", 1:10, sep = ""), n = n, Theta = a.Theta(Theta))
 
 
 ###################################################
@@ -141,7 +142,7 @@ poisson <- RNGMIX(Dataset.name = paste("Poisson_", 1:10, sep = ""), n = n, Theta
 ###################################################
 ## Estimate number of components, component weights and component parameters.
 
-poissonest <- REBMIX(Dataset = poisson@Dataset,
+poissonest <- REBMIX(Dataset = a.Dataset(poisson),
   Preprocessing = "histogram",
   cmax = 10,
   Criterion = "MDL5",
@@ -158,7 +159,7 @@ plot(poissonest, pos = 9, what = c("dens", "marg", "IC", "D", "logL"), nrow = 2,
 ###################################################
 ### code chunk number 11: poisson-clu-fig
 ###################################################
-poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = poisson@Zt)
+poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = a.Zt(poisson))
 
 plot(poissonclu)
 
@@ -170,7 +171,9 @@ plot(poissonclu)
 
 summary(poissonest)
 
-coef(poissonest, pos = 9)
+a.theta1.all(poissonest, pos = 9)
+
+a.theta2.all(poissonest, pos = 9)
 
 
 ###################################################
@@ -210,8 +213,6 @@ plot(wreathclu, s = 14)
 ###################################################
 summary(wreathest)
 
-coef(wreathest)
-
 
 ###################################################
 ### code chunk number 18: rebmix-code
@@ -232,7 +233,7 @@ data("Baudry_etal_2010_JCGS_examples", package = "mclust")
 
 ex4.1est <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
-  Preprocessing = "Parzen window",
+  Preprocessing = "kernel density estimation",
   cmax = 10,
   Criterion = "AIC")
 
@@ -280,8 +281,8 @@ Iris <- split(p = 0.75, Dataset = iris, class = 5)
 # parameters for train subsets.
 
 irisest <- REBMIX(model = "REBMVNORM",
-  Dataset = Iris@train,
-  Preprocessing = "Parzen window",
+  Dataset = a.train(Iris),
+  Preprocessing = "kernel density estimation",
   cmax = 10,
   Criterion = "ICL-BIC")
 
@@ -293,8 +294,8 @@ irisest <- REBMIX(model = "REBMVNORM",
 
 iriscla <- RCLSMIX(model = "RCLSMVNORM",
   x = list(irisest),
-  Dataset = Iris@test,
-  Zt = Iris@Zt)
+  Dataset = a.test(Iris),
+  Zt = a.Zt(Iris))
 
 
 ###################################################
@@ -356,7 +357,7 @@ Adult <- split(p = list(type = 1, train = 2, test = 1),
 adultest <- list()
 
 for (i in 1:14) {
-  adultest[[i]] <- REBMIX(Dataset = chunk(Adult, i)@train,
+  adultest[[i]] <- REBMIX(Dataset = a.train(chunk(Adult, i)),
     Preprocessing = "histogram",
     cmax = min(120, cmax[i]),
     Criterion = "BIC",
@@ -371,8 +372,8 @@ for (i in 1:14) {
 # Class membership prediction based upon the best first search algorithm.
 
 adultcla <- BFSMIX(x = adultest,
-  Dataset = Adult@test,
-  Zt = Adult@Zt)
+  Dataset = a.test(Adult),
+  Zt = a.Zt(Adult))
 
 
 ###################################################

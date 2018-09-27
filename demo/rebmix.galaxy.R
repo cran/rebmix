@@ -31,7 +31,7 @@ pdf <- c("normal", "lognormal", "Weibull", "gamma")
 
 for (i in 1:4) {
   galaxyest[[i]] <- REBMIX(Dataset = list(galaxy = galaxy),
-    Preprocessing = c("histogram", "Parzen window"),
+    Preprocessing = c("histogram", "kernel density estimation"),
     cmax = 10,
     Criterion = c("AIC", "BIC"),
     pdf = pdf[i],
@@ -48,4 +48,6 @@ summary(galaxyest$gamma)
 plot(galaxyest$lognormal, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
 #dev.off() # Uncomment to use tikzDevice package.
 
-coef(galaxyest$lognormal, pos = 1)
+a.theta1.all(galaxyest$lognormal, pos = 1)
+
+a.theta2.all(galaxyest$lognormal, pos = 1)

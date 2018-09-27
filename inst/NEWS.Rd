@@ -1,5 +1,20 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.10.3}{ 
+\itemize{
+\item Method \code{Zp} is replaced by \code{a.Zp} accessor method.
+\item Method \code{coef} is replaced by \code{a.theta1.all} and \code{a.theta2.all} accessor methods.
+\item Accessor methods are added for all slots.
+\item Class \code{"RNGMIX.Theta"} is added.
+\item Method \code{show} is added for \code{"RCLS.chunk"} class.
+\item Minimum number of component \code{cmin} is added to \code{REBMIX} arguments.
+\item Minimum number of component \code{cmin} slot is added to \code{"REBMIX"} class.
+\item Improved C++ functions \code{REBMIXKNN()}, \code{REBMIXKDE()} and \code{REBMIXH()}.
+\item Preprocessing \code{"Parzen window"} is renamed to \code{"kernel density estimation"}.
+\item Rough parameter estimation for binomial and Poisson parametric families is improved.
+\item Latent class analysis is added.
+}
+}
 \section{Changes in version 2.10.2}{ 
 \itemize{
 \item Method \code{split} is improved.
@@ -213,7 +228,7 @@
 \item Method \code{predict.list} for class membership prediction is added.
 \item The package does not write to stdout and read from stdout any more.
 \item The package is protected against wrong input arguments.
-\item Additional arguments \code{Variables}, \code{Theta1}, \code{Theta2}, \code{ymin}, \code{ymax} and \code{b} 
+\item Additional arguments \code{Variables}, \code{theta1}, \code{theta2}, \code{ymin}, \code{ymax} and \code{b} 
     enter function \code{REBMIX}.
 \item Minimum radius \code{RMIN} is eliminated.
 \item Simplified treatment of global modes with equal probabilities in C functions \code{GlobalModeKNN()}, 

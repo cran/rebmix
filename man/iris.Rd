@@ -3,8 +3,8 @@
 \alias{iris}
 \title{Iris Data Set}
 \description{
-This is perhaps the best known database to be found in the pattern recognition literature. 
-Fisher's paper is a classic in the field and is referenced frequently to this day. The data set contains 3 classes of 50 instances each, 
+This is perhaps the best known database to be found in the pattern recognition literature.
+Fisher's paper is a classic in the field and is referenced frequently to this day. The data set contains 3 classes of 50 instances each,
 where each class refers to a type of iris plant. One class is linearly separable from the other 2; the latter are NOT linearly separable from each other.
 }
 \usage{
@@ -53,23 +53,17 @@ set.seed(5)
 
 Iris <- split(p = 0.75, Dataset = iris, class = 5)
 
-# Estimate number of components, component weights and component 
+# Estimate number of components, component weights and component
 # parameters for train subsets.
 
-n <- range(Iris@ntrain)
-
-K <- c(as.integer(1 + log2(n[1])), # Minimum v follows Sturges rule.
-  as.integer(10 * log10(n[2]))) # Maximum v follows log10 rule.
-
-K <- c(floor(K[1]^(1/4)), ceiling(K[2]^(1/4)))
+n <- range(a.ntrain(Iris))
 
 irisest <- REBMIX(model = "REBMVNORM",
-  Dataset = Iris@train,
-  Preprocessing = "Parzen window",
+  Dataset = a.train(Iris),
+  Preprocessing = "kernel density estimation",
   cmax = 10,
   Criterion = "ICL-BIC",
-  pdf = rep("normal", 4),
-  K = K[1]:K[2])
+  pdf = rep("normal", 4))
 
 plot(irisest, pos = 1, nrow = 3, ncol = 2, what = c("den"))
 plot(irisest, pos = 2, nrow = 3, ncol = 2, what = c("den"))
@@ -77,10 +71,10 @@ plot(irisest, pos = 3, nrow = 3, ncol = 2, what = c("den"))
 
 # Selected chunks.
 
-iriscla <- RCLSMIX(model = "RCLSMVNORM", 
+iriscla <- RCLSMIX(model = "RCLSMVNORM",
   x = list(irisest),
-  Dataset = Iris@test,
-  Zt = Iris@Zt)
+  Dataset = a.test(Iris),
+  Zt = a.Zt(Iris))
 
 iriscla
 

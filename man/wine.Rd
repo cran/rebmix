@@ -39,7 +39,7 @@ data("wine")
 \code{Nonflavanoid.Phenols} continuous.
 }
 \item{
-\code{Proanthocyanins} continuous. 
+\code{Proanthocyanins} continuous.
 }
 \item{
 \code{Color.Intensity} continuous.
@@ -63,7 +63,7 @@ A. Asuncion and D. J. Newman. Uci machine learning repository, 2007. \url{http:/
 }
 \references{
 S. J. Roberts, R. Everson, and I. Rezek. Maximum certainty data partitioning. Pattern Recognition,
-33(5):833-839, 2000. \url{http://dx.doi.org/10.1016/S0031-3203(99)00086-2}.
+33(5):833-839, 2000. \url{https://doi.org/10.1016/S0031-3203(99)00086-2}.
 }
 \examples{
 \dontrun{
@@ -81,10 +81,10 @@ set.seed(3)
 
 Wine <- split(p = 0.75, Dataset = wine, class = 14)
 
-# Estimate number of components, component weights and component 
+# Estimate number of components, component weights and component
 # parameters for train subsets.
 
-n <- range(Wine@ntrain)
+n <- range(a.ntrain(Wine))
 
 K <- c(as.integer(1 + log2(n[1])), # Minimum v follows Sturges rule.
   as.integer(10 * log10(n[2]))) # Maximum v follows log10 rule.
@@ -92,8 +92,8 @@ K <- c(as.integer(1 + log2(n[1])), # Minimum v follows Sturges rule.
 K <- c(floor(K[1]^(1/13)), ceiling(K[2]^(1/13)))
 
 wineest <- REBMIX(model = "REBMVNORM",
-  Dataset = Wine@train,
-  Preprocessing = "Parzen window",
+  Dataset = a.train(Wine),
+  Preprocessing = "kernel density estimation",
   cmax = 10,
   Criterion = "ICL-BIC",
   pdf = rep("normal", 13),
@@ -106,10 +106,10 @@ plot(wineest, pos = 3, nrow = 7, ncol = 6, what = c("den"))
 
 # Selected chunks.
 
-winecla <- RCLSMIX(model = "RCLSMVNORM", 
+winecla <- RCLSMIX(model = "RCLSMVNORM",
   x = list(wineest),
-  Dataset = Wine@test,
-  Zt = Wine@Zt)
+  Dataset = a.test(Wine),
+  Zt = a.Zt(Wine))
 
 winecla
 

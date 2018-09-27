@@ -18,7 +18,7 @@ Returns as default the RCLRMIX algorithm output for mixtures of conditionally in
 \S4method{RCLRMIX}{RCLRMIX}(model = "RCLRMIX", x = NULL, pos = 1, Zt = factor(), ...)
 ## ... and for other signatures
 \S4method{summary}{RCLRMIX}(object, ...)
-## ... and for other signatures     
+## ... and for other signatures
 }
 \arguments{
 \item{model}{
@@ -54,7 +54,7 @@ Returns an object of class \code{RCLRMIX} or \code{RCLRMVNORM}.
 \author{Marko Nagode}
 \references{
 J. P. Baudry, A. E. Raftery, G. Celeux, K. Lo and R. Gottardo. Combining mixture components for clustering.
-Journal of Computational and Graphical Statistics, 19(2):332-353, 2010. \url{http://dx.doi.org/10.1198/jcgs.2010.08111}
+Journal of Computational and Graphical Statistics, 19(2):332-353, 2010. \url{https://doi.org/10.1198/jcgs.2010.08111}
 }
 \examples{
 devAskNewPage(ask = TRUE)
@@ -63,21 +63,15 @@ devAskNewPage(ask = TRUE)
 
 n <- c(500, 200, 400)
 
-Theta <- list(pdf1 = "Poisson",
-  theta1.1 = 3,
-  theta2.1 = NA,
-  pdf2 = "Poisson",
-  theta1.2 = 12,
-  theta2.2 = NA,
-  pdf3 = "Poisson",
-  theta1.3 = 36,
-  theta2.3 = NA)
+Theta <- new("RNGMIX.Theta", c = 3, pdf = "Poisson")
 
-poisson <- RNGMIX(Dataset.name = "Poisson_1", n = n, Theta = Theta)
+a.theta1(Theta) <- c(3, 12, 36)
+
+poisson <- RNGMIX(Dataset.name = "Poisson_1", n = n, Theta = a.Theta(Theta))
 
 # Estimate number of components, component weights and component parameters.
 
-poissonest <- REBMIX(Dataset = poisson@Dataset,
+poissonest <- REBMIX(Dataset = a.Dataset(poisson),
   Preprocessing = "histogram",
   cmax = 6,
   Criterion = "BIC",
@@ -92,7 +86,7 @@ plot(poissonest)
 
 # Cluster dataset.
 
-poissonclu <- RCLRMIX(x = poissonest, Zt = poisson@Zt)
+poissonclu <- RCLRMIX(x = poissonest, Zt = a.Zt(poisson))
 
 summary(poissonclu)
 

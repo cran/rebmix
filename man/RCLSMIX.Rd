@@ -19,7 +19,7 @@ Returns as default the RCLSMIX algorithm output for mixtures of conditionally in
         Zt = factor(), ...)
 ## ... and for other signatures
 \S4method{summary}{RCLSMIX}(object, ...)
-## ... and for other signatures     
+## ... and for other signatures
 }
 \arguments{
 \item{model}{
@@ -93,7 +93,7 @@ Adult <- split(p = list(type = 1, train = 2, test = 1),
 adultest <- list()
 
 for (i in 1:14) {
-  adultest[[i]] <- REBMIX(Dataset = chunk(Adult, i)@train,
+  adultest[[i]] <- REBMIX(Dataset = a.train(chunk(Adult, i)),
     Preprocessing = "histogram",
     cmax = min(120, cmax[i]),
     Criterion = "BIC",
@@ -103,9 +103,9 @@ for (i in 1:14) {
 
 # Class membership prediction based upon the best first search algorithm.
 
-adultcla <- BFSMIX(x = adultest, 
-  Dataset = Adult@test, 
-  Zt = Adult@Zt)
+adultcla <- BFSMIX(x = adultest,
+  Dataset = a.test(Adult),
+  Zt = a.Zt(Adult))
 
 adultcla
 

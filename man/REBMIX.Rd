@@ -15,13 +15,13 @@ REBMIX Algorithm for Univariate or Multivariate Finite Mixture Estimation
 Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson, Dirac or von Mises component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
 }
 \usage{
-\S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(), 
-       cmax = 15, Criterion = "AIC", pdf = character(), theta1 = numeric(), 
-       theta2 = numeric(), K = "auto", y0 = numeric(), ymin = numeric(), 
+\S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(),
+       cmax = 15, cmin = 1, Criterion = "AIC", pdf = character(), theta1 = numeric(),
+       theta2 = numeric(), K = "auto", y0 = numeric(), ymin = numeric(),
        ymax = numeric(), ar = 0.1, Restraints = "loose", ...)
 ## ... and for other signatures
-\S4method{summary}{REBMIX}(object, ...)   
-## ... and for other signatures 
+\S4method{summary}{REBMIX}(object, ...)
+## ... and for other signatures
 }
 \arguments{
 \item{model}{
@@ -29,35 +29,39 @@ see Methods section below.
 }
 \item{Dataset}{
 a list of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
-represents one random variable. Number of observations \eqn{n} equals the number of rows in the datasets.
+represents one random variable. Numbers of observations \eqn{n} equal the number of rows in the datasets.
 }
 \item{Preprocessing}{
-a character vector giving the preprocessing types. One of \code{"histogram"}, \code{"Parzen window"} or \code{"k-nearest neighbour"}.
+a character vector giving the preprocessing types. One of \code{"histogram"}, \cr
+\code{"kernel density estimation"} or \code{"k-nearest neighbour"}.
 }
 \item{cmax}{
 maximum number of components \eqn{c_{\mathrm{max}} > 0}. The default value is \code{15}.
 }
+\item{cmin}{
+minimum number of components \eqn{c_{\mathrm{min}} > 0}. The default value is \code{1}.
+}
 \item{Criterion}{
-a character vector giving the information criterion types. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"}, 
-Bayesian \code{"BIC"}, consistent Akaike \code{"CAIC"}, Hannan-Quinn \code{"HQC"}, minimum description length \code{"MDL2"} or \code{"MDL5"}, 
-approximate weight of evidence \code{"AWE"}, classification likelihood \code{"CLC"}, 
-integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition coefficient \code{"PC"}, 
+a character vector giving the information criterion types. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"},
+Bayesian \code{"BIC"}, consistent Akaike \code{"CAIC"}, Hannan-Quinn \code{"HQC"}, minimum description length \code{"MDL2"} or \code{"MDL5"},
+approximate weight of evidence \code{"AWE"}, classification likelihood \code{"CLC"},
+integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition coefficient \code{"PC"},
 total of positive relative deviations \code{"D"} or sum of squares error \code{"SSE"}.
 }
 \item{pdf}{
 a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"} or \code{"vonMises"}.
 }
 \item{theta1}{
-a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise. 
+a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise.
 }
 \item{theta2}{
 a vector of length \eqn{d} containing initial component parameters. Currently not used.
 }
 \item{K}{
-a character or a vector or a list of vectors containing numbers of bins \eqn{v} for the histogram and the Parzen window or numbers of nearest
+a character or a vector or a list of vectors containing numbers of bins \eqn{v} for the histogram and the kernel density estimation or numbers of nearest
 neighbours \eqn{k} for the \emph{k}-nearest neighbour. There is no genuine rule to identify \eqn{v} or \eqn{k}. Consequently,
 the REBMIX algorithm identifies them from the set \code{K} of input values by
-minimizing the information criterion. The Sturges rule \eqn{v = 1 + \mathrm{log_{2}}(n)}, \eqn{\mathrm{Log}_{10}} rule \eqn{v = 10 \mathrm{log_{10}}(n)} or RootN 
+minimizing the information criterion. The Sturges rule \eqn{v = 1 + \mathrm{log_{2}}(n)}, \eqn{\mathrm{Log}_{10}} rule \eqn{v = 10 \mathrm{log_{10}}(n)} or RootN
 rule \eqn{v = 2 \sqrt{n}} can be applied to estimate the limiting numbers of bins
 or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours. If, e.g., \code{K = c(10, 20, 40, 60)} and minimum \code{IC} coincides, e.g., \code{40}, brackets are set to \code{20} and \code{60} and the golden section is applied to refine the minimum search. See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. The default value is \code{"auto"}.
 }
@@ -75,7 +79,7 @@ acceleration rate \eqn{0 < a_{\mathrm{r}} \leq 1}. The default value is \code{0.
 }
 \item{Restraints}{
 a character giving the restraints type. One of \code{"rigid"} or default \code{"loose"}.
-The rigid restraints are obsolete and applicable for well separated components only. 
+The rigid restraints are obsolete and applicable for well separated components only.
 }
 \item{object}{
 see Methods section below.
@@ -98,57 +102,54 @@ Returns an object of class \code{REBMIX} or \code{REBMVNORM}.
 \author{Marko Nagode}
 \references{
 H. A. Sturges. The choice of a class interval. Journal of American Statistical Association, 21(153):
-65-66, 1926. \url{http://www.jstor.org/stable/2965501}.\cr\cr
+65-66, 1926. \url{https://www.jstor.org/stable/2965501}.\cr\cr
 P. F. Velleman. Interactive computing for exploratory data analysis I: display algorithms. Proceedings of the Statistical Computing Section,
-American Statistical Association, 1976.\cr\cr 
+American Statistical Association, 1976.\cr\cr
 W. J. Dixon and R. A. Kronmal. The Choice of origin and scale for graphs. Journal of the ACM, 12(2):
-259-261, 1965. \url{http://dx.doi.org/10.1145/321264.321277}.\cr\cr
+259-261, 1965. \url{https://doi.org/10.1145/321264.321277}.\cr\cr
 M. Nagode and M. Fajdiga. A general multi-modal probability density function suitable for the
 rainflow ranges of stationary random processes. International Journal of Fatigue, 20(3):211-223,
-1998. \url{http://dx.doi.org/10.1016/S0142-1123(97)00106-0}.\cr\cr
+1998. \url{https://doi.org/10.1016/S0142-1123(97)00106-0}.\cr\cr
 M. Nagode and M. Fajdiga. An improved algorithm for parameter estimation suitable for mixed
-weibull distributions. International Journal of Fatigue, 22(1):75-80, 2000. \url{http://dx.doi.org/10.1016/S0142-1123(99)00112-7}.\cr\cr
+weibull distributions. International Journal of Fatigue, 22(1):75-80, 2000. \url{https://doi.org/10.1016/S0142-1123(99)00112-7}.\cr\cr
 M. Nagode, J. Klemenc, and M. Fajdiga. Parametric modelling and scatter prediction of rainflow
-matrices. International Journal of Fatigue, 23(6):525-532, 2001. \url{http://dx.doi.org/10.1016/S0142-1123(01)00007-X}.\cr\cr
+matrices. International Journal of Fatigue, 23(6):525-532, 2001. \url{https://doi.org/10.1016/S0142-1123(01)00007-X}.\cr\cr
 M. Nagode and M. Fajdiga. An alternative perspective on the mixture estimation problem. Reliability
-Engineering & System Safety, 91(4):388-397, 2006. \url{http://dx.doi.org/10.1016/j.ress.2005.02.005}.\cr\cr
+Engineering & System Safety, 91(4):388-397, 2006. \url{https://doi.org/10.1016/j.ress.2005.02.005}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the univariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{http://dx.doi.org/10.1080/03610920903480890}.\cr\cr
+Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{https://doi.org/10.1080/03610920903480890}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}.\cr\cr
+Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{https://doi.org/10.1080/03610921003725788}.\cr\cr
 M. Nagode. Finite mixture modeling via REBMIX.
-Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{http://dx.doi.org/10.5963/JAO0302001}.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://doi.org/10.5963/JAO0302001}.
 }
 \examples{
 # Generate and plot univariate normal dataset.
 
 n <- c(998, 263, 1086, 487)
 
-Theta <- list(pdf1 = "n",
-  theta1.1 = c(688, 265, 30, 934),
-  theta2.1 = c(72, 54, 34, 28))
+Theta <- new("RNGMIX.Theta", c = 4, pdf = "normal")
+
+a.theta1(Theta) <- c(688, 265, 30, 934)
+a.theta2(Theta) <- c(72, 54, 34, 28)
 
 normal <- RNGMIX(Dataset.name = "complex1",
   rseed = -1,
   n = n,
-  Theta = Theta)
-  
-normal 
+  Theta = a.Theta(Theta))
 
-normal@Dataset[[1]][1:20,]  
+normal
 
-# Estimate number of components, component weights and component parameters. 
+a.Dataset(normal, 1)[1:20,]
 
-K <- c(as.integer(1 + log2(sum(n))), # Minimum v follows Sturges rule.
-  as.integer(2 * sum(n)^0.5)) # Maximum v follows RootN rule.
+# Estimate number of components, component weights and component parameters.
 
-normalest <- REBMIX(Dataset = normal@Dataset, 
-  Preprocessing = "h", 
-  cmax = 8, 
-  Criterion = "BIC", 
-  pdf = "n", 
-  K = K[1]:K[2])
-                 
+normalest <- REBMIX(Dataset = a.Dataset(normal),
+  Preprocessing = "h",
+  cmax = 8,
+  Criterion = "BIC",
+  pdf = "n")
+
 normalest
 
 BIC(normalest)

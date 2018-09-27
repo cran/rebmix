@@ -7,8 +7,8 @@
 Predictive Marginal Density Calculation
 }
 \description{
-Returns the data frame containing observations \eqn{\bm{x}_{1}, \ldots, \bm{x}_{n}} and 
-predictive marginal densities \eqn{f(\bm{x} | c, \bm{w}, \bm{\Theta})}. Vectors \eqn{\bm{x}} are subvectors of 
+Returns the data frame containing observations \eqn{\bm{x}_{1}, \ldots, \bm{x}_{n}} and
+predictive marginal densities \eqn{f(\bm{x} | c, \bm{w}, \bm{\Theta})}. Vectors \eqn{\bm{x}} are subvectors of
 \eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}}.
 }
 \usage{
@@ -44,32 +44,31 @@ currently not used.
 
 n <- c(15, 15)
 
-Theta <- list(pdf1 = rep("normal", 3),
-  theta1.1 = c(10, 20, 30),
-  theta2.1 = c(3, 2, 1),
-  pdf2 = rep("normal", 3),
-  theta1.2 = c(3, 4, 5),
-  theta2.2 = c(15, 10, 5))
+Theta <- new("RNGMIX.Theta", c = 2, pdf = rep("normal", 3))
+
+a.theta1(Theta, 1) <- c(10, 20, 30)
+a.theta1(Theta, 2) <- c(3, 4, 5)
+a.theta2(Theta, 1) <- c(3, 2, 1)
+a.theta2(Theta, 2) <- c(15, 10, 5)
 
 simulated <- RNGMIX(Dataset.name = paste("simulated_", 1:4, sep = ""),
   rseed = -1,
   n = n,
-  Theta = Theta)
+  Theta = a.Theta(Theta))
 
 # Number of classes or nearest neighbours to be processed.
 
 K <- c(as.integer(1 + log2(sum(n))), # Minimum v follows Sturges rule.
   as.integer(10 * log10(sum(n)))) # Maximum v follows log10 rule.
 
-# Estimate number of components, component weights and component parameters. 
+# Estimate number of components, component weights and component parameters.
 
 simulatedest <- REBMIX(model = "REBMVNORM",
-  Dataset = simulated@Dataset,
-  Preprocessing = "h", 
+  Dataset = a.Dataset(simulated),
+  Preprocessing = "h",
   cmax = 4,
-  Criterion = "BIC", 
-  pdf = c("n", "n", "n"), 
-  K = K[1]:K[2])
+  Criterion = "BIC",
+  pdf = c("n", "n", "n"))
 
 # Preprocess simulated dataset.
 
@@ -92,10 +91,10 @@ text(x = f[, 1], y = f[, 2], labels = format(f[, 3], digits = 3), cex = 0.8, pos
 }
 \references{
 M. Nagode and M. Fajdiga. The rebmix algorithm for the univariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{http://dx.doi.org/10.1080/03610920903480890}.\cr\cr
+Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{https://doi.org/10.1080/03610920903480890}.\cr\cr
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
-Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{http://dx.doi.org/10.1080/03610921003725788}.\cr\cr
+Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{https://doi.org/10.1080/03610921003725788}.\cr\cr
 M. Nagode. Finite mixture modeling via REBMIX.
-Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{http://dx.doi.org/10.5963/JAO0302001}.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://doi.org/10.5963/JAO0302001}.
 }
 \keyword{distributions}

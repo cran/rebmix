@@ -3,7 +3,7 @@ setMethod("demix",
 function(x, pos, variables, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
-  
+
   if (missing(x)) {
     stop(sQuote("x"), " object of class REBMIX is requested!", call. = FALSE)
   }
@@ -11,19 +11,21 @@ function(x, pos, variables, ...)
   if (!is.wholenumber(pos)) {
     stop(sQuote("pos"), " integer is requested!", call. = FALSE)
   }
-  
+
   length(pos) <- 1
 
   if ((pos < 1) || (pos > nrow(x@summary))) {
     stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
   }
-  
+
   Dataset <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
-  
+
+  colnames <- colnames(Dataset)
+
   d <- ncol(Dataset); dini <- d; variables <- eval(variables)
-  
+
   n <- nrow(Dataset)
-  
+
   if (length(variables) != 0) {
     if (!is.wholenumber(variables)) {
       stop(sQuote("variables"), " integer is requested!", call. = FALSE)
@@ -32,31 +34,31 @@ function(x, pos, variables, ...)
     if ((min(variables) < 1) || (max(variables) > d)) {
       stop(sQuote("variables"), " must be greater than 0 and less or equal than ", d, "!", call. = FALSE)
     }
-    
-    variables <- unique(variables); d <- length(variables) 
+
+    variables <- unique(variables); d <- length(variables)
   }
   else {
     variables <- 1:d
   }
-  
+
   Dataset <- Dataset[, variables]
-   
+
   Preprocessing <- x@summary[pos, "Preprocessing"]
-  
-  Names <- names(x@Theta[[pos]])  
-  
+
+  Names <- names(x@Theta[[pos]])
+
   pdf <- unlist(x@Theta[[pos]][grep("pdf", Names)])
-  
+
   pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
-  
+
   pdf <- pdf[variables]
-  
+
   k <- as.numeric(x@summary[pos, "v/k"])
-  
+
   Names <- names(x@summary)
-  
+
   if (Preprocessing == .rebmix$Preprocessing[1]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables] 
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
     y0 <- x@summary[pos, grep("y0", Names)]; y0 <- y0[variables]
 
     output <- .C(C_RPreprocessingHMIX,
@@ -82,13 +84,18 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y, stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-  } 
-  else 
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
+  }
+  else
   if (Preprocessing == .rebmix$Preprocessing[2]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]   
-      
-    output <- .C(C_RPreprocessingPWMIX,
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
+
+    output <- .C(C_RPreprocessingKDEMIX,
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
@@ -107,11 +114,16 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, -(d + 1)], stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-  } 
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
+  }
   else
   if (Preprocessing == .rebmix$Preprocessing[3]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables] 
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
 
     output <- .C(C_RPreprocessingKNNMIX,
       k = as.integer(k),
@@ -133,9 +145,14 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, c(-(d + 1), -(d + 3))], stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
   }
-  
+
   options(digits = digits)
 
   rm(list = ls()[!(ls() %in% c("output"))])
@@ -148,7 +165,7 @@ setMethod("demix",
 function(x, pos, variables, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
-  
+
   if (missing(x)) {
     stop(sQuote("x"), " object of class REBMVNORM is requested!", call. = FALSE)
   }
@@ -156,18 +173,20 @@ function(x, pos, variables, ...)
   if (!is.wholenumber(pos)) {
     stop(sQuote("pos"), " integer is requested!", call. = FALSE)
   }
-  
+
   length(pos) <- 1
 
   if ((pos < 1) || (pos > nrow(x@summary))) {
     stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
   }
-  
+
   Dataset <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
-  
+
+  colnames <- colnames(Dataset)
+
   d <- ncol(Dataset); dini <- d; variables <- eval(variables)
   n <- nrow(Dataset)
-  
+
   if (length(variables) != 0) {
     if (!is.wholenumber(variables)) {
       stop(sQuote("variables"), " integer is requested!", call. = FALSE)
@@ -176,31 +195,31 @@ function(x, pos, variables, ...)
     if ((min(variables) < 1) || (max(variables) > d)) {
       stop(sQuote("variables"), " must be greater than 0 and less or equal than ", d, "!", call. = FALSE)
     }
-    
-    variables <- unique(variables); d <- length(variables)  
+
+    variables <- unique(variables); d <- length(variables)
   }
   else {
     variables <- 1:d
   }
-  
+
   Dataset <- Dataset[, variables]
-   
+
   Preprocessing <- x@summary[pos, "Preprocessing"]
-  
-  Names <- names(x@Theta[[pos]])  
-  
+
+  Names <- names(x@Theta[[pos]])
+
   pdf <- unlist(x@Theta[[pos]][grep("pdf", Names)])
-  
+
   pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
-  
+
   pdf <- pdf[variables]
-  
+
   k <- as.numeric(x@summary[pos, "v/k"])
-  
+
   Names <- names(x@summary)
-  
+
   if (Preprocessing == .rebmix$Preprocessing[1]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables] 
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
     y0 <- x@summary[pos, grep("y0", Names)]; y0 <- y0[variables]
 
     output <- .C(C_RPreprocessingHMVNORM,
@@ -226,13 +245,18 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y, stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-  } 
-  else 
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
+  }
+  else
   if (Preprocessing == .rebmix$Preprocessing[2]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]   
-      
-    output <- .C(C_RPreprocessingPWMVNORM,
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
+
+    output <- .C(C_RPreprocessingKDEMVNORM,
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
@@ -251,11 +275,16 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, -(d + 1)], stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-  } 
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
+  }
   else
   if (Preprocessing == .rebmix$Preprocessing[3]) {
-    h <- x@summary[pos, grep("h", Names)]; h <- h[variables] 
+    h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
 
     output <- .C(C_RPreprocessingKNNMVNORM,
       k = as.integer(k),
@@ -277,9 +306,14 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, c(-(d + 1), -(d + 3))], stringsAsFactors = FALSE)
 
-    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    if (is.null(colnames)) {
+      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
+    }
+    else {
+      colnames(output) <- c(colnames[variables], "f")
+    }
   }
-  
+
   options(digits = digits)
 
   rm(list = ls()[!(ls() %in% c("output"))])

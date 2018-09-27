@@ -12,7 +12,7 @@
 
 typedef enum {
     poHistogram,        // Histogram approach.
-    poParzenWindow,     // Parzen window.
+    poKDE,              // kernel density estimation.
     poKNearestNeighbour // K-nearest neighbour.
 } PreprocessingType_e;
 
@@ -75,7 +75,7 @@ typedef struct additinalparametertype {
 class CompnentDistribution : public Base {
 public:
     // Members.
-    Base                   *owner_;  // Owner object. 
+    Base                   *owner_;  // Owner object.
     ParametricFamilyType_e *pdf_;    // Parametric family types.
     FLOAT                  **Theta_; // Component parameters.
     // Constructor.
@@ -91,10 +91,10 @@ class Rebmix : public Base {
     // Methods.
     int Golden();
     int GlobalModeKNN(int *m, FLOAT **Y, FLOAT *h, int *I);
-    int GlobalModePW(int *m, FLOAT **Y, FLOAT *h, int *I);
+    int GlobalModeKDE(int *m, FLOAT **Y, FLOAT *h, int *I);
     int GlobalModeH(int *m, int k, FLOAT **Y, FLOAT *h, int *I);
     int REBMIXKNN();
-    int REBMIXPW();
+    int REBMIXKDE();
     int REBMIXH();
     #if (_MAINTAIN_SWITCH)
     int ReadDataFile();
@@ -105,7 +105,7 @@ public:
     FLOAT                      p_value_;       // Probability of obtaining a result equal to or "more extreme" than what was actually observed.
     FLOAT                      min_dist_mul_;  // Minimum distance multiplier.
 	FLOAT                      var_mul_;       // Variance multiplier.
-    FLOAT                      kmax_;          // Maximum number of nonempty bins.  
+    FLOAT                      kmax_;          // Maximum number of nonempty bins.
     FLOAT                      ChiSqr_;        // Critical Chi square value for outlier detection and p = 2.0 * p_value_.
     char                       *curr_;         // Path to the currently open data file.
     int                        o_;             // Number of paths.
@@ -113,6 +113,7 @@ public:
     char                       *save_;         // Path to the save data file.
     PreprocessingType_e        Preprocessing_; // Preprocessing type.
     int                        cmax_;          // Maximum number of components.
+    int                        cmin_;          // Maximum number of components.
     InformationCriterionType_e Criterion_;     // Information criterion type.
     VariablesType_e            *Variables_;    // Types of variables.
     CompnentDistribution       *IniTheta_;     // Initial component parameters.
@@ -148,30 +149,28 @@ public:
     // Methods.
     virtual int Initialize();
     int PreprocessingKNN(int k, FLOAT *h, FLOAT **Y);
-    int PreprocessingPW(FLOAT *h, FLOAT **Y);
+    int PreprocessingKDE(FLOAT *h, FLOAT **Y);
     int PreprocessingH(FLOAT *h, FLOAT *y0, int *k, FLOAT **Y);
     int PreprocessingH(FLOAT *h, FLOAT *y0, int *k, FLOAT **Y, int *State);
     virtual int RoughEstimationKNN(FLOAT **Y, int k, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
-    virtual int RoughEstimationPW(FLOAT **Y, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
+    virtual int RoughEstimationKDE(FLOAT **Y, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int RoughEstimationH(int k, FLOAT **Y, FLOAT *h, FLOAT nl, int m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int ComponentDist(FLOAT *Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist, int *Outlier);
     virtual int LogComponentDist(FLOAT *Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist, int *Outlier);
     virtual int EnhancedEstimationKNN(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
-    virtual int EnhancedEstimationPW(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
+    virtual int EnhancedEstimationKDE(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int EnhancedEstimationH(int k, FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual int MomentsCalculation(CompnentDistribution *CmpTheta, FLOAT *FirstM, FLOAT *SecondM);
     virtual int BayesClassificationKNN(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT **FirstM, FLOAT **SecondM);
-    virtual int BayesClassificationPW(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT **FirstM, FLOAT **SecondM);
+    virtual int BayesClassificationKDE(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT **FirstM, FLOAT **SecondM);
     virtual int BayesClassificationH(int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT **FirstM, FLOAT **SecondM);
     virtual int DegreesOffreedom(int c, CompnentDistribution **MixTheta, int *M);
     int MixtureDist(FLOAT *Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixDist);
     int MixtureDist(FLOAT logV, FLOAT *Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixDist);
     int InformationCriterionKNN(int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
-    int InformationCriterionPW(FLOAT logV, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
+    int InformationCriterionKDE(FLOAT logV, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
     int InformationCriterionH(FLOAT logV, int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, int *M, FLOAT *D);
-    int CombineComponentsKNN(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
-    int CombineComponentsPW(FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
-    int CombineComponentsH(int k, FLOAT **Y, int c, FLOAT *W, CompnentDistribution **MixTheta, int *F, int *T, FLOAT *EN, FLOAT *ED);
+    int CombineComponents(int c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *tau, int *F, int *T, FLOAT *EN, FLOAT *ED);
     int REBMIX();
     #if (_MAINTAIN_SWITCH)
     int RunTemplateFile(char *file);
