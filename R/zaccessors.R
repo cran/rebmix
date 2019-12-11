@@ -1,3 +1,158 @@
+### Panic Branislav.
+
+setMethod("a.strategy", signature(x = "EM.Control"), function(x) x@strategy)
+setMethod("a.variant", signature(x = "EM.Control"), function(x) x@variant)
+setMethod("a.acceleration", signature(x = "EM.Control"), function(x) x@acceleration)
+setMethod("a.tolerance", signature(x = "EM.Control"), function(x) x@tolerance)
+setMethod("a.acceleration.multiplier", signature(x = "EM.Control"), function(x) x@acceleration.multiplier)
+setMethod("a.maximum.iterations", signature(x = "EM.Control"), function(x) x@maximum.iterations)
+
+setMethod("a.strategy<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("strategy"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.character(value)) {
+    stop(sQuote("strategy"), " must be character!", call. = FALSE)
+  }
+
+  x@strategy <- match.arg(value, .rebmix$EMStrategy)
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.strategy<-
+
+setMethod("a.variant<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("variant"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.character(value)) {
+    stop(sQuote("variant"), " must be character!", call. = FALSE)
+  }
+
+  x@variant <- match.arg(value, .rebmix$EMVariant)
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.variant<-
+
+setMethod("a.acceleration<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("acceleration"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.character(value)){
+    stop(sQuote("acceleration"), " must be character!", call. = FALSE)
+  }
+
+  x@acceleration <- match.arg(value, .rebmix$EMAcceleration)
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.acceleration<-
+
+setMethod("a.tolerance<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("tolerance"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.numeric(value)) {
+    stop(sQuote("tolerance"), " numeric is requested!", call. = FALSE)
+  }
+
+  length(value) <- 1
+
+  if (value <= 0.0) {
+    stop(sQuote("tolerance"), " must be greater than 0.0!", call. = FALSE)
+  }   
+
+  x@tolerance <- value
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.tolerance<-
+
+setMethod("a.acceleration.multiplier<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+  
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("acceleration.multiplier"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.numeric(value)) {
+    stop(sQuote("acceleration.multiplier"), " numeric is requested!", call. = FALSE)
+  }
+
+  length(value) <- 1
+
+  if (value < 1.0 || value > 2.0) {
+    stop(sQuote("acceleration.multiplier"), " must be greater or equal than 1.0 and less or equal than 2.0!", call. = FALSE)
+  }  
+
+  x@acceleration.multiplier <- value
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.acceleration.multiplier<-
+
+setMethod("a.maximum.iterations<-",
+          signature = (x = "EM.Control"),
+function(x, value)
+{
+  # value.
+  
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("maximum.iterations"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.wholenumber(value)) {
+    stop(sQuote("maximum.iterations"), " integer is requested!", call. = FALSE)
+  }
+
+  length(value) <- 1
+
+  if (value < 1) {
+    stop(sQuote("maximum.iterations"), " must be greater than 0!", call. = FALSE)
+  }  
+
+  x@maximum.iterations <- value
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.maximum.iterations<-
+
+### End
+
 setMethod("a.c", signature(x = "RNGMIX.Theta"), function(x) x@c)
 setMethod("a.d", signature(x = "RNGMIX.Theta"), function(x) x@d)
 setMethod("a.pdf", signature(x = "RNGMIX.Theta"), function(x) x@pdf)
@@ -199,6 +354,12 @@ function(x, value)
         stop(sQuote("value"), " for ", dQuote(.rebmix$pdf[9]), " must be greater than 0.0!", call. = FALSE)
       }
     }
+    else
+    if (x@pdf == .rebmix$pdf[10]) {
+      if (value[l] < 0.0) {
+        stop(sQuote("value"), " for ", dQuote(.rebmix$pdf[10]), " must be greater than 0.0!", call. = FALSE)
+      }
+    }    
   }
 
   for (l in 1:x@c) {
@@ -290,6 +451,12 @@ function(x, l, value)
         stop(sQuote("value"), " for ", dQuote(.rebmix$pdf[9]), " must be greater than 0.0!", call. = FALSE)
       }
     }
+    else
+    if (x@pdf[i] == .rebmix$pdf[10]) {
+      if (value[i] < 0.0) {
+        stop(sQuote("value"), " for ", dQuote(.rebmix$pdf[10]), " must be greater than 0.0!", call. = FALSE)
+      }
+    }    
   }
 
   x@Theta[[3 + (l - 1) * 3]] <- value
@@ -622,6 +789,46 @@ function(x, pos, col.name)
   output
 }) ## a.summary
 
+### Panic Branislav.
+
+setMethod("a.summary.EM",
+          signature(x = "REBMIX"),
+function(x, pos, col.name)
+{
+  if (!is.wholenumber(pos)) {
+    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
+  }
+
+  length(pos) <- 1
+  
+  if ((pos < 1) || (pos > nrow(x@summary.EM))) {
+    output <- x@summary.EM
+  }
+  else {
+    output <- x@summary.EM[pos, ]
+  }
+
+  if (!missing(col.name) && (length(col.name) > 0)) {
+    if (!is.character(col.name)) {
+      stop(sQuote("col.name"), " character is requested!", call. = FALSE)
+    }
+
+    col.name <- match.arg(col.name, colnames(output), several.ok = FALSE)
+
+    output <- output[, col.name]
+
+    if (is.number(output) == TRUE) {
+      output <- as.numeric(output)
+    }
+  }
+
+  rm(list = ls()[!(ls() %in% c("output"))])
+
+  output
+}) ## a.summary.EM
+
+### End
+
 setMethod("a.pos", signature(x = "REBMIX"), function(x) x@pos)
 setMethod("a.opt.c", signature(x = "REBMIX"), function(x) x@opt.c)
 setMethod("a.opt.IC", signature(x = "REBMIX"), function(x) x@opt.IC)
@@ -878,6 +1085,7 @@ setMethod("a.s", signature(x = "RCLS.chunk"), function(x) x@s)
 setMethod("a.levels", signature(x = "RCLS.chunk"), function(x) x@levels)
 setMethod("a.ntrain", signature(x = "RCLS.chunk"), function(x) x@ntrain)
 setMethod("a.train", signature(x = "RCLS.chunk"), function(x) x@train)
+setMethod("a.Zr", signature(x = "RCLS.chunk"), function(x) x@Zr)
 setMethod("a.ntest", signature(x = "RCLS.chunk"), function(x) x@ntest)
 setMethod("a.test", signature(x = "RCLS.chunk"), function(x) x@test)
 setMethod("a.Zt", signature(x = "RCLS.chunk"), function(x) x@Zt)

@@ -12,13 +12,14 @@
 REBMIX Algorithm for Univariate or Multivariate Finite Mixture Estimation
 }
 \description{
-Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson, Dirac or von Mises component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
+Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
 }
 \usage{
 \S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(),
-       cmax = 15, cmin = 1, Criterion = "AIC", pdf = character(), theta1 = numeric(),
-       theta2 = numeric(), K = "auto", y0 = numeric(), ymin = numeric(),
-       ymax = numeric(), ar = 0.1, Restraints = "loose", ...)
+       cmax = 15, cmin = 1, Criterion = "AIC", pdf = character(), 
+       theta1 = numeric(),theta2 = numeric(), K = "auto", y0 = numeric(), 
+       ymin = numeric(), ymax = numeric(), ar = 0.1, Restraints = "loose", 
+       EMcontrol = NULL, ...)
 ## ... and for other signatures
 \S4method{summary}{REBMIX}(object, ...)
 ## ... and for other signatures
@@ -42,14 +43,14 @@ maximum number of components \eqn{c_{\mathrm{max}} > 0}. The default value is \c
 minimum number of components \eqn{c_{\mathrm{min}} > 0}. The default value is \code{1}.
 }
 \item{Criterion}{
-a character vector giving the information criterion types. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"},
+a character giving the information criterion type. One of default Akaike \code{"AIC"}, \code{"AIC3"}, \code{"AIC4"} or \code{"AICc"},
 Bayesian \code{"BIC"}, consistent Akaike \code{"CAIC"}, Hannan-Quinn \code{"HQC"}, minimum description length \code{"MDL2"} or \code{"MDL5"},
 approximate weight of evidence \code{"AWE"}, classification likelihood \code{"CLC"},
 integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition coefficient \code{"PC"},
 total of positive relative deviations \code{"D"} or sum of squares error \code{"SSE"}.
 }
 \item{pdf}{
-a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"} or \code{"vonMises"}.
+a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"Gumbel"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"} or \code{"vonMises"}.
 }
 \item{theta1}{
 a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise.
@@ -81,6 +82,9 @@ acceleration rate \eqn{0 < a_{\mathrm{r}} \leq 1}. The default value is \code{0.
 a character giving the restraints type. One of \code{"rigid"} or default \code{"loose"}.
 The rigid restraints are obsolete and applicable for well separated components only.
 }
+\item{EMcontrol}{
+an object of class \code{EM.Control}.
+}
 \item{object}{
 see Methods section below.
 }
@@ -93,7 +97,7 @@ Returns an object of class \code{REBMIX} or \code{REBMVNORM}.
 }
 \section{Methods}{
 \describe{
-\item{\code{signature(model = "REBMIX")}}{a character giving the default class name \code{"REBMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, binomial, Poisson, Dirac or von Mises component densities.}
+\item{\code{signature(model = "REBMIX")}}{a character giving the default class name \code{"REBMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities.}
 \item{\code{signature(model = "REBMVNORM")}}{a character giving the class name \code{"REBMVNORM"} for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices.}
 \item{\code{signature(object = "REBMIX")}}{an object of class \code{REBMIX}.}
 \item{\code{signature(object = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
@@ -159,5 +163,38 @@ logL(normalest)
 # Plot finite mixture.
 
 plot(normalest, nrow = 2, what = c("den", "dis"), npts = 1000)
+
+# EM algorithm utilization
+
+# Load iris data.
+
+data(iris)
+
+Dataset <- list(data.frame(iris[, c(1:4)]))
+
+# Create EM.Control object.
+
+EM <- new("EM.Control", 
+  strategy = "exhaustive", 
+  variant = "EM", 
+  acceleration = "fixed", 
+  tolerance = 1e-4, 
+  acceleration.multiplier = 1.0, 
+  maximum.iterations = 1000)
+
+# Mixture parameter estimation using REBMIX and EM algorithm.
+
+irisest <- REBMIX(model="REBMVNORM", 
+  Dataset = Dataset, 
+  Preprocessing = "histogram",
+  cmax = 10,
+  Criterion = "BIC",
+  EMcontrol = EM)
+
+irisest
+
+# Print total number of EM iterations used in Ehxaustive strategy from summary.EM slot.
+
+a.summary.EM(irisest, pos = 1, col.name = "total.iterations.nbr")
 }
 \keyword{parameter estimation}

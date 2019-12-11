@@ -1,5 +1,16 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.11.0}{ 
+\itemize{
+\item Method \code{split} is improved.
+\item Improved C++ functions \code{REBMIXKNN()}, \code{REBMIXKDE()} and \code{REBMIXH()}.
+\item Method \code{RCLSMIX} is improved.
+\item Method \code{plot} is improved.
+\item Continuous parametric family \code{"Gumbel"} is added.  
+\item EM algorithm is added to the C++ code for the improved estimation of the Gaussian mixture model parameters.
+\item Class \code{EM.Control} is added for EM algorithm control parameters handling.
+}
+}
 \section{Changes in version 2.10.3}{ 
 \itemize{
 \item Method \code{Zp} is replaced by \code{a.Zp} accessor method.

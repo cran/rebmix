@@ -212,6 +212,8 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, FLOAT *Y)
             Y[i] = y;
 
             break;
+        case pfGumbel:
+            break;
         case pfvonMises:
             CmpDist->Theta_[0][i] -= Pi2 * int(CmpDist->Theta_[0][i] / Pi2);
 
@@ -404,7 +406,7 @@ int Rngmix::RunTemplateFile(char *file)
         Error = 1; goto E0;
     }
 
-    printf("RNGMIX Version 2.10.3\n");
+    printf("RNGMIX Version 2.11.0\n");
 
 S0: while (fgets(line, 2048, fp) != NULL) {
         pchar = strtok(line, "\n");
@@ -545,6 +547,9 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 else
                 if (!strcmp(pchar, "GAMMA"))
                     IniTheta_->pdf_[i] = pfGamma;
+                else
+                if (!strcmp(pchar, "GUMBEL"))
+                    IniTheta_->pdf_[i] = pfGumbel;
                 else
                 if (!strcmp(pchar, "VONMISES"))
                     IniTheta_->pdf_[i] = pfvonMises;

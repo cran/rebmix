@@ -72,7 +72,7 @@ gamma3 <- RNGMIX(Dataset.name = "gamma3", rseed = -4, n = n, Theta = a.Theta(The
 gamma1est <- REBMIX(Dataset = a.Dataset(gamma1),
   Preprocessing = "kernel density estimation",
   cmax = 8,
-  Criterion = c("AIC", "BIC"),
+  Criterion = "BIC",
   pdf = "gamma")
 
 gamma2est <- REBMIX(Dataset = a.Dataset(gamma2),
@@ -100,9 +100,9 @@ plot(gamma3est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
 ###################################################
 summary(gamma2est)
 
-a.theta1.all(gamma1est, pos = 2)
+a.theta1.all(gamma1est, pos = 1)
 
-a.theta2.all(gamma1est, pos = 2)
+a.theta2.all(gamma1est, pos = 1)
 
 
 ###################################################
@@ -231,21 +231,88 @@ data("Baudry_etal_2010_JCGS_examples", package = "mclust")
 ###################################################
 ## Estimate number of components, component weights and component parameters.
 
-ex4.1est <- REBMIX(model = "REBMVNORM",
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+
+EM <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est.dens <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
-  Preprocessing = "kernel density estimation",
+  Preprocessing = "histogram",
   cmax = 10,
-  Criterion = "AIC")
+  Criterion = "AIC",
+  EMcontrol = EM)
 
 
 ###################################################
-### code chunk number 21: ex4_1-fig
+### code chunk number 21: ex4_1_dens-fig
+###################################################
+plot(ex4.1est.dens, pos = 1, what = c("dens"), nrow = 1, ncol = 1)
+
+
+###################################################
+### code chunk number 22: ex4_1_dens-clu-fig
+###################################################
+ex4.1clu.dens <- RCLRMIX(model = "RCLRMVNORM", x = ex4.1est.dens)
+
+plot(ex4.1clu.dens)
+
+
+###################################################
+### code chunk number 23: rebmix-code
+###################################################
+summary(ex4.1est.dens)
+
+
+###################################################
+### code chunk number 24: rebmix-code
+###################################################
+summary(ex4.1clu.dens)
+
+
+###################################################
+### code chunk number 25: rebmix-code
+###################################################
+## Estimate number of components, component weights and component parameters.
+
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+
+CEM <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "ECM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est <- REBMIX(model = "REBMVNORM",
+  Dataset = list(as.data.frame(ex4.1)),
+  Preprocessing = "histogram",
+  cmax = 10,
+  Criterion = "ICL",
+  EMcontrol = CEM)
+
+
+
+###################################################
+### code chunk number 26: ex4_1-fig
 ###################################################
 plot(ex4.1est, pos = 1, what = c("dens"), nrow = 1, ncol = 1)
 
 
 ###################################################
-### code chunk number 22: ex4_1-clu-fig
+### code chunk number 27: rebmix-code
+###################################################
+summary(ex4.1est)
+
+
+###################################################
+### code chunk number 28: ex4_1-clu-fig
 ###################################################
 ex4.1clu <- RCLRMIX(model = "RCLRMVNORM", x = ex4.1est)
 
@@ -253,13 +320,109 @@ plot(ex4.1clu)
 
 
 ###################################################
-### code chunk number 23: rebmix-code
+### code chunk number 29: rebmix-code
 ###################################################
-summary(ex4.1est)
+summary(ex4.1clu)
 
 
 ###################################################
-### code chunk number 24: rebmix-code
+### code chunk number 30: rebmix-code
+###################################################
+## Estimate number of components, component weights and component parameters.
+
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+
+EM.normal <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est.em.normal <- REBMIX(model = "REBMVNORM",
+  Dataset = list(as.data.frame(ex4.1)),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "AIC",
+  EMcontrol = EM.normal)
+
+cat("Total number of EM algorithm iterations: ",
+  a.summary.EM(ex4.1est.em.normal, pos=1, col.name = "total.iterations.nbr"),
+  ". Value of AIC: ", a.summary(ex4.1est.em.normal, pos = 1, col.name = "IC"))
+
+
+###################################################
+### code chunk number 31: rebmix-code
+###################################################
+EM.fixed1.5 <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.5,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est.em.fixed1.5 <- REBMIX(model = "REBMVNORM",
+  Dataset = list(as.data.frame(ex4.1)),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "AIC",
+  EMcontrol = EM.fixed1.5)
+
+cat("Total number of EM algorithm iterations: ",
+  a.summary.EM(ex4.1est.em.fixed1.5, pos=1, col.name = "total.iterations.nbr"),
+  ". Value of AIC: ", a.summary(ex4.1est.em.fixed1.5, pos = 1, col.name = "IC"))
+
+
+###################################################
+### code chunk number 32: rebmix-code
+###################################################
+EM.line <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "line",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est.em.line <- REBMIX(model = "REBMVNORM",
+  Dataset = list(as.data.frame(ex4.1)),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "AIC",
+  EMcontrol = EM.line)
+
+cat("Total number of EM algorithm iterations: ",
+  a.summary.EM(ex4.1est.em.line, pos=1, col.name = "total.iterations.nbr"),
+  ". Value of AIC: ", a.summary(ex4.1est.em.line, pos = 1, col.name = "IC"))
+
+
+###################################################
+### code chunk number 33: rebmix-code
+###################################################
+EM.golden <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "golden",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000)
+
+ex4.1est.em.golden <- REBMIX(model = "REBMVNORM",
+  Dataset = list(as.data.frame(ex4.1)),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "AIC",
+  EMcontrol = EM.golden)
+
+cat("Total number of EM algorithm iterations: ",
+  a.summary.EM(ex4.1est.em.golden, pos=1, col.name = "total.iterations.nbr"),
+  ". Value of AIC: ", a.summary(ex4.1est.em.golden, pos = 1, col.name = "IC"))
+
+
+###################################################
+### code chunk number 34: rebmix-code
 ###################################################
 data("iris")
 
@@ -275,7 +438,7 @@ Iris <- split(p = 0.75, Dataset = iris, class = 5)
 
 
 ###################################################
-### code chunk number 25: rebmix-code
+### code chunk number 35: rebmix-code
 ###################################################
 # Estimate number of components, component weights and component
 # parameters for train subsets.
@@ -288,7 +451,7 @@ irisest <- REBMIX(model = "REBMVNORM",
 
 
 ###################################################
-### code chunk number 26: rebmix-code
+### code chunk number 36: rebmix-code
 ###################################################
 # Selected features.
 
@@ -299,7 +462,7 @@ iriscla <- RCLSMIX(model = "RCLSMVNORM",
 
 
 ###################################################
-### code chunk number 27: rebmix-code
+### code chunk number 37: rebmix-code
 ###################################################
 iriscla
 
@@ -307,7 +470,7 @@ summary(iriscla)
 
 
 ###################################################
-### code chunk number 28: iris-cla-fig
+### code chunk number 38: iris-cla-fig
 ###################################################
 # Plot selected features.
 
@@ -315,7 +478,7 @@ plot(iriscla, nrow = 3, ncol = 2)
 
 
 ###################################################
-### code chunk number 29: rebmix-code
+### code chunk number 39: rebmix-code
 ###################################################
 data("adult")
 
@@ -329,7 +492,7 @@ adult <- as.data.frame(data.matrix(adult))
 
 
 ###################################################
-### code chunk number 30: rebmix-code
+### code chunk number 40: rebmix-code
 ###################################################
 # Find numbers of levels.
 
@@ -339,7 +502,7 @@ cmax
 
 
 ###################################################
-### code chunk number 31: rebmix-code
+### code chunk number 41: rebmix-code
 ###################################################
 # Split adult dataset into train and test subsets for two Incomes
 # and remove Type and Income columns.
@@ -349,7 +512,7 @@ Adult <- split(p = list(type = 1, train = 2, test = 1),
 
 
 ###################################################
-### code chunk number 32: rebmix-code
+### code chunk number 42: rebmix-code
 ###################################################
 # Estimate number of components, component weights and component parameters
 # for the set of chunks 1:14.
@@ -367,7 +530,7 @@ for (i in 1:14) {
 
 
 ###################################################
-### code chunk number 33: rebmix-code
+### code chunk number 43: rebmix-code
 ###################################################
 # Class membership prediction based upon the best first search algorithm.
 
@@ -377,7 +540,7 @@ adultcla <- BFSMIX(x = adultest,
 
 
 ###################################################
-### code chunk number 34: rebmix-code
+### code chunk number 44: rebmix-code
 ###################################################
 adultcla
 
@@ -385,7 +548,7 @@ summary(adultcla)
 
 
 ###################################################
-### code chunk number 35: adult-cla-fig
+### code chunk number 45: adult-cla-fig
 ###################################################
 # Plot selected chunks.
 
@@ -393,7 +556,7 @@ plot(adultcla, nrow = 5, ncol = 2)
 
 
 ###################################################
-### code chunk number 36: rebmix-code
+### code chunk number 46: rebmix-code
 ###################################################
 rm(list = ls())
 

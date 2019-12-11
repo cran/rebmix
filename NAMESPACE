@@ -16,7 +16,10 @@ exportClasses("RNGMIX.Theta",
               "RCLRMVNORM",
               "RCLSMIX",
               "RCLSMVNORM",
-              "RCLS.chunk")
+              "RCLS.chunk",
+### Panic Branislav.
+              "EM.Control")
+### End
 
 exportMethods("RNGMIX",
               "REBMIX",
@@ -76,6 +79,9 @@ exportMethods("RNGMIX",
               "a.ar",
               "a.Restraints",
               "a.summary",
+### Panic Branislav.
+              "a.summary.EM",
+### End              
               "a.pos",
               "a.opt.c",
               "a.opt.IC",
@@ -118,4 +124,19 @@ exportMethods("RNGMIX",
               "a.Chunks",
               "a.levels",
               "a.train",
-              "a.test")
+              "a.Zr",
+              "a.test",
+### Panic Branislav.
+              "a.strategy",
+              "a.strategy<-",
+              "a.variant",
+              "a.variant<-",
+              "a.acceleration",
+              "a.acceleration<-",
+              "a.tolerance",
+              "a.tolerance<-",
+              "a.acceleration.multiplier",
+              "a.acceleration.multiplier<-",
+              "a.maximum.iterations",
+              "a.maximum.iterations<-")
+### End 
