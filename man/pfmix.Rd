@@ -9,7 +9,8 @@ Predictive Marginal Distribution Function Calculation
 \description{
 Returns the data frame containing observations \eqn{\bm{x}_{1}, \ldots, \bm{x}_{n}} and
 predictive marginal distribution functions \eqn{F(\bm{x} | c, \bm{w}, \bm{\Theta})}. Vectors \eqn{\bm{x}} are subvectors of
-\eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}}.
+\eqn{\bm{y} = (y_{1}, \ldots, y_{d})^{\top}}. If \eqn{\bm{x} = \bm{y}} the method returns the data frame containing observations \eqn{\bm{y}_{1}, \ldots, \bm{y}_{n}} and
+the corresponding predictive mixture distribution function \eqn{F(\bm{y} | c, \bm{w}, \bm{\Theta})}.
 }
 \usage{
 \S4method{pfmix}{REBMIX}(x = NULL, Dataset = data.frame(), pos = 1,
@@ -87,7 +88,7 @@ f
 # Plot finite mixture.
 
 opar <- plot(simulatedest, pos = 3, nrow = 3, ncol = 1,
-  what = "dist", contour.drawlabels = TRUE, contour.labcex = 0.6)
+  what = "pdf", contour.drawlabels = TRUE, contour.labcex = 0.6)
 
 par(usr = opar[[2]]$usr, mfg = c(2, 1))
 

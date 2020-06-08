@@ -633,7 +633,7 @@ function(.Object, ...,
     stop(sQuote("Preprocessing"), " character vector is requested!", call. = FALSE)
   }
 
-  Preprocessing <- match.arg(Preprocessing, .rebmix$Preprocessing, several.ok = TRUE)
+  Preprocessing <- match.arg(Preprocessing, .rebmix$Preprocessing, several.ok = FALSE)
 
   # cmax.
 
@@ -743,13 +743,21 @@ function(.Object, ...,
     stop(sQuote("K"), " must not be empty!", call. = FALSE)
   }
 
-  if (is.list(K)) {
+  if (is.matrix(K)) {
     if (!all(unlist(lapply(K, is.wholenumber) == TRUE))) {
-      stop(sQuote("K"), " list of integer vectors is requested!", call. = FALSE)
+      stop(sQuote("K"), " matrix of integer values is requested!", call. = FALSE)
     }
 
     if (!all(unlist(lapply(K, function(x) all(x > 0)))) == TRUE) {
       stop("all ", sQuote("K"), " must be greater than 0!", call. = FALSE)
+    }
+    
+    if(ncol(K) != d) {
+      stop(sQuote("K"), " number of columns in matrix must equal ", d, "!", call. = FALSE)    
+    }
+    
+    if(nrow(K) != length(Dataset)) {
+      stop(sQuote("K"), " number of rows in matrix must equal ", length(Dataset), "!", call. = FALSE)    
     }
   }
   else
@@ -797,6 +805,10 @@ function(.Object, ...,
     if (length(ymax) != d) {
       stop("lengths of ", sQuote("ymax"), " and ", sQuote("d"), " must match!", call. = FALSE)
     }
+    
+    if (any(ymax <= ymin)) {
+      stop(sQuote("ymax"), " must be greater than ", sQuote("ymin"), "!", call. = FALSE)
+    }    
   }
 
   # ar.
@@ -1199,6 +1211,7 @@ function(object)
 
 setClass("RCLRMIX",
 slots = c(x = "ANY",
+  Dataset = "data.frame",
   pos = "numeric",
   Zt = "factor",
   Zp = "factor",
@@ -1217,6 +1230,7 @@ prototype = list(pos = 1))
 setMethod("initialize", "RCLRMIX",
 function(.Object, ...,
   x,
+  Dataset,
   pos,
   Zt)
 {
@@ -1227,7 +1241,7 @@ function(.Object, ...,
   if (missing(x) || (length(x) == 0)) {
     stop(sQuote("x"), " must not be empty!", call. = FALSE)
   }
-
+  
   if (class(x) != model) {
     stop(sQuote("x"), " object of class ", model, " is requested!", call. = FALSE)
   }
@@ -1245,18 +1259,51 @@ function(.Object, ...,
   if ((pos < 1) || (pos > nrow(x@summary))) {
     stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
   }
+  
+  # Dataset.
+  
+  if (missing(Dataset) || (length(Dataset) == 0)) {
+    Dataset <- .Object@Dataset
+    
+    n <- nrow(x@Dataset[[pos]])
+  }
+  else {
+    if (!is.data.frame(Dataset)) {
+      stop(sQuote("Dataset"), " data frame is requested!", call. = FALSE)
+    }
+
+    d <- length(x@Variables)
+
+    if (ncol(Dataset) != d) {
+      stop(sQuote("Dataset"), " number of columns in data frame must equal ", d, "!", call. = FALSE)
+    }
+
+    n <- nrow(Dataset)
+
+    if (n < 1) {
+      stop(sQuote("Dataset"), " number of rows in data frame must be greater than 0!", call. = FALSE)
+    }  
+  }
 
   # Zt.
 
-  if (missing(Zt) || (length(Zt) == 0)) Zt <- .Object@Zt
-
-  if (!is.factor(Zt)) {
-    stop(sQuote("Zt"), " factor is requested!", call. = FALSE)
+  if (missing(Zt) || (length(Zt) == 0)) {
+    Zt <- .Object@Zt
+  }
+  else {  
+    if (!is.factor(Zt)) {
+      stop(sQuote("Zt"), " factor is requested!", call. = FALSE)
+    }
+  
+    if (n != length(Zt)) {
+      stop("length of ", sQuote("Zt"), " must equal ", n, "!", call. = FALSE)  
+    }
   }
 
   levels(Zt) <- 1:length(levels(Zt))
 
   .Object@x <- x
+  .Object@Dataset <- Dataset
   .Object@pos <- pos
   .Object@Zt <- Zt
 
@@ -1466,6 +1513,8 @@ function(.Object, ...,
   if (!is.data.frame(Dataset)) {
     stop(sQuote("Dataset"), " data frame is requested!", call. = FALSE)
   }
+  
+  n <- nrow(Dataset)
 
   # ntest.
 
@@ -1477,6 +1526,10 @@ function(.Object, ...,
 
   if (!is.factor(Zt)) {
     stop(sQuote("Zt"), " factor is requested!", call. = FALSE)
+  }
+  
+  if (n != length(Zt)) {
+    stop("length of ", sQuote("Zt"), " must equal ", n, "!", call. = FALSE)  
   }
 
   levels(Zt) <- 1:length(levels(Zt))

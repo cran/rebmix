@@ -1,13 +1,11 @@
 ### R code from vignette source 'rebmix.Rnw'
-### Encoding: CP1250
 
 ###################################################
 ### code chunk number 1: rebmix-code
 ###################################################
 ##############################################
 ## R sources for reproducing the results in ##
-##   Marko Nagode:                          ##
-##   rebmix: The Rebmix Package             ##
+##              rebmix package              ##
 ##############################################
 
 options(prompt = "R> ", continue = "+  ", width = 80,
@@ -92,7 +90,7 @@ gamma3est <- REBMIX(Dataset = a.Dataset(gamma3),
 ###################################################
 ### code chunk number 5: gamma3-fig
 ###################################################
-plot(gamma3est, pos = 1, what = c("den", "dis"), ncol = 2, npts = 1000)
+plot(gamma3est, pos = 1, what = c("pdf", "marginal cdf"), ncol = 2, npts = 1000)
 
 
 ###################################################
@@ -153,13 +151,13 @@ poissonest <- REBMIX(Dataset = a.Dataset(poisson),
 ###################################################
 ### code chunk number 10: poisson-fig
 ###################################################
-plot(poissonest, pos = 9, what = c("dens", "marg", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
+plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
 
 
 ###################################################
 ### code chunk number 11: poisson-clu-fig
 ###################################################
-poissonclu <- RCLRMIX(x = poissonest, pos = 9, Zt = a.Zt(poisson))
+poissonclu <- RCLRMIX(x = poissonest, pos = 1, Zt = a.Zt(poisson))
 
 plot(poissonclu)
 
@@ -171,9 +169,9 @@ plot(poissonclu)
 
 summary(poissonest)
 
-a.theta1.all(poissonest, pos = 9)
+a.theta1.all(poissonest, pos = 1)
 
-a.theta2.all(poissonest, pos = 9)
+a.theta2.all(poissonest, pos = 1)
 
 
 ###################################################
@@ -245,14 +243,14 @@ ex4.1est.dens <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
   Preprocessing = "histogram",
   cmax = 10,
-  Criterion = "AIC",
+  Criterion = "BIC",
   EMcontrol = EM)
 
 
 ###################################################
 ### code chunk number 21: ex4_1_dens-fig
 ###################################################
-plot(ex4.1est.dens, pos = 1, what = c("dens"), nrow = 1, ncol = 1)
+plot(ex4.1est.dens, pos = 1, what = c("pdf"), nrow = 1, ncol = 1)
 
 
 ###################################################
@@ -302,7 +300,7 @@ ex4.1est <- REBMIX(model = "REBMVNORM",
 ###################################################
 ### code chunk number 26: ex4_1-fig
 ###################################################
-plot(ex4.1est, pos = 1, what = c("dens"), nrow = 1, ncol = 1)
+plot(ex4.1est, pos = 1, what = c("pdf"), nrow = 1, ncol = 1)
 
 
 ###################################################
@@ -344,12 +342,12 @@ ex4.1est.em.normal <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
   Preprocessing = "histogram",
   cmax = 15,
-  Criterion = "AIC",
+  Criterion = "BIC",
   EMcontrol = EM.normal)
 
 cat("Total number of EM algorithm iterations: ",
   a.summary.EM(ex4.1est.em.normal, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of AIC: ", a.summary(ex4.1est.em.normal, pos = 1, col.name = "IC"))
+  ". Value of BIC: ", a.summary(ex4.1est.em.normal, pos = 1, col.name = "IC"))
 
 
 ###################################################
@@ -367,12 +365,12 @@ ex4.1est.em.fixed1.5 <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
   Preprocessing = "histogram",
   cmax = 15,
-  Criterion = "AIC",
+  Criterion = "BIC",
   EMcontrol = EM.fixed1.5)
 
 cat("Total number of EM algorithm iterations: ",
   a.summary.EM(ex4.1est.em.fixed1.5, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of AIC: ", a.summary(ex4.1est.em.fixed1.5, pos = 1, col.name = "IC"))
+  ". Value of BIC: ", a.summary(ex4.1est.em.fixed1.5, pos = 1, col.name = "IC"))
 
 
 ###################################################
@@ -390,12 +388,12 @@ ex4.1est.em.line <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
   Preprocessing = "histogram",
   cmax = 15,
-  Criterion = "AIC",
+  Criterion = "BIC",
   EMcontrol = EM.line)
 
 cat("Total number of EM algorithm iterations: ",
   a.summary.EM(ex4.1est.em.line, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of AIC: ", a.summary(ex4.1est.em.line, pos = 1, col.name = "IC"))
+  ". Value of BIC: ", a.summary(ex4.1est.em.line, pos = 1, col.name = "IC"))
 
 
 ###################################################
@@ -413,12 +411,12 @@ ex4.1est.em.golden <- REBMIX(model = "REBMVNORM",
   Dataset = list(as.data.frame(ex4.1)),
   Preprocessing = "histogram",
   cmax = 15,
-  Criterion = "AIC",
+  Criterion = "BIC",
   EMcontrol = EM.golden)
 
 cat("Total number of EM algorithm iterations: ",
   a.summary.EM(ex4.1est.em.golden, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of AIC: ", a.summary(ex4.1est.em.golden, pos = 1, col.name = "IC"))
+  ". Value of BIC: ", a.summary(ex4.1est.em.golden, pos = 1, col.name = "IC"))
 
 
 ###################################################

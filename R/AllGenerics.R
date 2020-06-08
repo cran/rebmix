@@ -102,6 +102,7 @@ setGeneric("boot",
 setGeneric("RCLRMIX",
   function(model = "RCLRMIX",
     x = NULL,
+    Dataset = data.frame(),
     pos = 1,
     Zt = factor(), ...)
   standardGeneric("RCLRMIX"))
@@ -216,7 +217,25 @@ setGeneric("a.summary.EM", function(x = NULL, pos = 0, col.name = character()) s
 
 ### End
 
+### Panic Branislav & Marko Nagode.
 
+setGeneric("optbins",
+  function(Dataset = list(),
+    Rule = "Knuth equal",  
+    y0 = numeric(),
+    ymin = numeric(),
+    ymax = numeric(), 
+    kmin = numeric(),
+    kmax = numeric(), ...)
+  standardGeneric("optbins"))
+  
+setGeneric("bins",
+  function(Dataset = list(),
+    K = matrix(),
+    y0 = numeric(),
+    ymin = numeric(),
+    ymax = numeric(), ...)
+  standardGeneric("bins"))  
 
-
+### End
 

@@ -20,8 +20,6 @@ function(x, pos, variables, ...)
 
   Dataset <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
 
-  colnames <- colnames(Dataset)
-
   d <- ncol(Dataset); dini <- d; variables <- eval(variables)
 
   n <- nrow(Dataset)
@@ -47,12 +45,6 @@ function(x, pos, variables, ...)
 
   Names <- names(x@Theta[[pos]])
 
-  pdf <- unlist(x@Theta[[pos]][grep("pdf", Names)])
-
-  pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
-
-  pdf <- pdf[variables]
-
   k <- as.numeric(x@summary[pos, "v/k"])
 
   Names <- names(x@summary)
@@ -60,22 +52,24 @@ function(x, pos, variables, ...)
   if (Preprocessing == .rebmix$Preprocessing[1]) {
     h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
     y0 <- x@summary[pos, grep("y0", Names)]; y0 <- y0[variables]
+    ymin <- x@summary[pos, grep("ymin", Names)]; ymin <- ymin[variables]
+    ymax <- x@summary[pos, grep("ymax", Names)]; ymax <- ymax[variables]    
 
     output <- .C(C_RPreprocessingHMIX,
       h = as.double(h),
       y0 = as.double(y0),
-      length.pdf = as.integer(d),
-      pdf = as.character(pdf),
+      ymin = as.double(ymin),
+      ymax = as.double(ymax),      
       k = as.integer(k),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 1)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     length(output$y) <- output$k * (output$d + 1); dim(output$y) <- c(output$k, output$d + 1)
@@ -84,12 +78,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y, stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
   else
   if (Preprocessing == .rebmix$Preprocessing[2]) {
@@ -99,13 +88,13 @@ function(x, pos, variables, ...)
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 2)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     dim(output$y) <- c(n, d + 2)
@@ -114,12 +103,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, -(d + 1)], stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
   else
   if (Preprocessing == .rebmix$Preprocessing[3]) {
@@ -130,13 +114,13 @@ function(x, pos, variables, ...)
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 3)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     dim(output$y) <- c(n, d + 3)
@@ -145,12 +129,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, c(-(d + 1), -(d + 3))], stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
 
   options(digits = digits)
@@ -182,8 +161,6 @@ function(x, pos, variables, ...)
 
   Dataset <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
 
-  colnames <- colnames(Dataset)
-
   d <- ncol(Dataset); dini <- d; variables <- eval(variables)
   n <- nrow(Dataset)
 
@@ -206,14 +183,6 @@ function(x, pos, variables, ...)
 
   Preprocessing <- x@summary[pos, "Preprocessing"]
 
-  Names <- names(x@Theta[[pos]])
-
-  pdf <- unlist(x@Theta[[pos]][grep("pdf", Names)])
-
-  pdf <- match.arg(pdf, .rebmix$pdf, several.ok = TRUE)
-
-  pdf <- pdf[variables]
-
   k <- as.numeric(x@summary[pos, "v/k"])
 
   Names <- names(x@summary)
@@ -221,22 +190,24 @@ function(x, pos, variables, ...)
   if (Preprocessing == .rebmix$Preprocessing[1]) {
     h <- x@summary[pos, grep("h", Names)]; h <- h[variables]
     y0 <- x@summary[pos, grep("y0", Names)]; y0 <- y0[variables]
+    ymin <- x@summary[pos, grep("ymin", Names)]; ymin <- ymin[variables]
+    ymax <- x@summary[pos, grep("ymax", Names)]; ymax <- ymax[variables]
 
     output <- .C(C_RPreprocessingHMVNORM,
       h = as.double(h),
       y0 = as.double(y0),
-      length.pdf = as.integer(d),
-      pdf = as.character(pdf),
+      ymin = as.double(ymin),
+      ymax = as.double(ymax),
       k = as.integer(k),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 1)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     length(output$y) <- output$k * (output$d + 1); dim(output$y) <- c(output$k, output$d + 1)
@@ -245,12 +216,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y, stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
   else
   if (Preprocessing == .rebmix$Preprocessing[2]) {
@@ -260,13 +226,13 @@ function(x, pos, variables, ...)
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 2)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     dim(output$y) <- c(n, d + 2)
@@ -275,12 +241,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, -(d + 1)], stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
   else
   if (Preprocessing == .rebmix$Preprocessing[3]) {
@@ -291,13 +252,13 @@ function(x, pos, variables, ...)
       h = as.double(h),
       n = as.integer(n),
       d = as.integer(d),
-      x = as.double(unlist(Dataset)),
+      x = as.double(Dataset),
       y = double(n * (d + 3)),
       error = integer(1),
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in preprocessing!", call. = FALSE); return(NA)
+      stop("in demix!", call. = FALSE); return(NA)
     }
 
     dim(output$y) <- c(n, d + 3)
@@ -306,12 +267,7 @@ function(x, pos, variables, ...)
 
     output <- as.data.frame(output$y[, c(-(d + 1), -(d + 3))], stringsAsFactors = FALSE)
 
-    if (is.null(colnames)) {
-      colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
-    }
-    else {
-      colnames(output) <- c(colnames[variables], "f")
-    }
+    colnames(output) <- c(paste("x", if (dini > 1) variables else "", sep = ""), "f")
   }
 
   options(digits = digits)

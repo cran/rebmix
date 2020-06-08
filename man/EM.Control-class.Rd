@@ -21,7 +21,7 @@ a character containing the type of the EM algorithm to be used. One of \code{"EM
 a character containing the type of acceleration of the EM iteration increment. One of \code{"fixed"}, \code{"line"} or \code{"golden"}. The default value is \code{"fixed"}.
 }
 \item{\code{tolerance}:}{
-tolerance value for the EM convergence criteria. The default value is 1e-4.
+tolerance value for the EM convergence criteria. The default value is 1.0E-4.
 }
 \item{\code{acceleration.multiplier}:}{
 acceleration.multiplier \eqn{a_{\mathrm{EM}}}, \eqn{1.0 \leq a_{\mathrm{EM}} \leq 2.0}. acceleration.multiplier for the EM step increment. The default value is 1.0.
@@ -31,8 +31,11 @@ maximum.iterations is positive integer containing the maximum allowed number of 
 }
 }
 }
-\author{Panic Branislav}
+\author{Branislav Panic}
 \references{
+B. Panic, J. Klemenc, M. Nagode. Improved initialization of the EM algorithm for mixture model parameter estimation.
+Mathematics, 8(3):373, 2020.
+\url{https://doi.org/10.3390/math8030373}.\cr\cr
 A. P. Dempster et al. Maximum likelihood from incomplete data via the EM algorithm. Journal of the Royal Statistical Society. Series B, 39(1):1-38, 1977.
 \url{https://www.jstor.org/stable/2984875}.\cr\cr
 G. Celeux and G. Govaert. A classification EM algorithm for clustering and two stochastic versions, Computational Statistics & Data Analysis, 14(3):315:332, 1992.

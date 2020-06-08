@@ -29,11 +29,11 @@ Returns as default the REBMIX algorithm output for mixtures of conditionally ind
 see Methods section below.
 }
 \item{Dataset}{
-a list of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
+a list of length \eqn{n_{\mathrm{D}}} of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
 represents one random variable. Numbers of observations \eqn{n} equal the number of rows in the datasets.
 }
 \item{Preprocessing}{
-a character vector giving the preprocessing types. One of \code{"histogram"}, \cr
+a character giving the preprocessing type. One of \code{"histogram"}, \cr
 \code{"kernel density estimation"} or \code{"k-nearest neighbour"}.
 }
 \item{cmax}{
@@ -59,12 +59,14 @@ a vector of length \eqn{d} containing initial component parameters. One of \eqn{
 a vector of length \eqn{d} containing initial component parameters. Currently not used.
 }
 \item{K}{
-a character or a vector or a list of vectors containing numbers of bins \eqn{v} for the histogram and the kernel density estimation or numbers of nearest
+a character or a vector or a matrix of size \eqn{n_{\mathrm{D}} \times d} containing numbers of bins \eqn{v} or \eqn{v_{1}, \ldots, v_{d}} for the histogram and the kernel density estimation or numbers of nearest
 neighbours \eqn{k} for the \emph{k}-nearest neighbour. There is no genuine rule to identify \eqn{v} or \eqn{k}. Consequently,
 the REBMIX algorithm identifies them from the set \code{K} of input values by
 minimizing the information criterion. The Sturges rule \eqn{v = 1 + \mathrm{log_{2}}(n)}, \eqn{\mathrm{Log}_{10}} rule \eqn{v = 10 \mathrm{log_{10}}(n)} or RootN
 rule \eqn{v = 2 \sqrt{n}} can be applied to estimate the limiting numbers of bins
-or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours. If, e.g., \code{K = c(10, 20, 40, 60)} and minimum \code{IC} coincides, e.g., \code{40}, brackets are set to \code{20} and \code{60} and the golden section is applied to refine the minimum search. See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. The default value is \code{"auto"}.
+or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of nearest neighbours. If, e.g., \code{K = c(10, 20, 40, 60)} and minimum \code{IC} coincides, e.g., \code{40}, brackets are set to \code{20} and \code{60} and the golden section is applied to refine the minimum search. 
+If, e.g., \code{K = matrix(c(10, 15, 18, 5, 7, 9), byrow = TRUE, ncol = 3)} than \eqn{d = 3} and the list \code{Dataset} contains \eqn{n_{\mathrm{D}} = 2} frames. Hence, different numbers of bins can be assigned to \eqn{y_{1}, \ldots, y_{d}}.
+See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. The default value is \code{"auto"}.
 }
 \item{y0}{
 a vector of length \eqn{d} containing origins. The default value is \code{numeric()}.
@@ -125,7 +127,10 @@ Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \url{ht
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
 Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \url{https://doi.org/10.1080/03610921003725788}.\cr\cr
 M. Nagode. Finite mixture modeling via REBMIX.
-Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://doi.org/10.5963/JAO0302001}.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://doi.org/10.5963/JAO0302001}.\cr\cr
+B. Panic, J. Klemenc, M. Nagode. Improved initialization of the EM algorithm for mixture model parameter estimation.
+Mathematics, 8(3):373, 2020.
+\url{https://doi.org/10.3390/math8030373}.
 }
 \examples{
 # Generate and plot univariate normal dataset.
@@ -162,7 +167,7 @@ logL(normalest)
 
 # Plot finite mixture.
 
-plot(normalest, nrow = 2, what = c("den", "dis"), npts = 1000)
+plot(normalest, nrow = 2, what = c("pdf", "marginal cdf"), npts = 1000)
 
 # EM algorithm utilization
 

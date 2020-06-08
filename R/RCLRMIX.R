@@ -20,7 +20,14 @@ function(model, ...)
 
   d <- length(pdf) / c
 
-  dataset <- as.matrix(model@x@Dataset[[model@pos]])
+  dataset <- model@Dataset
+
+  if (missing(dataset) || (length(dataset) == 0)) {
+    dataset <- as.matrix(model@x@Dataset[[model@pos]])
+  }
+  else {
+    dataset <- as.matrix(dataset)
+  }  
 
   n <- nrow(dataset)
 
@@ -164,7 +171,7 @@ function(model, ...)
 
   i <- length(model@from)
 
-  while (i > 1) {
+  while (i > 0) {
     from.in.unique.Z <- model@from[i] %in% unique.Z
     to.in.unique.Z <- model@to[i] %in% unique.Z
 
@@ -224,8 +231,15 @@ function(model, ...)
   w <- model@x@w[[model@pos]]
 
   d <- length(pdf) / c
+  
+  dataset <- model@Dataset
 
-  dataset <- as.matrix(model@x@Dataset[[model@pos]])
+  if (missing(dataset) || (length(dataset) == 0)) {
+    dataset <- as.matrix(model@x@Dataset[[model@pos]])
+  }
+  else {
+    dataset <- as.matrix(dataset)
+  } 
 
   n <- nrow(dataset)
 
@@ -286,7 +300,7 @@ function(model, ...)
 
   i <- length(model@from)
 
-  while (i > 1) {
+  while (i > 0) {
     from.in.unique.Z <- model@from[i] %in% unique.Z
     to.in.unique.Z <- model@to[i] %in% unique.Z
 
@@ -329,17 +343,19 @@ setMethod("RCLRMIX",
           signature(model = "ANY"),
 function(model,
   x,
+  Dataset,
   pos,
   Zt, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("RCLRMIX Version 2.11.0")
+  message("RCLRMIX Version 2.12.0")
 
   flush.console()
 
   model <- new(model,
     x = x,
+    Dataset = Dataset,
     pos = pos,
     Zt = Zt)
 

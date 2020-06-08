@@ -14,12 +14,16 @@ EMAcceleration = c("fixed", "line", "golden")),
 .Names = c("Preprocessing", "Criterion", "Variables", "pdf", "pdf.nargs", "pdf.Variables", "Restraints", "EMStrategy", "EMVariant", "EMAcceleration"))
 
 .rebmix.plot <- structure(list(
-what = c("density", "marginal", "IC", "logL", "D", "distribution", "K")),
+what = c("pdf", "marginal pdf", "IC", "logL", "D", "marginal cdf", "K")),
 .Names = c("what"))
 
 .rebmix.boot <- structure(list(
 Bootstrap = c("parametric", "nonparametric")),
 .Names = c("Bootstrap"))
+
+.optbins <- structure(list(
+Rule = c("Sturges", "Log10", "RootN", "Knuth equal", "Knuth unequal")),
+.Names = c("Rule"))
 
 
 

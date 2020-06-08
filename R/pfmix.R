@@ -12,9 +12,23 @@ function(x,
   if (missing(x)) {
     stop(sQuote("x"), " object of class REBMIX is requested!", call. = FALSE)
   }
+  
+  if (!is.wholenumber(pos)) {
+    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
+  }
+
+  length(pos) <- 1
+
+  if ((pos < 1) || (pos > nrow(x@summary))) {
+    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
+  }  
 
   if (missing(Dataset)) {
-    stop(sQuote("Dataset"), " must not be empty!", call. = FALSE)
+    Dataset <- x@Dataset[[pos]]  
+  
+    if (missing(Dataset)) {
+      stop(sQuote("Dataset"), " must not be empty!", call. = FALSE)
+    }
   }
 
   if (!is.data.frame(Dataset)) {
@@ -30,17 +44,7 @@ function(x,
   n <- nrow(Dataset)
 
   if (n < 1) {
-    stop(sQuote("Dataset"), " number of rows in data frame must be greater than 1!", call. = FALSE)
-  }
-
-  if (!is.wholenumber(pos)) {
-    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
-  }
-
-  length(pos) <- 1
-
-  if ((pos < 1) || (pos > nrow(x@summary))) {
-    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
+    stop(sQuote("Dataset"), " number of rows in data frame must be greater than 0!", call. = FALSE)
   }
 
   if (length(variables) != 0) {
@@ -144,12 +148,7 @@ function(x,
 
   output <- as.data.frame(cbind(Dataset[, variables], f), stringsAsFactors = FALSE)
 
-  if (is.null(colnames(Dataset))) {
-    colnames(output) <- c(paste("x", if (d > 1) variables else "", sep = ""), "F")
-  }
-  else {
-    colnames(output) <- c(colnames(Dataset)[variables], "F")
-  }
+  colnames(output) <- c(paste("x", if (d > 1) variables else "", sep = ""), "F")
 
   options(digits = digits)
 
@@ -173,10 +172,24 @@ function(x,
     stop(sQuote("x"), " object of class REBMVNORM is requested!", call. = FALSE)
   }
 
-  if (missing(Dataset)) {
-    stop(sQuote("Dataset"), " must not be empty!", call. = FALSE)
+  if (!is.wholenumber(pos)) {
+    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
   }
 
+  length(pos) <- 1
+
+  if ((pos < 1) || (pos > nrow(x@summary))) {
+    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
+  }  
+
+  if (missing(Dataset)) {
+    Dataset <- x@Dataset[[pos]]  
+  
+    if (missing(Dataset)) {
+      stop(sQuote("Dataset"), " must not be empty!", call. = FALSE)
+    }
+  }
+  
   if (!is.data.frame(Dataset)) {
     stop(sQuote("Dataset"), " data frame is requested!", call. = FALSE)
   }
@@ -190,17 +203,7 @@ function(x,
   n <- nrow(Dataset)
 
   if (n < 1) {
-    stop(sQuote("Dataset"), " number of rows in data frame must be greater than 1!", call. = FALSE)
-  }
-
-  if (!is.wholenumber(pos)) {
-    stop(sQuote("pos"), " integer is requested!", call. = FALSE)
-  }
-
-  length(pos) <- 1
-
-  if ((pos < 1) || (pos > nrow(x@summary))) {
-    stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(x@summary), "!", call. = FALSE)
+    stop(sQuote("Dataset"), " number of rows in data frame must be greater than 0!", call. = FALSE)
   }
 
   if (length(variables) != 0) {
@@ -262,12 +265,7 @@ function(x,
 
   output <- as.data.frame(cbind(Dataset[, variables], f), stringsAsFactors = FALSE)
 
-  if (is.null(colnames(Dataset))) {
-    colnames(output) <- c(paste("x", if (d > 1) variables else "", sep = ""), "F")
-  }
-  else {
-    colnames(output) <- c(colnames(Dataset)[variables], "F")
-  }
+  colnames(output) <- c(paste("x", if (d > 1) variables else "", sep = ""), "F")
 
   options(digits = digits)
 
