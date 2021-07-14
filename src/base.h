@@ -3,7 +3,9 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4514)
+#pragma warning(disable: 4710)
 #pragma warning(disable: 4820)
+#pragma warning(disable: 5045)
 #endif
 
 #include <float.h>
@@ -68,6 +70,10 @@
 #define Euler (FLOAT)0.5772156649015328606065120900824
 #endif
 
+#ifndef SqrPi6
+#define SqrPi6 (FLOAT)1.644934066848226436472415166646
+#endif
+
 #ifndef Phi
 #define Phi (FLOAT)1.6180339887498948482045868343656
 #endif
@@ -120,6 +126,10 @@
 #define RNMX (FLOAT)(1.0 - 1.2E-7)
 #endif
 
+#ifndef INT_MAX
+#define INT_MAX 2147483647
+#endif
+
 #define Min(x, y) ((x < y) ? x : y)
 
 #define Max(x, y) ((x > y) ? x : y)
@@ -129,16 +139,17 @@
 #define IsInf(x) (!IsNan(x) && IsNan((x) - (x)))
 
 typedef enum {
-    pfNormal,    // Normal distribution.
-    pfLognormal, // Lognormal distribution.
-    pfWeibull,   // Weibull distribution.
-    pfGamma,     // Gamma distribution.
-    pfGumbel,    // Gumbel distribution.
-    pfvonMises,  // Von Mises distribution.
-    pfBinomial,  // Binomial distribution.
-    pfPoisson,   // Poisson distribution.
-    pfDirac,     // Dirac distribution.
-    pfUniform    // Uniform distribution.
+    pfNormal,          // Normal distribution.
+	pfTNormal,         // Truncated normal distribution.
+    pfLognormal,       // Lognormal distribution.
+    pfWeibull,         // Weibull distribution.
+    pfGamma,           // Gamma distribution.
+    pfGumbel,          // Gumbel distribution.
+    pfvonMises,        // Von Mises distribution.
+    pfBinomial,        // Binomial distribution.
+    pfPoisson,         // Poisson distribution.
+    pfDirac,           // Dirac distribution.
+    pfUniform,         // Uniform distribution.
 } ParametricFamilyType_e;
 
 typedef enum {
@@ -208,18 +219,18 @@ public:
 }; // CompnentDistribution
 
 typedef struct mixtureparametertype {
-    FLOAT *W;                        // Pointer to weight.
-    CompnentDistribution **MixTheta; // Pointer to mixture parameters.
-    int c;                           // Number of components in mixture.
-    FLOAT logL;                      // Estimated value of log likelihood.
-    FLOAT logV;                      // Logaritmic value of V.
-    int k;                           // Bin number for histogram preprocessing or smothing parameter for kernel density estimation and k-nearest neighbour preprocessing.
-    FLOAT *h;                        // Bin widths for histogram preprocessing or smothing parameter for kernel density estimation and k-nearest neighbour preprocessing.
-    FLOAT *y0;                       // Bin origins for histogram preprocessing or NULL for kernel density estimation and k-nearest neighbour preprocessing.
-    FLOAT *ymin;                     // Minimum values from data.
-    FLOAT *ymax;                     // Maximum values from data.
-    int n_iter_em;                   // Number of performed iterations of EM algorithm.
-    int initialized;                 // Boolean indicator if struct contains mixture model parameters. 
+    FLOAT                *W;          // Pointer to weight.
+    CompnentDistribution **MixTheta;  // Pointer to mixture parameters.
+    int                  c;           // Number of components in mixture.
+    FLOAT                logL;        // Estimated value of log likelihood.
+    FLOAT                logV;        // Logaritmic value of V.
+    int                  k;           // Bin number for histogram preprocessing or smothing parameter for kernel density estimation and k-nearest neighbour preprocessing.
+    FLOAT                *h;          // Bin widths for histogram preprocessing or smothing parameter for kernel density estimation and k-nearest neighbour preprocessing.
+    FLOAT                *y0;         // Bin origins for histogram preprocessing or NULL for kernel density estimation and k-nearest neighbour preprocessing.
+    FLOAT                *ymin;       // Minimum values from data.
+    FLOAT                *ymax;       // Maximum values from data.
+    int                  n_iter_em;   // Number of performed iterations of EM algorithm.
+    int                  initialized; // Boolean indicator if struct contains mixture model parameters. 
 } MixtureParameterType;
 
 FLOAT Ran1(int *IDum);
@@ -276,6 +287,10 @@ int GammaInv(FLOAT Fy, FLOAT Theta, FLOAT Beta, FLOAT *y);
 // Returns the inverse of the Weibull c.d.f. for the specified Theta and Beta.
 
 FLOAT WeibullInv(FLOAT Fy, FLOAT Theta, FLOAT Beta);
+
+// Returns the inverse of the Gumbel c.d.f. for the specified Mean and Beta.
+
+FLOAT GumbelInv(FLOAT Fy, FLOAT Mean, FLOAT Beta);
 
 // Returns the error function erf(y). See http://www.nr.com/.
 

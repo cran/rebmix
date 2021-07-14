@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <float.h>
-#include <math.h>
-
 #include "rngmixf.h"
-#include "rebmixf.h"
+
+#include <math.h>
 
 extern "C" {
 
@@ -185,6 +181,7 @@ void RREBMIX(char   **Preprocessing, // Preprocessing type.
              double *EMTolerance,       // Tolerance for EM algortihm.
              double *EMAccelerationMul, // Acceleration rate for Em algorithm.
              int    *EMMaxIter,         // Maximum number of iterations in EM algorithm.
+	         int    *EMK,               // Number of bins for histogram EM algorithm.
              int    *n_iter,            // Number of iterations for optimal case.
              int    *n_iter_sum,        // Number of iterations in whole run.
 /// End
@@ -495,6 +492,8 @@ void RREBMIX(char   **Preprocessing, // Preprocessing type.
     rebmix->EM_am_ = *EMAccelerationMul;
 
     rebmix->EM_max_iter_ = *EMMaxIter;
+
+	rebmix->EM_K_ = *EMK;
 
 /// End
 
@@ -823,7 +822,7 @@ void RdensHistogramXY(int    *k,     // Total number of bins.
         }
 
         switch (pdfx) {
-        case pfNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
+        case pfNormal: case pfTNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
             break;
         case pfLognormal: case pfWeibull: case pfGamma:
             if (x[*k] <= FLOAT_MIN) x[*k] += (*hx);
@@ -842,7 +841,7 @@ void RdensHistogramXY(int    *k,     // Total number of bins.
         }
 
         switch (pdfy) {
-        case pfNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
+        case pfNormal: case pfTNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
             break;
         case pfLognormal: case pfWeibull: case pfGamma:
             if (y[*k] <= FLOAT_MIN) y[*k] += (*hy);
@@ -1018,7 +1017,7 @@ void RdensHistogramX(int    *k,     // Total number of bins.
         }
 
         switch (pdfx) {
-        case pfNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
+        case pfNormal: case pfTNormal: case pfvonMises: case pfBinomial: case pfPoisson: case pfDirac: case pfUniform: case pfGumbel: default:
             break;
         case pfLognormal: case pfWeibull: case pfGamma:
             if (x[*k] <= FLOAT_MIN) x[*k] += (*hx);
@@ -2612,11 +2611,11 @@ void RGumbelPdf(int *n, double *y, double *Mean, double *Beta, double *f)
     int   i;
 
     for (i = 0; i < *n; i++) {
-		A = (y[i] - *Mean) / (*Beta);
+		A = -(y[i] - *Mean) / (*Beta);
 
-        f[i] = (FLOAT)exp(-(A + (FLOAT)exp(-A))) / (*Beta);
+        f[i] = (FLOAT)exp(A - (FLOAT)exp(A)) / (*Beta);
     }
-} // RvonMisesPdf
+} // RGumbelPdf
 
 void RGumbelCdf(int *n, double *y, double *Mean, double *Beta, double *F)
 {
@@ -2624,9 +2623,9 @@ void RGumbelCdf(int *n, double *y, double *Mean, double *Beta, double *F)
 	int   i;
 
 	for (i = 0; i < *n; i++) {
-	    A = (y[i] - *Mean) / (*Beta);
+	    A = -(y[i] - *Mean) / (*Beta);
       
-		F[i] = (FLOAT)exp(-(FLOAT)exp(-A));
+		F[i] = (FLOAT)exp(-(FLOAT)exp(A));
     }
 } // RGumbelCdf
 

@@ -118,6 +118,49 @@ summary(gamma3boot)
 ###################################################
 ### code chunk number 8: rebmix-code
 ###################################################
+## EM.control object creation.
+
+EM <- new("EM.Control",
+  strategy = "best",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000,
+  K = 0)
+
+gamma1est.em <- REBMIX(Dataset = a.Dataset(gamma1),
+  Preprocessing = "kernel density estimation",
+  cmax = 8,
+  Criterion = "BIC",
+  pdf = "gamma",
+  EMcontrol = EM)
+
+gamma2est.em <- REBMIX(Dataset = a.Dataset(gamma2),
+  Preprocessing = "histogram",
+  cmax = 8,
+  Criterion = "BIC",
+  pdf = "gamma",
+  EMcontrol = EM)
+
+gamma3est.em <- REBMIX(Dataset = a.Dataset(gamma3),
+  Preprocessing = "histogram",
+  cmax = 8,
+  Criterion = "BIC",
+  pdf = "gamma",
+  K = 23:27,
+  EMcontrol = EM)
+
+summary(gamma1est.em)
+
+summary(gamma2est.em)
+
+summary(gamma3est.em)
+
+
+###################################################
+### code chunk number 9: rebmix-code
+###################################################
 #########################
 ##   Poisson dataset   ##
 #########################
@@ -136,7 +179,7 @@ poisson <- RNGMIX(Dataset.name = paste("Poisson_", 1:10, sep = ""), n = n, Theta
 
 
 ###################################################
-### code chunk number 9: rebmix-code
+### code chunk number 10: rebmix-code
 ###################################################
 ## Estimate number of components, component weights and component parameters.
 
@@ -149,13 +192,13 @@ poissonest <- REBMIX(Dataset = a.Dataset(poisson),
 
 
 ###################################################
-### code chunk number 10: poisson-fig
+### code chunk number 11: poisson-fig
 ###################################################
 plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
 
 
 ###################################################
-### code chunk number 11: poisson-clu-fig
+### code chunk number 12: poisson-clu-fig
 ###################################################
 poissonclu <- RCLRMIX(x = poissonest, pos = 1, Zt = a.Zt(poisson))
 
@@ -163,7 +206,7 @@ plot(poissonclu)
 
 
 ###################################################
-### code chunk number 12: rebmix-code
+### code chunk number 13: rebmix-code
 ###################################################
 ## Visualize results.
 
@@ -175,61 +218,9 @@ a.theta2.all(poissonest, pos = 1)
 
 
 ###################################################
-### code chunk number 13: rebmix-code
-###################################################
-data("wreath", package = "mclust")
-
-
-###################################################
 ### code chunk number 14: rebmix-code
 ###################################################
-## Estimate number of components, component weights and component parameters.
-
-wreathest <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(wreath)),
-  Preprocessing = "histogram",
-  cmax = 20,
-  Criterion = "BIC")
-
-
-###################################################
-### code chunk number 15: wreath-fig
-###################################################
-plot(wreathest)
-
-
-###################################################
-### code chunk number 16: wreath-clu-fig
-###################################################
-wreathclu <- RCLRMIX(model = "RCLRMVNORM", x = wreathest)
-
-plot(wreathclu, s = 14)
-
-
-###################################################
-### code chunk number 17: rebmix-code
-###################################################
-summary(wreathest)
-
-
-###################################################
-### code chunk number 18: rebmix-code
-###################################################
-summary(wreathclu)
-
-
-###################################################
-### code chunk number 19: rebmix-code
-###################################################
-data("Baudry_etal_2010_JCGS_examples", package = "mclust")
-
-
-###################################################
-### code chunk number 20: rebmix-code
-###################################################
-## Estimate number of components, component weights and component parameters.
-
-## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+## EM.control object creation.
 
 EM <- new("EM.Control",
   strategy = "exhaustive",
@@ -237,48 +228,133 @@ EM <- new("EM.Control",
   acceleration = "fixed",
   acceleration.multiplier = 1.0,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est.dens <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+poissonest.em <- REBMIX(Dataset = a.Dataset(poisson),
   Preprocessing = "histogram",
   cmax = 10,
-  Criterion = "BIC",
-  EMcontrol = EM)
+  Criterion = "MDL5",
+  pdf = rep("Poisson", 2),
+  K = 1,
+  EMcontrol  = EM)
+
+summary(poissonest.em)
 
 
 ###################################################
-### code chunk number 21: ex4_1_dens-fig
+### code chunk number 15: rebmix-code
 ###################################################
-plot(ex4.1est.dens, pos = 1, what = c("pdf"), nrow = 1, ncol = 1)
+###################################
+##  Multivariate normal dataset  ##
+###################################
+
+## Generate normal dataset.
+
+n <- c(50, 50, 50, 50, 50)
+
+Theta <- new("RNGMVNORM.Theta", c = 5, d = 2)
+
+a.theta1(Theta, 1) <- c(2.7, 3.7)
+
+a.theta1(Theta, 2) <- c(5.7, 9.1)
+
+a.theta1(Theta, 3) <- c(2.0, 9.0)
+
+a.theta1(Theta, 4) <- c(9.5, 6.6)
+
+a.theta1(Theta, 5) <- c(6.3, 0.6)
+
+a.theta2(Theta, 1) <- c(0.9, -0.1, -0.1, 0.4)
+
+a.theta2(Theta, 2) <- c(2.8, -1.3, -1.3, 1.5)
+
+a.theta2(Theta, 3) <- c(0.1, 0.0, 0.0, 0.3)
+
+a.theta2(Theta, 4) <- c(1.3, -0.4, -0.4, 0.4)
+
+a.theta2(Theta, 5) <- c(0.5, 0.3, 0.3, 2.5)
+
+mvnorm.simulated <- RNGMIX(model = "RNGMVNORM",
+  Dataset.name = "mvnormdataset",
+  rseed = -1,
+  n = n,
+  Theta = a.Theta(Theta))
 
 
 ###################################################
-### code chunk number 22: ex4_1_dens-clu-fig
-###################################################
-ex4.1clu.dens <- RCLRMIX(model = "RCLRMVNORM", x = ex4.1est.dens)
-
-plot(ex4.1clu.dens)
-
-
-###################################################
-### code chunk number 23: rebmix-code
-###################################################
-summary(ex4.1est.dens)
-
-
-###################################################
-### code chunk number 24: rebmix-code
-###################################################
-summary(ex4.1clu.dens)
-
-
-###################################################
-### code chunk number 25: rebmix-code
+### code chunk number 16: rebmix-code
 ###################################################
 ## Estimate number of components, component weights and component parameters.
 
-## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+mvnormest <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
+  Preprocessing = "histogram",
+  cmax = 20,
+  Criterion = "BIC")
+
+
+###################################################
+### code chunk number 17: mvnorm-fig
+###################################################
+plot(mvnormest)
+
+
+###################################################
+### code chunk number 18: mvnorm-clu-fig
+###################################################
+mvnormclu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest)
+
+plot(mvnormclu)
+
+
+###################################################
+### code chunk number 19: rebmix-code
+###################################################
+summary(mvnormest)
+
+
+###################################################
+### code chunk number 20: rebmix-code
+###################################################
+summary(mvnormclu)
+
+
+###################################################
+### code chunk number 21: rebmix-code
+###################################################
+## EM.control object creation.
+
+EM <- new("EM.Control",
+  strategy = "single",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000,
+  K = 0)
+
+## Optimal K estimation.
+
+K <- optbins(Dataset = a.Dataset(mvnorm.simulated), Rule = "Knuth equal", kmin = 2, kmax = 100)
+
+## Finite mixture estimation
+
+mvnormest.em <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
+  Preprocessing = "histogram",
+  cmax = 20,
+  K = K,
+  Criterion = "BIC",
+  EMcontrol = EM)
+
+summary(mvnormest.em)
+
+
+###################################################
+### code chunk number 22: rebmix-code
+###################################################
+## EM.control object creation.
 
 CEM <- new("EM.Control",
   strategy = "exhaustive",
@@ -286,49 +362,31 @@ CEM <- new("EM.Control",
   acceleration = "fixed",
   acceleration.multiplier = 1.0,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+## Estimate number of components, component weights and component parameters.
+
+mvnormest.cem <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
   Preprocessing = "histogram",
   cmax = 10,
   Criterion = "ICL",
   EMcontrol = CEM)
 
+mvnorm.clu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest.cem)
 
 
 ###################################################
-### code chunk number 26: ex4_1-fig
+### code chunk number 23: mvnorm-clu-fig-cem
 ###################################################
-plot(ex4.1est, pos = 1, what = c("pdf"), nrow = 1, ncol = 1)
-
-
-###################################################
-### code chunk number 27: rebmix-code
-###################################################
-summary(ex4.1est)
+plot(mvnorm.clu)
 
 
 ###################################################
-### code chunk number 28: ex4_1-clu-fig
+### code chunk number 24: rebmix-code
 ###################################################
-ex4.1clu <- RCLRMIX(model = "RCLRMVNORM", x = ex4.1est)
-
-plot(ex4.1clu)
-
-
-###################################################
-### code chunk number 29: rebmix-code
-###################################################
-summary(ex4.1clu)
-
-
-###################################################
-### code chunk number 30: rebmix-code
-###################################################
-## Estimate number of components, component weights and component parameters.
-
-## Create the EM.Control object to utilize one of the REBMIX&EM strategies
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies.
 
 EM.normal <- new("EM.Control",
   strategy = "exhaustive",
@@ -336,163 +394,213 @@ EM.normal <- new("EM.Control",
   acceleration = "fixed",
   acceleration.multiplier = 1.0,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est.em.normal <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+## Estimate number of components, component weights and component parameters.
+
+mvnormestest.em.normal <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
   Preprocessing = "histogram",
   cmax = 15,
   Criterion = "BIC",
   EMcontrol = EM.normal)
 
 cat("Total number of EM algorithm iterations: ",
-  a.summary.EM(ex4.1est.em.normal, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of BIC: ", a.summary(ex4.1est.em.normal, pos = 1, col.name = "IC"))
+  a.summary.EM(mvnormestest.em.normal, pos = 1, col.name = "total.iterations.nbr"),
+  ". Value of BIC: ", a.summary(mvnormestest.em.normal, pos = 1, col.name = "IC"))
 
 
 ###################################################
-### code chunk number 31: rebmix-code
+### code chunk number 25: rebmix-code
 ###################################################
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies.
+
 EM.fixed1.5 <- new("EM.Control",
   strategy = "exhaustive",
   variant = "EM",
   acceleration = "fixed",
   acceleration.multiplier = 1.5,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est.em.fixed1.5 <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+## Estimate number of components, component weights and component parameters.
+
+mvnormest.em.fixed1.5 <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
   Preprocessing = "histogram",
   cmax = 15,
   Criterion = "BIC",
   EMcontrol = EM.fixed1.5)
 
 cat("Total number of EM algorithm iterations: ",
-  a.summary.EM(ex4.1est.em.fixed1.5, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of BIC: ", a.summary(ex4.1est.em.fixed1.5, pos = 1, col.name = "IC"))
+  a.summary.EM(mvnormest.em.fixed1.5, pos = 1, col.name = "total.iterations.nbr"),
+  ". Value of BIC: ", a.summary(mvnormest.em.fixed1.5, pos = 1, col.name = "IC"))
 
 
 ###################################################
-### code chunk number 32: rebmix-code
+### code chunk number 26: rebmix-code
 ###################################################
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies.
+
 EM.line <- new("EM.Control",
   strategy = "exhaustive",
   variant = "EM",
   acceleration = "line",
   acceleration.multiplier = 1.0,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est.em.line <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+## Estimate number of components, component weights and component parameters.
+
+mvnormest.em.line <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
   Preprocessing = "histogram",
   cmax = 15,
   Criterion = "BIC",
   EMcontrol = EM.line)
 
 cat("Total number of EM algorithm iterations: ",
-  a.summary.EM(ex4.1est.em.line, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of BIC: ", a.summary(ex4.1est.em.line, pos = 1, col.name = "IC"))
+  a.summary.EM(mvnormest.em.line, pos = 1, col.name = "total.iterations.nbr"),
+  ". Value of BIC: ", a.summary(mvnormest.em.line, pos = 1, col.name = "IC"))
 
 
 ###################################################
-### code chunk number 33: rebmix-code
+### code chunk number 27: rebmix-code
 ###################################################
+## Create the EM.Control object to utilize one of the REBMIX&EM strategies.
+
 EM.golden <- new("EM.Control",
   strategy = "exhaustive",
   variant = "EM",
   acceleration = "golden",
   acceleration.multiplier = 1.0,
   tolerance = 1e-4,
-  maximum.iterations = 1000)
+  maximum.iterations = 1000,
+  K = 0)
 
-ex4.1est.em.golden <- REBMIX(model = "REBMVNORM",
-  Dataset = list(as.data.frame(ex4.1)),
+## Estimate number of components, component weights and component parameters.
+
+mvnormest.em.golden <- REBMIX(model = "REBMVNORM",
+  Dataset = a.Dataset(mvnorm.simulated),
   Preprocessing = "histogram",
   cmax = 15,
   Criterion = "BIC",
   EMcontrol = EM.golden)
 
 cat("Total number of EM algorithm iterations: ",
-  a.summary.EM(ex4.1est.em.golden, pos=1, col.name = "total.iterations.nbr"),
-  ". Value of BIC: ", a.summary(ex4.1est.em.golden, pos = 1, col.name = "IC"))
+  a.summary.EM(mvnormest.em.golden, pos = 1, col.name = "total.iterations.nbr"),
+  ". Value of BIC: ", a.summary(mvnormest.em.golden, pos = 1, col.name = "IC"))
+
+
+###################################################
+### code chunk number 28: rebmix-code
+###################################################
+data("sensorless.drive")
+
+## Show classes.
+
+levels(sensorless.drive[["Class"]])
+
+## Split dataset into train (75%) and test (25%) subsets.
+
+set.seed(5)
+
+Drive <- split(p = 0.75, Dataset = sensorless.drive, class = 4)
+
+
+###################################################
+### code chunk number 29: rebmix-code
+###################################################
+## Estimate number of components, component weights and component
+## parameters for train subsets.
+
+driveest <- REBMIX(model = "REBMVNORM",
+  Dataset = a.train(Drive),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "BIC")
+
+
+###################################################
+### code chunk number 30: rebmix-code
+###################################################
+## Selected features.
+
+drivecla <- RCLSMIX(model = "RCLSMVNORM",
+  x = list(driveest),
+  Dataset = a.test(Drive),
+  Zt = a.Zt(Drive))
+
+
+###################################################
+### code chunk number 31: rebmix-code
+###################################################
+drivecla
+
+summary(drivecla)
+
+
+###################################################
+### code chunk number 32: drive-cla-fig
+###################################################
+# Plot selected features.
+
+plot(drivecla, nrow = 3, ncol = 2)
+
+
+###################################################
+### code chunk number 33: rebmix-code
+###################################################
+## EM.control object creation.
+
+EM <- new("EM.Control",
+  strategy = "exhaustive",
+  variant = "EM",
+  acceleration = "fixed",
+  acceleration.multiplier = 1.0,
+  tolerance = 1e-4,
+  maximum.iterations = 1000,
+  K = 300)
+
+## Estimate number of components, component weights and component
+## parameters for train subsets.
+
+driveest <- REBMIX(model = "REBMVNORM",
+  Dataset = a.train(Drive),
+  Preprocessing = "histogram",
+  cmax = 15,
+  Criterion = "BIC",
+  EMcontrol = EM)
+
+drivecla <- RCLSMIX(model = "RCLSMVNORM",
+  x = list(driveest),
+  Dataset = a.test(Drive),
+  Zt = a.Zt(Drive))
+
+summary(drivecla)
 
 
 ###################################################
 ### code chunk number 34: rebmix-code
 ###################################################
-data("iris")
-
-# Show level attributes discrete variables.
-
-levels(iris[["Class"]])
-
-# Split dataset into train (75%) and test (25%) subsets.
-
-set.seed(5)
-
-Iris <- split(p = 0.75, Dataset = iris, class = 5)
-
-
-###################################################
-### code chunk number 35: rebmix-code
-###################################################
-# Estimate number of components, component weights and component
-# parameters for train subsets.
-
-irisest <- REBMIX(model = "REBMVNORM",
-  Dataset = a.train(Iris),
-  Preprocessing = "kernel density estimation",
-  cmax = 10,
-  Criterion = "ICL-BIC")
-
-
-###################################################
-### code chunk number 36: rebmix-code
-###################################################
-# Selected features.
-
-iriscla <- RCLSMIX(model = "RCLSMVNORM",
-  x = list(irisest),
-  Dataset = a.test(Iris),
-  Zt = a.Zt(Iris))
-
-
-###################################################
-### code chunk number 37: rebmix-code
-###################################################
-iriscla
-
-summary(iriscla)
-
-
-###################################################
-### code chunk number 38: iris-cla-fig
-###################################################
-# Plot selected features.
-
-plot(iriscla, nrow = 3, ncol = 2)
-
-
-###################################################
-### code chunk number 39: rebmix-code
-###################################################
 data("adult")
 
-# Find complete cases.
+## Find complete cases.
 
 adult <- adult[complete.cases(adult),]
 
-# Replace levels with numbers.
+## Replace levels with numbers.
 
 adult <- as.data.frame(data.matrix(adult))
 
 
 ###################################################
-### code chunk number 40: rebmix-code
+### code chunk number 35: rebmix-code
 ###################################################
-# Find numbers of levels.
+## Find numbers of levels.
 
 cmax <- unlist(lapply(apply(adult[, c(-1, -16)], 2, unique), length))
 
@@ -500,20 +608,20 @@ cmax
 
 
 ###################################################
-### code chunk number 41: rebmix-code
+### code chunk number 36: rebmix-code
 ###################################################
-# Split adult dataset into train and test subsets for two Incomes
-# and remove Type and Income columns.
+## Split adult dataset into train and test subsets for two Incomes
+## and remove Type and Income columns.
 
 Adult <- split(p = list(type = 1, train = 2, test = 1),
   Dataset = adult, class = 16)
 
 
 ###################################################
-### code chunk number 42: rebmix-code
+### code chunk number 37: rebmix-code
 ###################################################
-# Estimate number of components, component weights and component parameters
-# for the set of chunks 1:14.
+## Estimate number of components, component weights and component parameters
+## for the set of chunks 1:14.
 
 adultest <- list()
 
@@ -528,9 +636,9 @@ for (i in 1:14) {
 
 
 ###################################################
-### code chunk number 43: rebmix-code
+### code chunk number 38: rebmix-code
 ###################################################
-# Class membership prediction based upon the best first search algorithm.
+## Class membership prediction based upon the best first search algorithm.
 
 adultcla <- BFSMIX(x = adultest,
   Dataset = a.test(Adult),
@@ -538,7 +646,7 @@ adultcla <- BFSMIX(x = adultest,
 
 
 ###################################################
-### code chunk number 44: rebmix-code
+### code chunk number 39: rebmix-code
 ###################################################
 adultcla
 
@@ -546,15 +654,15 @@ summary(adultcla)
 
 
 ###################################################
-### code chunk number 45: adult-cla-fig
+### code chunk number 40: adult-cla-fig
 ###################################################
-# Plot selected chunks.
+## Plot selected chunks.
 
 plot(adultcla, nrow = 5, ncol = 2)
 
 
 ###################################################
-### code chunk number 46: rebmix-code
+### code chunk number 41: rebmix-code
 ###################################################
 rm(list = ls())
 

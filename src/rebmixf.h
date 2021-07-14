@@ -1,15 +1,11 @@
 #ifndef REBMIXF_H_INCLUDED
 #define REBMIXF_H_INCLUDED
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4514)
-#pragma warning(disable: 4820)
-#endif
+#include "base.h"
+#include "emf.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include "base.h"
-#include "emf.h"
 
 typedef enum {
     poHistogram,        // Histogram approach.
@@ -47,10 +43,11 @@ typedef enum {
 } InformationCriterionType_e;
 
 typedef struct roughparametertype {
-    FLOAT h;   // Mode class width;
-    FLOAT ym;  // Mode position.
-    FLOAT flm; // Component conditional empirical density.
-    FLOAT klm; // Component conditional total number of observations.
+    FLOAT h;     // Mode class width;
+    FLOAT ym;    // Mode position.
+    FLOAT ymean; // Mean position.
+    FLOAT flm;   // Component conditional empirical density.
+    FLOAT klm;   // Component conditional total number of observations.
 } RoughParameterType;
 
 class Rebmix : public Base {
@@ -94,7 +91,8 @@ public:
     Emmix                      *EM_;           // Object of class Emmix.
     FLOAT                      EM_TOL_;        // Tolerance for EM algorithm.
     FLOAT                      EM_am_;         // Acceleration multiplier for EM algorithm.
-    int                        EM_max_iter_;   // Maximum number of iterations of EM algorithm.    
+    int                        EM_max_iter_;   // Maximum number of iterations of EM algorithm.
+	int                        EM_K_;          // Number of bins for histogram EM algorithm.
     EmStrategyType_e           EM_strategy_;   // EM strategy utilization.
     EmVariantType_e            EM_variant_;    // Type of EM variant algorithm.
     EmAccelerationType_e       EM_accel_;      // Type of acceleration of standard EM algorithm.

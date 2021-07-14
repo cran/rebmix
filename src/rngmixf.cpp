@@ -1,9 +1,11 @@
-#include <math.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#include "base.h"
 #include "rngmixf.h"
+
+#include <math.h>
+
+#if (_MAINTAIN_SWITCH)
+#include <ctype.h>
+#include <stdio.h>
+#endif
 
 static int   NDevISet = 0;
 static FLOAT NDevVSet = (FLOAT)0.0;
@@ -178,6 +180,8 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, int j, FLOAT **Y)
             Y[i][j] = CmpDist->Theta_[1][i] * y + CmpDist->Theta_[0][i];
 
             break;
+		case pfTNormal:
+			break;
         case pfLognormal:
             if (LDevISet == 0) {
                 do {
@@ -213,6 +217,8 @@ int Rngmix::InvComponentDist(CompnentDistribution *CmpDist, int j, FLOAT **Y)
 
             break;
         case pfGumbel:
+			Y[i][j] = CmpDist->Theta_[0][i] - CmpDist->Theta_[1][i] * (FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_)));
+
             break;
         case pfvonMises:
             CmpDist->Theta_[0][i] -= Pi2 * int(CmpDist->Theta_[0][i] / Pi2);
@@ -406,7 +412,7 @@ int Rngmix::RunTemplateFile(char *file)
         Error = 1; goto E0;
     }
 
-    printf("RNGMIX Version 2.12.0\n");
+    printf("RNGMIX Version 2.13.0\n");
 
 S0: while (fgets(line, 2048, fp) != NULL) {
         pchar = strtok(line, "\n");

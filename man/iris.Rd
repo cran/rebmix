@@ -31,7 +31,7 @@ data("iris")
 }
 }
 \source{
-A. Asuncion and D. J. Newman. Uci machine learning repository, 2007. \url{http://archive.ics.uci.edu/ml}.
+A. Asuncion and D. J. Newman. Uci machine learning repository, 2007. \url{http://archive.ics.uci.edu/ml/}.
 }
 \references{
 R. A. Fisher. The use of multiple measurements in taxonomic problems. Annals of Eugenics,
@@ -51,7 +51,7 @@ levels(iris[["Class"]])
 
 set.seed(5)
 
-Iris <- split(p = 0.75, Dataset = iris, class = 5)
+Iris <- split(p = 0.6, Dataset = iris, class = 5)
 
 # Estimate number of components, component weights and component
 # parameters for train subsets.
@@ -60,10 +60,10 @@ n <- range(a.ntrain(Iris))
 
 irisest <- REBMIX(model = "REBMVNORM",
   Dataset = a.train(Iris),
-  Preprocessing = "kernel density estimation",
+  Preprocessing = "histogram",
   cmax = 10,
   Criterion = "ICL-BIC",
-  pdf = rep("normal", 4))
+  EMcontrol = new("EM.Control", strategy = "single"))
 
 plot(irisest, pos = 1, nrow = 3, ncol = 2, what = c("pdf"))
 plot(irisest, pos = 2, nrow = 3, ncol = 2, what = c("pdf"))

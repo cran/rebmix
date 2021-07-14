@@ -1,5 +1,13 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.13.0}{ 
+\itemize{
+\item Method \code{plot} is debugged and improved.
+\item Improved C++ functions \code{REBMIXKNN()}, \code{REBMIXKDE()} and \code{REBMIXH()}.
+\item EM algorithm is added to the C++ code for the improved estimation of all mixture model parameters.
+\item Updated examples.
+}
+}
 \section{Changes in version 2.12.0}{ 
 \itemize{
 \item Value \code{"density"} is replaced by \code{"pdf"} in \code{what} argument.

@@ -96,6 +96,7 @@ function(model, ...)
       EMTolerance = as.double(model@EMcontrol@tolerance),
       EMAccelerationMul = as.double(model@EMcontrol@acceleration.multiplier),
       EMMaxIter = as.integer(model@EMcontrol@maximum.iterations),
+      EMK = as.integer(model@EMcontrol@K),
       n_iter = integer(1),
       n_iter_all = integer(1),
 ### End            
@@ -403,6 +404,7 @@ function(model, ...)
       EMTolerance = as.double(model@EMcontrol@tolerance),
       EMAccelerationMul = as.double(model@EMcontrol@acceleration.multiplier),
       EMMaxIter = as.integer(model@EMcontrol@maximum.iterations),
+      EMK = as.integer(model@EMcontrol@K),      
       n_iter = integer(1),
       n_iter_all = integer(1),
 ### End         
@@ -635,7 +637,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("REBMIX Version 2.12.0")
+  message("REBMIX Version 2.13.0")
 
   flush.console()
 
@@ -694,7 +696,7 @@ function(model,
 
   model@pos <- which(as.numeric(model@summary[, "logL"]) == max(as.numeric(model@summary[, "logL"])))
 
-  if (model@cmax <= max(as.numeric(model@summary[, "c"]))) {
+  if ((model@cmax > model@cmin) && (model@cmax <= max(as.numeric(model@summary[, "c"])))) {
     message("Note: c = ", cmax, "! Consider increasing ", sQuote("cmax"), "!")
   }
 

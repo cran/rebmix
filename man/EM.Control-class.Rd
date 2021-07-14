@@ -6,8 +6,8 @@
 \description{Object of class \code{EM.Control}.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("EM.Control", ...)}. Accessor methods for the slots are \code{a.strategy(x = NULL)}, \code{a.variant(x = NULL)},
-\code{a.acceleration(x = NULL)}, \code{a.tolerance(x = NULL)}, \code{a.acceleration.multiplier(x = NULL)} and \code{a.maximum.iterations(x = NULL)} where \code{x} stands for an object of class \code{EM.Control}. Setter methods \code{a.strategy(x = NULL)}, \code{a.variant(x = NULL)},
-\code{a.acceleration(x = NULL)}, \code{a.tolerance(x = NULL)}, \code{a.acceleration.multiplier(x = NULL)} and \code{a.maximum.iterations(x = NULL)} are provided to write to \code{strategy}, \code{variant}, \code{acceleration}, \code{tolerance}, \code{acceleration.multiplier} and \code{maximum.iterations} slot respectively.
+\code{a.acceleration(x = NULL)}, \code{a.tolerance(x = NULL)}, \code{a.acceleration.multiplier(x = NULL)}, \code{a.maximum.iterations(x = NULL)} and \code{a.K(x = NULL)} where \code{x} stands for an object of class \code{EM.Control}. Setter methods \code{a.strategy(x = NULL)}, \code{a.variant(x = NULL)},
+\code{a.acceleration(x = NULL)}, \code{a.tolerance(x = NULL)}, \code{a.acceleration.multiplier(x = NULL)}, \code{a.maximum.iterations(x = NULL)} and \code{a.K(x = NULL)} are provided to write to \code{strategy}, \code{variant}, \code{acceleration}, \code{tolerance}, \code{acceleration.multiplier} and \code{maximum.iterations} slot respectively.
 }
 \section{Slots}{
 \describe{
@@ -27,7 +27,10 @@ tolerance value for the EM convergence criteria. The default value is 1.0E-4.
 acceleration.multiplier \eqn{a_{\mathrm{EM}}}, \eqn{1.0 \leq a_{\mathrm{EM}} \leq 2.0}. acceleration.multiplier for the EM step increment. The default value is 1.0.
 }
 \item{\code{maximum.iterations}:}{
-maximum.iterations is positive integer containing the maximum allowed number of iterations of the EM algorithm. The default value is 1000.
+is positive integer containing the maximum allowed number of iterations of the EM algorithm. The default value is 1000.
+}
+\item{\code{K}:}{
+is integer containing the number of bins for the histogram based EM algorithm. This option can reduce computational time drastically if the datasets contain a large number of observations \eqn{n} and \code{K} is set to the value \eqn{\ll n}. The default value of 0 means that the EM algorithm runs over all \eqn{n}.
 }
 }
 }
@@ -35,11 +38,11 @@ maximum.iterations is positive integer containing the maximum allowed number of 
 \references{
 B. Panic, J. Klemenc, M. Nagode. Improved initialization of the EM algorithm for mixture model parameter estimation.
 Mathematics, 8(3):373, 2020.
-\url{https://doi.org/10.3390/math8030373}.\cr\cr
+\doi{10.3390/math8030373}.\cr\cr
 A. P. Dempster et al. Maximum likelihood from incomplete data via the EM algorithm. Journal of the Royal Statistical Society. Series B, 39(1):1-38, 1977.
 \url{https://www.jstor.org/stable/2984875}.\cr\cr
 G. Celeux and G. Govaert. A classification EM algorithm for clustering and two stochastic versions, Computational Statistics & Data Analysis, 14(3):315:332, 1992.
-\url{https://doi.org/10.1016/0167-9473(92)90042-E}.
+\doi{10.1016/0167-9473(92)90042-E}.
 }
 \examples{
 # Inline creation by function new call.
@@ -47,7 +50,7 @@ G. Celeux and G. Govaert. A classification EM algorithm for clustering and two s
 EM <- new("EM.Control", strategy = "exhaustive", 
   variant = "EM", acceleration = "fixed", 
   tolerance = 1e-4, acceleration.multiplier = 1.0, 
-  maximum.iterations = 1000)
+  maximum.iterations = 1000, K = 0)
 
 EM
 
@@ -61,6 +64,7 @@ a.acceleration(EM) <- "fixed"
 a.tolerance(EM) <- 1e-4
 a.acceleration.multiplier(EM) <- 1.0
 a.maximum.iterations(EM) <- 1000
+a.K(EM) <- 256
 
 EM
 }

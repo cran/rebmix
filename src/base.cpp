@@ -1,20 +1,8 @@
-#ifdef _MSC_VER
-#pragma warning(disable: 4514)
-#endif
-
-#include <math.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "base.h"
 
-#if (_MEMORY_LEAK_SWITCH)
-#define _CRTDBG_MAP_ALLOC
+#include <math.h>
 #include <stdlib.h>
-#include <crtdbg.h>
-#endif
+#include <string.h>
 
 // Base constructor.
 
@@ -178,7 +166,7 @@ int Digamma(FLOAT y, FLOAT *Psi)
                     Error = 1; goto E0;
                 }
 
-                aug = sgn * (cos(z) / sin(z) * (FLOAT)4.0);
+                aug = sgn * ((FLOAT)cos(z) / (FLOAT)sin(z) * (FLOAT)4.0);
             }
             else {
                 aug = sgn * ((FLOAT)sin(z) / (FLOAT)cos(z) * (FLOAT)4.0);
@@ -417,6 +405,17 @@ FLOAT WeibullInv(FLOAT Fy, FLOAT Theta, FLOAT Beta)
 
     return (y);
 } // WeibullInv
+
+// Returns the inverse of the Gumbel c.d.f. for the specified Theta and Beta.
+
+FLOAT GumbelInv(FLOAT Fy, FLOAT Mean, FLOAT Beta)
+{
+	FLOAT y;
+
+	y = Mean - Beta * (FLOAT)log((FLOAT)log((FLOAT)1.0 / Fy));
+
+	return (y);
+} // GumbelInv
 
 // Returns the error function erf(y). See http://www.nr.com/.
 

@@ -44,7 +44,7 @@ currently not used.
 \author{Branislav Panic, Marko Nagode}
 \references{
 M. Nagode. Finite mixture modeling via REBMIX.
-Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://doi.org/10.5963/JAO0302001}.
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \doi{10.5963/JAO0302001}.
 }
 \examples{
 # Generate multivariate normal datasets.
@@ -68,6 +68,17 @@ sim2d <- RNGMIX(model = "RNGMVNORM",
 
 opt.k <- optbins(Dataset = sim2d@Dataset,
   Rule = "Knuth equal",
+  kmin = 1, 
+  kmax = 20)
+
+opt.k
+
+Y <- bins(Dataset = sim2d@Dataset, K = opt.k)
+
+Y
+
+opt.k <- optbins(Dataset = sim2d@Dataset,
+  Rule = "Knuth unequal",
   kmin = 1, 
   kmax = 20)
 

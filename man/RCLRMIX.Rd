@@ -58,7 +58,7 @@ Returns an object of class \code{RCLRMIX} or \code{RCLRMVNORM}.
 \author{Marko Nagode}
 \references{
 J. P. Baudry, A. E. Raftery, G. Celeux, K. Lo and R. Gottardo. Combining mixture components for clustering.
-Journal of Computational and Graphical Statistics, 19(2):332-353, 2010. \url{https://doi.org/10.1198/jcgs.2010.08111}
+Journal of Computational and Graphical Statistics, 19(2):332-353, 2010. \doi{10.1198/jcgs.2010.08111}
 }
 \examples{
 devAskNewPage(ask = TRUE)
@@ -75,12 +75,14 @@ poisson <- RNGMIX(Dataset.name = "Poisson_1", n = n, Theta = a.Theta(Theta))
 
 # Estimate number of components, component weights and component parameters.
 
+EM <- new("EM.Control", strategy = "exhaustive")
+
 poissonest <- REBMIX(Dataset = a.Dataset(poisson),
   Preprocessing = "histogram",
   cmax = 6,
   Criterion = "BIC",
   pdf = rep("Poisson", 1),
-  K = 1)
+  EMcontrol = EM)
 
 summary(poissonest)
 

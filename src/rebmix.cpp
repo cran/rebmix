@@ -1,18 +1,14 @@
-#include <stdio.h>
-
-#include "base.h"
-#include "rngmixf.h"
-#include "rebmixf.h"
 #include "rngmvnormf.h"
 #include "rebmvnormf.h"
 
 #if (_MEMORY_LEAK_SWITCH)
 #define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
 #include <crtdbg.h>
 #endif
 
 #if (_MAINTAIN_SWITCH)
+#include <stdio.h>
+
 int main(int argc, char* argv[])
 {
     #if (_MEMORY_LEAK_SWITCH)
@@ -35,16 +31,6 @@ int main(int argc, char* argv[])
         Error = NULL == rngmix; if (Error) goto E0;
 
         Error = rngmix->RunTemplateFile(argv[1]);
-
-        if (Error) goto E0;
-    }
-    else
-    if (!strcmp(argv[2], "REBMIX")) {
-        rebmix = new Rebmix;
-
-        Error = NULL == rebmix; if (Error) goto E0;
-
-        Error = rebmix->RunTemplateFile(argv[1]);
 
         if (Error) goto E0;
     }
