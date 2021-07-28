@@ -1,6 +1,6 @@
-\name{sensorless.drive}
+\name{sensorlessdrive}
 \docType{data}
-\alias{sensorless.drive}
+\alias{sensorlessdrive}
 \title{Sensorless Drive Faults Detection Data}
 \description{
 These data are the results of a sensorless drive diagnosis procedure. Features are extracted from the electric current drive signals. The drive has intact and defective components. 
@@ -9,10 +9,10 @@ load moments and load forces. The current signals are measured with a current pr
 are used, that is, features 5, 7 and 11. First class (1) are the healthy drives and the rest are the drives with fault components.
 }
 \usage{
-data("sensorless.drive")
+data(sensorlessdrive)
 }
 \format{
-\code{sensorless.drive} is a data frame with 58509 cases (rows) and 4 variables (columns) named:
+\code{sensorlessdrive} is a data frame with 58509 cases (rows) and 4 variables (columns) named:
 \enumerate{
 \item{
 \code{V5} continuous.
@@ -39,13 +39,13 @@ M. Bator, A. Dicks, U. Moenks and V. Lohweg. Feature extraction and reduction ap
 }
 \examples{
 \dontrun{
-data("sensorless.drive")
+data(sensorlessdrive)
 
 # Split dataset into train (75%) and test (25%) subsets.
 
 set.seed(3)
 
-Drive <- split(p = 0.75, Dataset = sensorless.drive, class = 4)
+Drive <- split(p = 0.75, Dataset = sensorlessdrive, class = 4)
 
 # Estimate number of components, component weights and component
 # parameters for train subsets.

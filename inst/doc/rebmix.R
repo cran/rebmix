@@ -21,7 +21,7 @@ options(prompt = "R> ", continue = "+  ", width = 80,
 
 ## load package and set prompt before starting new page to TRUE.
 
-library("rebmix")
+library(rebmix)
 devAskNewPage(ask = TRUE)
 
 
@@ -498,17 +498,13 @@ cat("Total number of EM algorithm iterations: ",
 ###################################################
 ### code chunk number 28: rebmix-code
 ###################################################
-data("sensorless.drive")
-
-## Show classes.
-
-levels(sensorless.drive[["Class"]])
+data(sensorlessdrive)
 
 ## Split dataset into train (75%) and test (25%) subsets.
 
 set.seed(5)
 
-Drive <- split(p = 0.75, Dataset = sensorless.drive, class = 4)
+Drive <- split(p = 0.75, Dataset = sensorlessdrive, class = 4)
 
 
 ###################################################
@@ -586,7 +582,7 @@ summary(drivecla)
 ###################################################
 ### code chunk number 34: rebmix-code
 ###################################################
-data("adult")
+data(adult)
 
 ## Find complete cases.
 

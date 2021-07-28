@@ -9,7 +9,7 @@ peak to peak value (PPV), crest factor (CF), impulse factor (IF), margin factor 
 and root variance frequency (RVF).
 }
 \usage{
-data("bearings")
+data(bearings)
 }
 \format{
 \code{bearings} is a data frame with 1906 cases (rows) and 14 variables (columns) named:
@@ -67,7 +67,7 @@ B. Panic, J. Klemenc and M. Nagode. Gaussian mixture model based classification 
 }
 \examples{
 \dontrun{
-data("bearings")
+data(bearings)
 
 # Split dataset into train (75%) and test (25%) subsets.
 

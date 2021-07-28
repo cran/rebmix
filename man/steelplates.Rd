@@ -1,16 +1,16 @@
-\name{steel.plates}
+\name{steelplates}
 \docType{data}
-\alias{steel.plates}
+\alias{steelplates}
 \title{Steel Plates Faults Recognition Data}
 \description{
 These data are the results of an extraction process from images of faults of steel plates. There are seven different faults: Pastry (1), Z_Scratch (2), K_Scratch (3), Stains (4), Dirtiness (5),
 Bumps (6), Other faults (7).
 }
 \usage{
-data("steel.plates")
+data(steelplates)
 }
 \format{
-\code{steel.plates} is a data frame with 1941 cases (rows) and 28 variables (columns) named:
+\code{steelplates} is a data frame with 1941 cases (rows) and 28 variables (columns) named:
 \enumerate{
 \item{
 \code{X_Minimum} integer.
@@ -107,33 +107,33 @@ M. Buscema. MetaNet*: The theory of independent judges. Substance Use & Misuse. 
 }
 \examples{
 \dontrun{
-data("steel.plates")
+data(steelplates)
 
 # Split dataset into train (75%) and test (25%) subsets.
 
 set.seed(3)
 
-Steel.plates <- split(p = 0.75, Dataset = steel.plates, class = 28)
+Steelplates <- split(p = 0.75, Dataset = steelplates, class = 28)
 
 # Estimate number of components, component weights and component
 # parameters for train subsets.
 
-steel.platesest <- REBMIX(model = "REBMVNORM",
-  Dataset = a.train(Steel.plates),
+steelplatesest <- REBMIX(model = "REBMVNORM",
+  Dataset = a.train(Steelplates),
   Preprocessing = "histogram",
   cmax = 15,
   Criterion = "BIC")
 
 # Classification.
 
-steel.platescla <- RCLSMIX(model = "RCLSMVNORM",
-  x = list(steel.platesest),
-  Dataset = a.test(Steel.plates),
-  Zt = a.Zt(Steel.plates))
+steelplatescla <- RCLSMIX(model = "RCLSMVNORM",
+  x = list(steelplatesest),
+  Dataset = a.test(Steelplates),
+  Zt = a.Zt(Steelplates))
 
-steel.platescla
+steelplatescla
 
-summary(steel.platescla)
+summary(steelplatescla)
 }
 }
 \keyword{datasets}

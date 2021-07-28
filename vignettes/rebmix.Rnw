@@ -35,9 +35,9 @@ The \pkg{rebmix} package provides R functions for random univariate and multivar
 \section{Introduction}
 To cite the REBMIX algorithm please refer to \citep{Nagode_Fajdiga_2011a, Nagode_Fajdiga_2011b, Nagode_2015, Nagode_2018}. For theoretical backgrounds please upload \url{http://doi.org/10.5963/JAO0302001}.
 
-\section{What's new in version \texttt{2.13.0}}
+\section{What's new in version \texttt{2.13.1}}
 
-Version \texttt{2.13.0} introduces several major improvements of the package. The Gumbel probability density
+Version \texttt{2.13.1} introduces several major improvements of the package. The Gumbel probability density
 
 \begin{equation}
 f(y) = \frac{1}{\beta}\exp\left(-\frac{y - \mu}{\beta} - \exp\left(-\frac{y - \mu}{\beta}\right)\right).
@@ -106,7 +106,7 @@ options(prompt = "R> ", continue = "+  ", width = 80,
 
 ## load package and set prompt before starting new page to TRUE.
 
-library("rebmix")
+library(rebmix)
 devAskNewPage(ask = TRUE)
 @
 
@@ -203,7 +203,7 @@ gamma3est <- REBMIX(Dataset = a.Dataset(gamma3),
 
 \subsubsection{Plot method}
 \begin{figure}[htb]\centering
-<<gamma3-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 3.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<gamma3-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 3.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 plot(gamma3est, pos = 1, what = c("pdf", "marginal cdf"), ncol = 2, npts = 1000)
 @
 \caption{Gamma 3 dataset. Empirical density (circles) and predictive gamma mixture density in black solid line.}
@@ -317,7 +317,7 @@ poissonest <- REBMIX(Dataset = a.Dataset(poisson),
 
 \subsubsection{Plot method}
 \begin{figure}[htb]\centering
-<<poisson-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 6.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<poisson-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 6.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
 @
 \caption{Poisson dataset. Empirical densities (coloured large circles), predictive multivariate Poisson-Poisson mixture density (coloured small circles), empirical densities (circles), predictive univariate marginal Poisson mixture densities and progress charts (solid line).}
@@ -325,7 +325,7 @@ plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nr
 
 \subsubsection{Clustering}
 \begin{figure}[htb]\centering
-<<poisson-clu-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 4.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<poisson-clu-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 4.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 poissonclu <- RCLRMIX(x = poissonest, pos = 1, Zt = a.Zt(poisson))
 
 plot(poissonclu)
@@ -423,7 +423,7 @@ mvnormest <- REBMIX(model = "REBMVNORM",
 
 \subsubsection{Plot method}
 \begin{figure}[htb]\centering
-<<mvnorm-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 5.0, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<mvnorm-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 5.0, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 plot(mvnormest)
 @
 \caption{Dataset \texttt{mvnorm}. Empirical densities (coloured circles), predictive multivariate normal mixture density (coloured lines).}
@@ -431,7 +431,7 @@ plot(mvnormest)
 
 \subsubsection{Clustering}
 \begin{figure}[htb]\centering
-<<mvnorm-clu-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 4.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<mvnorm-clu-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 4.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 mvnormclu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest)
 
 plot(mvnormclu)
@@ -507,7 +507,7 @@ mvnorm.clu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest.cem)
 @
 
 \begin{figure}[htb]\centering
-<<mvnorm-clu-fig-cem, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 5.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<mvnorm-clu-fig-cem, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 5.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 plot(mvnorm.clu)
 @
 \caption{Dataset \texttt{mvnorm}. Predictive cluster membership (coloured circles) for exhaustive REBMIX\&ECM strategy and ICL criterion.}
@@ -626,21 +626,17 @@ cat("Total number of EM algorithm iterations: ",
   ". Value of BIC: ", a.summary(mvnormest.em.golden, pos = 1, col.name = "IC"))
 @
 
-\subsection{Multivariate \texttt{sensorless.drive} dataset}
+\subsection{Multivariate \texttt{sensorlessdrive} dataset}
 These data are a result of the sensorless drive diagnosis procedure. The features are extracted from electric current drive signals \citep{sensorless_drive_citation}. The main objective is the sensorless fault detection and classification.
 
 <<rebmix-code, split = FALSE, keep.source = FALSE>>=
-data("sensorless.drive")
-
-## Show classes.
-
-levels(sensorless.drive[["Class"]])
+data(sensorlessdrive)
 
 ## Split dataset into train (75%) and test (25%) subsets.
 
 set.seed(5)
 
-Drive <- split(p = 0.75, Dataset = sensorless.drive, class = 4)
+Drive <- split(p = 0.75, Dataset = sensorlessdrive, class = 4)
 @
 
 \subsubsection{Finite mixture estimation}
@@ -674,7 +670,7 @@ summary(drivecla)
 
 \subsubsection{Plot method}
 \begin{figure}[htb]\centering
-<<drive-cla-fig, fig = TRUE, pdf = TRUE, png = FALSE, eps = FALSE, height = 5.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
+<<drive-cla-fig, fig = TRUE, pdf = FALSE, png = TRUE, eps = FALSE, height = 5.5, width = 5.5, echo = TRUE, results = hide, keep.source = FALSE>>=
 # Plot selected features.
 
 plot(drivecla, nrow = 3, ncol = 2)
@@ -719,7 +715,7 @@ summary(drivecla)
 The \texttt{adult} dataset containing $48842$ instances with $16$ continuous, binary and discrete variables was extracted from the census bureau database \citet{Asuncion_Newman_2007}. Extraction was done by Barry Becker from the 1994 census bureau database. The \texttt{adult} dataset is loaded, complete cases are extracted and levels are replaced with numbers.
 
 <<rebmix-code, split = FALSE, results = hide, keep.source = FALSE>>=
-data("adult")
+data(adult)
 
 ## Find complete cases.
 
@@ -802,7 +798,7 @@ rm(list = ls())
 @
 
 \section{Summary}\label{sec:summary}
-The users of the \texttt{rebmix} package are kindly encouraged to inform the author about bugs and wishes.
+The users of the \texttt{rebmix} package are kindly encouraged to inform the authors about bugs and wishes.
 
 \bibliography{rebmix}
 \vspace{\baselineskip}\noindent\emph{Marko Nagode\\
