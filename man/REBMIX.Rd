@@ -12,14 +12,14 @@
 REBMIX Algorithm for Univariate or Multivariate Finite Mixture Estimation
 }
 \description{
-Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
+Returns as default the REBMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac, uniform or von Mises component densities. If \code{model} equals \code{"REBMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
 }
 \usage{
 \S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(),
        cmax = 15, cmin = 1, Criterion = "AIC", pdf = character(), 
-       theta1 = numeric(),theta2 = numeric(), K = "auto", y0 = numeric(), 
-       ymin = numeric(), ymax = numeric(), ar = 0.1, Restraints = "loose", 
-       EMcontrol = NULL, ...)
+       theta1 = numeric(), theta2 = numeric(), theta3 = numeric(), K = "auto", 
+       y0 = numeric(), ymin = numeric(), ymax = numeric(), ar = 0.1, 
+       Restraints = "loose", EMcontrol = NULL, ...)
 ## ... and for other signatures
 \S4method{summary}{REBMIX}(object, ...)
 ## ... and for other signatures
@@ -50,13 +50,16 @@ integrated classification likelihood \code{"ICL"} or \code{"ICL-BIC"}, partition
 total of positive relative deviations \code{"D"} or sum of squares error \code{"SSE"}.
 }
 \item{pdf}{
-a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"Gumbel"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"} or \code{"vonMises"}.
+a character vector of length \eqn{d} containing continuous or discrete parametric family types. One of \code{"normal"}, \code{"lognormal"}, \code{"Weibull"}, \code{"gamma"}, \code{"Gumbel"}, \code{"binomial"}, \code{"Poisson"}, \code{"Dirac"}, \code{"uniform"} or \code{"vonMises"}.
 }
 \item{theta1}{
-a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{number of categories} - 1} for \code{"binomial"} distribution or \code{"NA"} otherwise.
+a vector of length \eqn{d} containing initial component parameters. One of \eqn{n_{il} = \textrm{number of categories} - 1} for \code{"binomial"} distribution.
 }
 \item{theta2}{
 a vector of length \eqn{d} containing initial component parameters. Currently not used.
+}
+\item{theta3}{
+a vector of length \eqn{d} containing initial component parameters. One of \eqn{\xi_{il} \in \{-1, \textrm{NA}, 1\}} for \code{"Gumbel"} distribution.
 }
 \item{K}{
 a character or a vector or a matrix of size \eqn{n_{\mathrm{D}} \times d} containing numbers of bins \eqn{v} or \eqn{v_{1}, \ldots, v_{d}} for the histogram and the kernel density estimation or numbers of nearest
@@ -91,7 +94,7 @@ an object of class \code{EM.Control}.
 see Methods section below.
 }
 \item{\dots}{
-currently not used; additional arguments affecting the summary produced.
+currently not used.
 }
 }
 \value{
@@ -99,7 +102,7 @@ Returns an object of class \code{REBMIX} or \code{REBMVNORM}.
 }
 \section{Methods}{
 \describe{
-\item{\code{signature(model = "REBMIX")}}{a character giving the default class name \code{"REBMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities.}
+\item{\code{signature(model = "REBMIX")}}{a character giving the default class name \code{"REBMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac, uniform or von Mises component densities.}
 \item{\code{signature(model = "REBMVNORM")}}{a character giving the class name \code{"REBMVNORM"} for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices.}
 \item{\code{signature(object = "REBMIX")}}{an object of class \code{REBMIX}.}
 \item{\code{signature(object = "REBMVNORM")}}{an object of class \code{REBMVNORM}.}
@@ -200,6 +203,6 @@ irisest
 
 # Print total number of EM iterations used in Ehxaustive strategy from summary.EM slot.
 
-a.summary.EM(irisest, pos = 1, col.name = "total.iterations.nbr")
+a.summary.EM(irisest, col.name = "total.iterations.nbr", pos = 1)
 }
 \keyword{parameter estimation}

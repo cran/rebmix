@@ -21,24 +21,33 @@
 \alias{RCLRMIX,ANY-method}
 \alias{RCLSMIX,ANY-method}
 \alias{BFSMIX,ANY-method}
+\alias{EMMIX,ANY-method}
 
 \alias{a.d}
 \alias{a.theta1<-}
 \alias{a.theta2<-}
+\alias{a.theta3<-}
 \alias{a.c,RNGMIX.Theta-method}
 \alias{a.d,RNGMIX.Theta-method}
 \alias{a.pdf,RNGMIX.Theta-method}
 \alias{a.Theta,RNGMIX.Theta-method}
 \alias{a.theta1<-,RNGMIX.Theta,ANY-method}
 \alias{a.theta2<-,RNGMIX.Theta,ANY-method}
+\alias{a.theta3<-,RNGMIX.Theta,ANY-method}
 \alias{a.theta1<-,RNGMIX.Theta,missing-method}
 \alias{a.theta2<-,RNGMIX.Theta,missing-method}
+\alias{a.theta3<-,RNGMIX.Theta,missing-method}
 \alias{a.c,RNGMVNORM.Theta-method}
 \alias{a.d,RNGMVNORM.Theta-method}
 \alias{a.pdf,RNGMVNORM.Theta-method}
 \alias{a.Theta,RNGMVNORM.Theta-method}
 \alias{a.theta1<-,RNGMVNORM.Theta,ANY-method}
 \alias{a.theta2<-,RNGMVNORM.Theta,ANY-method}
+\alias{a.theta1.all<-,RNGMIX.Theta-method}
+\alias{a.theta2.all<-,RNGMIX.Theta-method}
+\alias{a.theta3.all<-,RNGMIX.Theta-method}
+\alias{a.theta1.all<-,RNGMVNORM.Theta-method}
+\alias{a.theta2.all<-,RNGMVNORM.Theta-method}
 
 \alias{a.Dataset.name}
 \alias{a.rseed}
@@ -78,8 +87,13 @@
 \alias{a.pdf}
 \alias{a.theta1}
 \alias{a.theta2}
+\alias{a.theta3}
 \alias{a.theta1.all}
 \alias{a.theta2.all}
+\alias{a.theta3.all}
+\alias{a.theta1.all<-}
+\alias{a.theta2.all<-}
+\alias{a.theta3.all<-}
 \alias{a.K}
 \alias{a.y0}
 \alias{a.ar}
@@ -101,8 +115,10 @@
 \alias{a.pdf,REBMIX-method}
 \alias{a.theta1,REBMIX-method}
 \alias{a.theta2,REBMIX-method}
+\alias{a.theta3,REBMIX-method}
 \alias{a.theta1.all,REBMIX-method}
 \alias{a.theta2.all,REBMIX-method}
+\alias{a.theta3.all,REBMIX-method}
 \alias{a.theta2.all,REBMVNORM-method}
 \alias{a.K,REBMIX-method}
 \alias{a.y0,REBMIX-method}
@@ -201,6 +217,7 @@
 \alias{a.pi}
 \alias{a.P}
 \alias{a.tau}
+\alias{a.Rule}
 \alias{a.from}
 \alias{a.to}
 \alias{a.EN}
@@ -215,6 +232,7 @@
 \alias{a.P,RCLRMIX-method}
 \alias{a.tau,RCLRMIX-method}
 \alias{a.prob,RCLRMIX-method}
+\alias{a.Rule,RCLRMIX-method}
 \alias{a.from,RCLRMIX-method}
 \alias{a.to,RCLRMIX-method}
 \alias{a.EN,RCLRMIX-method}
@@ -229,6 +247,7 @@
 \alias{a.P,RCLRMVNORM-method}
 \alias{a.tau,RCLRMVNORM-method}
 \alias{a.prob,RCLRMVNORM-method}
+\alias{a.Rule,RCLRMVNORM-method}
 \alias{a.from,RCLRMVNORM-method}
 \alias{a.to,RCLRMVNORM-method}
 \alias{a.EN,RCLRMVNORM-method}
@@ -295,6 +314,7 @@
 \alias{a.tolerance}
 \alias{a.acceleration.multiplier}
 \alias{a.maximum.iterations}
+\alias{a.eliminate.zero.components}
 
 \alias{a.strategy,EM.Control-method}
 \alias{a.variant,EM.Control-method}
@@ -302,6 +322,7 @@
 \alias{a.tolerance,EM.Control-method}
 \alias{a.acceleration.multiplier,EM.Control-method}
 \alias{a.maximum.iterations,EM.Control-method}
+\alias{a.eliminate.zero.components,EM.Control-method}
 \alias{a.K,EM.Control-method}
 
 \alias{a.strategy<-}
@@ -310,6 +331,7 @@
 \alias{a.tolerance<-}
 \alias{a.acceleration.multiplier<-}
 \alias{a.maximum.iterations<-}
+\alias{a.eliminate.zero.components<-}
 \alias{a.K<-}
 
 \alias{a.strategy<-,EM.Control-method}
@@ -318,11 +340,18 @@
 \alias{a.tolerance<-,EM.Control-method}
 \alias{a.acceleration.multiplier<-,EM.Control-method}
 \alias{a.maximum.iterations<-,EM.Control-method}
+\alias{a.eliminate.zero.components<-,EM.Control-method}
 \alias{a.K<-,EM.Control-method}
 
 \alias{a.summary.EM}
 \alias{a.summary.EM,REBMIX-method}
 \alias{a.summary.EM,REBMVNORM-method}
+
+\alias{a.w,EMMIX.Theta-method}
+\alias{a.w,EMMVNORM.Theta-method}
+\alias{a.w<-}
+\alias{a.w<-,EMMIX.Theta-method}
+\alias{a.w<-,EMMVNORM.Theta-method}
 
 \title{Internal rebmix Functions}
 \description{

@@ -33,6 +33,10 @@
       fix <- dgamma(as.numeric(x), scale = as.numeric(xTheta[[i]]$theta1), shape = as.numeric(xTheta[[i]]$theta2), ...)
     }
     else
+    if (xTheta[[i]]$pdf == .rebmix$pdf[8]) {
+      fix <- dunif(as.numeric(x), min = as.numeric(xTheta[[i]]$theta1), max = as.numeric(xTheta[[i]]$theta2), ...)
+    }
+    else    
     if (xTheta[[i]]$pdf == .rebmix$pdf[9]) {
       output <- .C(C_RvonMisesPdf,
         n = as.integer(n),
@@ -50,7 +54,8 @@
         n = as.integer(n),
         y = as.double(x),
         Mean = as.double(xTheta[[i]]$theta1),
-        Beta = as.double(xTheta[[i]]$theta2),
+        Sigma = as.double(xTheta[[i]]$theta2),
+        Xi = as.double(xTheta[[i]]$theta3),
         f = double(n),
         PACKAGE = "rebmix")
 
@@ -85,6 +90,10 @@
       fiy <- dgamma(as.numeric(y), scale = as.numeric(yTheta[[i]]$theta1), shape = as.numeric(yTheta[[i]]$theta2), ...)
     }
     else
+    if (yTheta[[i]]$pdf == .rebmix$pdf[8]) {
+      fiy <- dunif(as.numeric(y), min = as.numeric(yTheta[[i]]$theta1), max = as.numeric(yTheta[[i]]$theta2), ...)
+    }
+    else    
     if (yTheta[[i]]$pdf == .rebmix$pdf[9]) {
       output <- .C(C_RvonMisesPdf,
         n = as.integer(n),
@@ -102,7 +111,8 @@
         n = as.integer(n),
         y = as.double(y),
         Mean = as.double(yTheta[[i]]$theta1),
-        Beta = as.double(yTheta[[i]]$theta2),
+        Sigma = as.double(yTheta[[i]]$theta2),
+        Xi = as.double(yTheta[[i]]$theta3),
         f = double(n),
         PACKAGE = "rebmix")
 

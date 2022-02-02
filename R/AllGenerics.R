@@ -16,6 +16,7 @@ setGeneric("REBMIX",
     pdf = character(),
     theta1 = numeric(),
     theta2 = numeric(),
+    theta3 = numeric(),
     K = "auto",
     y0 = numeric(),
     ymin = numeric(),
@@ -26,6 +27,15 @@ setGeneric("REBMIX",
     EMcontrol = NULL, ...)
 ### End    
   standardGeneric("REBMIX"))
+
+### Panic Branislav.
+  setGeneric("EMMIX",
+  function(model = "REBMIX",
+    Dataset = list(),
+    Theta = NULL,
+    EMcontrol = NULL, ...)
+  standardGeneric("EMMIX"))
+### End
 
 setGeneric(".IC", function(x = NULL, Criterion = "AIC", pos = 1, ...) standardGeneric(".IC"))
 
@@ -104,7 +114,8 @@ setGeneric("RCLRMIX",
     x = NULL,
     Dataset = data.frame(),
     pos = 1,
-    Zt = factor(), ...)
+    Zt = factor(), 
+    Rule = character(), ...)
   standardGeneric("RCLRMIX"))
 
 setGeneric("RCLSMIX",
@@ -124,7 +135,12 @@ setGeneric("BFSMIX",
 setGeneric("a.d", function(x = NULL) standardGeneric("a.d"))
 setGeneric("a.theta1<-", function(x = NULL, l = numeric(), value = numeric()) standardGeneric("a.theta1<-"))
 setGeneric("a.theta2<-", function(x = NULL, l = numeric(), value = numeric()) standardGeneric("a.theta2<-"))
-
+setGeneric("a.theta3<-", function(x = NULL, l = numeric(), value = numeric()) standardGeneric("a.theta3<-"))
+### Panic Branislav.
+setGeneric("a.theta1.all<-", function(x = NULL, value = numeric()) standardGeneric("a.theta1.all<-"))
+setGeneric("a.theta2.all<-", function(x = NULL, value = numeric()) standardGeneric("a.theta2.all<-"))
+setGeneric("a.theta3.all<-", function(x = NULL, value = numeric()) standardGeneric("a.theta3.all<-"))
+### End
 setGeneric("a.Dataset.name", function(x = NULL) standardGeneric("a.Dataset.name"))
 setGeneric("a.rseed", function(x = NULL) standardGeneric("a.rseed"))
 setGeneric("a.n", function(x = NULL) standardGeneric("a.n"))
@@ -132,6 +148,9 @@ setGeneric("a.Theta", function(x = NULL, pos = 0) standardGeneric("a.Theta"))
 setGeneric("a.Dataset", function(x = NULL, pos = 0, ...) standardGeneric("a.Dataset"))
 setGeneric("a.Zt", function(x = NULL) standardGeneric("a.Zt"))
 setGeneric("a.w", function(x = NULL, pos = 0) standardGeneric("a.w"))
+### Panic Branislav.
+setGeneric("a.w<-", function(x = NULL, value = numeric()) standardGeneric("a.w<-"))
+### End
 setGeneric("a.Variables", function(x = NULL) standardGeneric("a.Variables"))
 setGeneric("a.ymin", function(x = NULL) standardGeneric("a.ymin"))
 setGeneric("a.ymax", function(x = NULL) standardGeneric("a.ymax"))
@@ -143,14 +162,16 @@ setGeneric("a.Criterion", function(x = NULL) standardGeneric("a.Criterion"))
 setGeneric("a.pdf", function(x = NULL) standardGeneric("a.pdf"))
 setGeneric("a.theta1", function(x = NULL) standardGeneric("a.theta1"))
 setGeneric("a.theta2", function(x = NULL) standardGeneric("a.theta2"))
+setGeneric("a.theta3", function(x = NULL) standardGeneric("a.theta3"))
 setGeneric("a.theta1.all", function(x = NULL, pos = 1) standardGeneric("a.theta1.all"))
 setGeneric("a.theta2.all", function(x = NULL, pos = 1) standardGeneric("a.theta2.all"))
+setGeneric("a.theta3.all", function(x = NULL, pos = 1) standardGeneric("a.theta3.all"))
 setGeneric("a.K", function(x = NULL) standardGeneric("a.K"))
 setGeneric("a.K<-", function(x = NULL, value = numeric()) standardGeneric("a.K<-"))
 setGeneric("a.y0", function(x = NULL) standardGeneric("a.y0"))
 setGeneric("a.ar", function(x = NULL) standardGeneric("a.ar"))
 setGeneric("a.Restraints", function(x = NULL) standardGeneric("a.Restraints"))
-setGeneric("a.summary", function(x = NULL, pos = 0, col.name = character()) standardGeneric("a.summary"))
+setGeneric("a.summary", function(x = NULL, col.name = character(), pos = 0) standardGeneric("a.summary"))
 setGeneric("a.pos", function(x = NULL) standardGeneric("a.pos"))
 setGeneric("a.opt.c", function(x = NULL) standardGeneric("a.opt.c"))
 setGeneric("a.opt.IC", function(x = NULL) standardGeneric("a.opt.IC"))
@@ -182,6 +203,7 @@ setGeneric("a.from", function(x = NULL) standardGeneric("a.from"))
 setGeneric("a.to", function(x = NULL) standardGeneric("a.to"))
 setGeneric("a.EN", function(x = NULL) standardGeneric("a.EN"))
 setGeneric("a.ED", function(x = NULL) standardGeneric("a.ED"))
+setGeneric("a.Rule", function(x = NULL) standardGeneric("a.Rule"))
 
 setGeneric("a.o", function(x = NULL) standardGeneric("a.o"))
 setGeneric("a.s", function(x = NULL) standardGeneric("a.s"))
@@ -201,7 +223,6 @@ setGeneric("a.train", function(x = NULL) standardGeneric("a.train"))
 setGeneric("a.test", function(x = NULL) standardGeneric("a.test"))
 
 ### Panic Branislav.
-
 setGeneric("a.strategy", function(x = NULL) standardGeneric("a.strategy"))
 setGeneric("a.strategy<-", function(x = NULL, value = character()) standardGeneric("a.strategy<-"))
 setGeneric("a.variant", function(x = NULL) standardGeneric("a.variant"))
@@ -214,12 +235,12 @@ setGeneric("a.acceleration.multiplier", function(x = NULL) standardGeneric("a.ac
 setGeneric("a.acceleration.multiplier<-", function(x = NULL, value = numeric()) standardGeneric("a.acceleration.multiplier<-"))
 setGeneric("a.maximum.iterations", function(x = NULL) standardGeneric("a.maximum.iterations"))
 setGeneric("a.maximum.iterations<-", function(x = NULL, value = numeric()) standardGeneric("a.maximum.iterations<-"))
-setGeneric("a.summary.EM", function(x = NULL, pos = 0, col.name = character()) standardGeneric("a.summary.EM"))
-
+setGeneric("a.summary.EM", function(x = NULL, col.name = character(), pos = 0) standardGeneric("a.summary.EM"))
+setGeneric("a.eliminate.zero.components", function(x = NULL) standardGeneric("a.eliminate.zero.components"))
+setGeneric("a.eliminate.zero.components<-", function(x = NULL, value = numeric()) standardGeneric("a.eliminate.zero.components<-"))
 ### End
 
 ### Panic Branislav & Marko Nagode.
-
 setGeneric("optbins",
   function(Dataset = list(),
     Rule = "Knuth equal",  
@@ -237,6 +258,5 @@ setGeneric("bins",
     ymin = numeric(),
     ymax = numeric(), ...)
   standardGeneric("bins"))  
-
 ### End
 

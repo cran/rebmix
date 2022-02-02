@@ -1,5 +1,15 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.14.0}{ 
+\itemize{
+\item The package has been extended to three parametric family types.
+\item Improved C++ functions \code{REBMIXKNN()}, \code{REBMIXKDE()} and \code{REBMIXH()}.
+\item Method \code{plot} is debugged and improved.
+\item Value \code{"cdf"} is added to \code{what} argument.
+\item Class \code{"EMMIX.Theta"} is added.
+\item Method \code{EMMIX} is added.
+}
+}
 \section{Changes in version 2.13.1}{ 
 \itemize{
 \item Reduced size of the vignette.

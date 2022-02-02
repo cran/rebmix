@@ -5,9 +5,7 @@ function(model, ...)
   summary <- list()
 
 ### Panic Branislav.
-
   summary.EM <- list()
-
 ### End  
 
   for (i in 1:length(model@Dataset)) {
@@ -64,6 +62,13 @@ function(model, ...)
     else {
       length.theta2 <- -d; theta2 <- numeric()
     }
+    
+    if (length(model@theta3) > 0) {
+      length.theta3 <- +d; theta3 <- model@theta3; theta3[is.na(theta3)] <- 0
+    }
+    else {
+      length.theta3 <- -d; theta3 <- numeric()
+    }    
 
     output <- .C(C_RREBMIX,
       Preprocessing = as.character(model@Preprocessing),
@@ -74,9 +79,9 @@ function(model, ...)
       Variables = as.character(model@Variables),
       length.pdf = as.integer(length.pdf),
       pdf = as.character(model@pdf),
-      length.Theta = as.integer(2),
-      length.theta = as.integer(c(length.theta1, length.theta2)),
-      Theta = as.double(c(theta1, theta2)),
+      length.Theta = as.integer(3),
+      length.theta = as.integer(c(length.theta1, length.theta2, length.theta3)),
+      Theta = as.double(c(theta1, theta2, theta3)),
       length.K = as.integer(length.K),
       K = as.integer(K),
       length.y0 = as.integer(length(model@y0)),
@@ -112,6 +117,7 @@ function(model, ...)
       w = double(model@cmax),
       theta1 = double(model@cmax * d),
       theta2 = double(model@cmax * d),
+      theta3 = double(model@cmax * d),
       opt.length = integer(1),
       opt.c = integer(1000), # 1000 = ItMax see rebmixf.h
       opt.IC = double(1000),
@@ -133,6 +139,7 @@ function(model, ...)
     length(output$w) <- c
     length(output$theta1) <- c * d
     length(output$theta2) <- c * d
+    length(output$theta3) <- c * d
 
     length(output$opt.c) <- output$opt.length
     length(output$opt.IC) <- output$opt.length
@@ -160,20 +167,24 @@ function(model, ...)
 
     model@Theta[[i]] <- list()
 
-    length(model@Theta[[i]]) <- 3 * c
+    length(model@Theta[[i]]) <- 4 * c
 
-    names(model@Theta[[i]])[seq(1, 3 * c, 3)] <- paste("pdf", 1:c, sep = "")
-    names(model@Theta[[i]])[seq(2, 3 * c, 3)] <- paste("theta1.", 1:c, sep = "")
-    names(model@Theta[[i]])[seq(3, 3 * c, 3)] <- paste("theta2.", 1:c, sep = "")
+    names(model@Theta[[i]])[seq(1, 4 * c, 4)] <- paste("pdf", 1:c, sep = "")
+    names(model@Theta[[i]])[seq(2, 4 * c, 4)] <- paste("theta1.", 1:c, sep = "")
+    names(model@Theta[[i]])[seq(3, 4 * c, 4)] <- paste("theta2.", 1:c, sep = "")
+    names(model@Theta[[i]])[seq(4, 4 * c, 4)] <- paste("theta3.", 1:c, sep = "")
 
-    M <- which(pdf %in% .rebmix$pdf[.rebmix$pdf.nargs == 1])
+    M1 <- which(model@pdf %in% .rebmix$pdf[.rebmix$pdf.nargs < 2])
+    M2 <- which(model@pdf %in% .rebmix$pdf[.rebmix$pdf.nargs < 3])
 
     for (j in 1:c) {
-	  model@Theta[[i]][[1 + (j - 1) * 3]] <- model@pdf
-	  model@Theta[[i]][[2 + (j - 1) * 3]] <- output$theta1[seq((j - 1) * d + 1, j * d, 1)]
-  	  model@Theta[[i]][[3 + (j - 1) * 3]] <- output$theta2[seq((j - 1) * d + 1, j * d, 1)]
+	  model@Theta[[i]][[1 + (j - 1) * 4]] <- model@pdf
+	  model@Theta[[i]][[2 + (j - 1) * 4]] <- output$theta1[seq((j - 1) * d + 1, j * d, 1)]
+  	  model@Theta[[i]][[3 + (j - 1) * 4]] <- output$theta2[seq((j - 1) * d + 1, j * d, 1)]
+  	  model@Theta[[i]][[4 + (j - 1) * 4]] <- output$theta3[seq((j - 1) * d + 1, j * d, 1)]
 
-      model@Theta[[i]][[3 + (j - 1) * 3]][M] <- NA
+      model@Theta[[i]][[3 + (j - 1) * 4]][M1] <- NA
+      model@Theta[[i]][[4 + (j - 1) * 4]][M2] <- NA
     }
 
     output$K <- paste("c(", paste(K, collapse = ","), ")", sep = "")
@@ -240,7 +251,6 @@ function(model, ...)
     }
     
 ### Panic Branislav.
-
     summary.EM[[i]] <- c(Dataset.name,
       output$EMStrategy,
       output$EMVariant,
@@ -250,9 +260,7 @@ function(model, ...)
       output$EMMaxIter,
       output$n_iter,
       output$n_iter_all)
-
 ### End     
-
     model@opt.c[[i]] <- output$opt.c
     model@opt.IC[[i]] <- output$opt.IC
     model@opt.logL[[i]] <- output$opt.logL
@@ -264,9 +272,7 @@ function(model, ...)
   model@summary <- as.data.frame(do.call("rbind", summary), stringsAsFactors = FALSE)
   
 ### Panic Branislav.
-
   model@summary.EM <- as.data.frame(do.call("rbind", summary.EM), stringsAsFactors = FALSE)
-  
 ### End  
 
   colnames(model@summary) <- c("Dataset",
@@ -288,7 +294,6 @@ function(model, ...)
     "M")
     
 ### Panic Branislav.
-
   colnames(model@summary.EM) <- c("Dataset",
     "strategy",
     "variant",
@@ -298,7 +303,6 @@ function(model, ...)
     "maximum.iterations",
     "opt.iterations.nbr",
     "total.iterations.nbr")
-    
 ### End   
 
   rm(list = ls()[!(ls() %in% c("model"))])
@@ -313,9 +317,7 @@ function(model, ...)
   summary <- list()
   
 ### Panic Branislav.
-
   summary.EM <- list()
-  
 ### End  
 
   for (i in 1:length(model@Dataset)) {
@@ -548,7 +550,6 @@ function(model, ...)
     }
     
 ### Panic Branislav.
-
     summary.EM[[i]] <- c(Dataset.name,
         output$EMStrategy,
         output$EMVariant,
@@ -558,7 +559,6 @@ function(model, ...)
         output$EMMaxIter,
         output$n_iter,
         output$n_iter_all)
-        
 ### End    
 
     model@opt.c[[i]] <- output$opt.c
@@ -572,9 +572,7 @@ function(model, ...)
   model@summary <- as.data.frame(do.call("rbind", summary), stringsAsFactors = FALSE)
   
 ### Panic Branislav.
-
   model@summary.EM <- as.data.frame(do.call("rbind", summary.EM), stringsAsFactors = FALSE)
-  
 ### End  
 
   colnames(model@summary) <- c("Dataset",
@@ -596,7 +594,6 @@ function(model, ...)
     "M")
     
 ### Panic Branislav.
-
   colnames(model@summary.EM) <- c("Dataset",
     "strategy",
     "variant",
@@ -606,7 +603,6 @@ function(model, ...)
     "maximum.iterations",
     "opt.iterations.nbr",
     "total.iterations.nbr")
-    
 ### End       
 
   rm(list = ls()[!(ls() %in% c("model"))])
@@ -625,6 +621,7 @@ function(model,
   pdf,
   theta1,
   theta2,
+  theta3,  
   K,
   y0,
   ymin,
@@ -637,7 +634,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("REBMIX Version 2.13.1")
+  message("REBMIX Version 2.14.0")
 
   flush.console()
 
@@ -650,6 +647,7 @@ function(model,
      pdf = pdf,
      theta1 = theta1,
      theta2 = theta2,
+     theta3 = theta3,
      K = K,
      y0 = y0,
      ymin = ymin,
@@ -675,7 +673,6 @@ function(model,
   }
   
 ### Panic Branislav.  
-  
   if (is.null(model@summary.EM)) {
     model@summary.EM <- output@summary.EM 
   }
@@ -684,7 +681,6 @@ function(model,
   }
   
 ### End    
-
   for (k in (1:length(Dataset))) {
     model@opt.c[[length(model@opt.c) + 1]] <- output@opt.c[[k]]
     model@opt.IC[[length(model@opt.IC) + 1]] <- output@opt.IC[[k]]

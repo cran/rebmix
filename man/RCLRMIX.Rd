@@ -12,11 +12,11 @@
 Predicts Cluster Membership Based Upon a Model Trained by REBMIX
 }
 \description{
-Returns as default the RCLRMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities, following the methodology proposed in the article cited in the references. If \code{model} equals \code{"RCLRMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
+Returns as default the RCLRMIX algorithm output for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac, uniform or von Mises component densities, following the methodology proposed in the article cited in the references. If \code{model} equals \code{"RCLRMVNORM"} output for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices is returned.
 }
 \usage{
 \S4method{RCLRMIX}{RCLRMIX}(model = "RCLRMIX", x = NULL, Dataset = data.frame(), 
-        pos = 1, Zt = factor(), ...)
+        pos = 1, Zt = factor(), Rule = character(), ...)
 ## ... and for other signatures
 \S4method{summary}{RCLRMIX}(object, ...)
 ## ... and for other signatures
@@ -37,11 +37,14 @@ a desired row number in \code{x@summary} for which the clustering is performed. 
 \item{Zt}{
 a factor of true cluster membership. The default value is \code{factor()}.
 }
+\item{Rule}{
+a character containing the merging rule. One of \code{"Entropy"} or \code{"Demp"}. The default value is \code{"Entropy"}.
+}
 \item{object}{
 see Methods section below.
 }
 \item{\dots}{
-currently not used; additional arguments affecting the summary produced.
+currently not used.
 }
 }
 \value{
@@ -49,7 +52,7 @@ Returns an object of class \code{RCLRMIX} or \code{RCLRMVNORM}.
 }
 \section{Methods}{
 \describe{
-\item{\code{signature(model = "RCLRMIX")}}{a character giving the default class name \code{"RCLRMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac or von Mises component densities.}
+\item{\code{signature(model = "RCLRMIX")}}{a character giving the default class name \code{"RCLRMIX"} for mixtures of conditionally independent normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac, uniform or von Mises component densities.}
 \item{\code{signature(model = "RCLRMVNORM")}}{a character giving the class name \code{"RCLRMVNORM"} for mixtures of multivariate normal component densities with unrestricted variance-covariance matrices.}
 \item{\code{signature(object = "RCLRMIX")}}{an object of class \code{RCLRMIX}.}
 \item{\code{signature(object = "RCLRMVNORM")}}{an object of class \code{RCLRMVNORM}.}
@@ -108,7 +111,7 @@ Dataset <- as.data.frame(Dataset)
 
 # Cluster the dataset.
 
-poissonclu <- RCLRMIX(x = poissonest, Dataset = Dataset)
+poissonclu <- RCLRMIX(x = poissonest, Dataset = Dataset, Rule = "Demp")
 
 a.Dataset(poissonclu)
 }

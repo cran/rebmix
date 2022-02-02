@@ -13,6 +13,10 @@ function(model, ...)
   theta2 <- unlist(model@x@Theta[[model@pos]][grep("theta2", Names)])
 
   theta2[is.na(theta2)] <- 0
+  
+  theta3 <- unlist(model@x@Theta[[model@pos]][grep("theta3", Names)])
+
+  theta3[is.na(theta3)] <- 0  
 
   c <- length(model@x@w[[model@pos]])
 
@@ -118,12 +122,15 @@ function(model, ...)
     c = as.integer(c),
     w = as.double(model@x@w[[model@pos]]),
     length.pdf = as.integer(d),
-    length.Theta = as.integer(2),
-    length.theta = as.integer(c(d, d)),
+    length.Theta = as.integer(3),
+    length.theta = as.integer(c(d, d, d)),
     pdf = as.character(pdf),
-    Theta = as.double(c(theta1, theta2)),
+    Theta = as.double(c(theta1, theta2, theta3)),
     n = as.integer(n),
     x = as.double(dataset),
+### Panic Branislav.
+    Rule = as.character(model@Rule),
+### End    
     tau = double(n * c),
     F = integer(c),
     T = integer(c),
@@ -157,6 +164,7 @@ function(model, ...)
     pdf = as.character(unlist(pdf)),
     theta1 = as.double(unlist(theta1)),
     theta2 = as.double(unlist(theta2)),
+    theta3 = as.double(unlist(theta3)),
     Z = integer(n),
     error = integer(1),
     PACKAGE = "rebmix")
@@ -204,6 +212,10 @@ function(model, ...)
   }
 
   model@Zp <- as.factor(output$Z)
+  
+  if (model@c < c) {
+    message("Note: Number of clusters ", model@c, " is less than number of components ", c, "!")
+  }  
 
   rm(list = ls()[!(ls() %in% c("model"))])
 
@@ -253,6 +265,9 @@ function(model, ...)
     Theta = as.double(c(theta1, theta2)),
     n = as.integer(n),
     x = as.double(dataset),
+### Panic Branislav.
+    Rule = as.character(model@Rule),
+### End    
     tau = double(n * c),
     F = integer(c),
     T = integer(c),
@@ -333,6 +348,10 @@ function(model, ...)
   }
 
   model@Zp <- as.factor(output$Z)
+  
+  if (model@c < c) {
+    message("Note: Number of clusters ", model@c, " is less than number of components ", c, "!")
+  }  
 
   rm(list = ls()[!(ls() %in% c("model"))])
 
@@ -345,11 +364,12 @@ function(model,
   x,
   Dataset,
   pos,
-  Zt, ...)
+  Zt,
+  Rule, ...)
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("RCLRMIX Version 2.13.1")
+  message("RCLRMIX Version 2.14.0")
 
   flush.console()
 
@@ -357,7 +377,8 @@ function(model,
     x = x,
     Dataset = Dataset,
     pos = pos,
-    Zt = Zt)
+    Zt = Zt,
+    Rule = Rule)    
 
   model <- RCLRMIX(model = model, ...)
 

@@ -140,7 +140,7 @@
 
 typedef enum {
     pfNormal,          // Normal distribution.
-	pfTNormal,         // Truncated normal distribution.
+    pfTNormal,         // Truncated normal distribution.
     pfLognormal,       // Lognormal distribution.
     pfWeibull,         // Weibull distribution.
     pfGamma,           // Gamma distribution.
@@ -169,6 +169,11 @@ typedef enum {
     strategy_best,       // Best REBMIX + EM strategy.
     strategy_exhaustive  // Exhaustive REBMIX + EM strategy.
 } EmStrategyType_e;
+
+typedef enum {
+    merge_none,  // EM algorithm is not employed for estimation of mixture model parameters.
+    merge_naive  // Single REBMIX + EM strategy.
+} EmMergeCompsType_e;
 
 typedef struct summaryparametertype {
     int   c;     // Optimal number of components.
@@ -288,9 +293,9 @@ int GammaInv(FLOAT Fy, FLOAT Theta, FLOAT Beta, FLOAT *y);
 
 FLOAT WeibullInv(FLOAT Fy, FLOAT Theta, FLOAT Beta);
 
-// Returns the inverse of the Gumbel c.d.f. for the specified Mean and Beta.
+// Returns the inverse of the Gumbel c.d.f. for the specified Mean, Sigma and Xi.
 
-FLOAT GumbelInv(FLOAT Fy, FLOAT Mean, FLOAT Beta);
+FLOAT GumbelInv(FLOAT Fy, FLOAT Mean, FLOAT Sigma, FLOAT Xi);
 
 // Returns the error function erf(y). See http://www.nr.com/.
 
