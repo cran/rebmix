@@ -20,7 +20,7 @@
     PACKAGE = "rebmix")
 
   if (output$error == 1) {
-    stop("in densHistogram.xy!", call. = FALSE); return(NA)
+    stop("in RdensHistogramXY!", call. = FALSE); return(NA)
   }
 
   length(output$x) <- output$k

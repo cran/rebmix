@@ -126,7 +126,7 @@ function(model, ...)
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in RNGMIX!", call. = FALSE); return(NA)
+      stop("in RRNGMVNORM!", call. = FALSE); return(NA)
     }
 
     dim(output$Y) <- c(output$n, d)
@@ -167,7 +167,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("RNGMIX Version 2.14.0")
+  message("RNGMIX Version 2.14.1")
 
   flush.console()
 

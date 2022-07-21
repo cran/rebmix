@@ -54,7 +54,7 @@ function(.Object, ...,
   # tolerance.
   
   if (missing(tolerance) || (length(tolerance) == 0)) {
-    tolerance <- 1e-4
+    tolerance <- 1.E-4
   }
 
   if (!is.numeric(tolerance)) {
@@ -149,7 +149,7 @@ function(object)
     stop(sQuote("object"), " object of class EM.Control is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"strategy\":", "\n", sep = "")
 
@@ -271,10 +271,10 @@ setMethod("show",
 function(object)
 {
   if (missing(object)) {
-    stop(sQuote("object"), " object of class THETA is requested!", call. = FALSE)
+    stop(sQuote("object"), " object of class RNGMIX.Theta is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"c\":", "\n", sep = "")
 
@@ -467,10 +467,10 @@ setMethod("show",
 function(object)
 {
   if (missing(object)) {
-    stop(sQuote("object"), " object of class THETA is requested!", call. = FALSE)
+    stop(sQuote("object"), " object of class EMMIX.Theta is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"c\":", "\n", sep = "")
 
@@ -588,10 +588,10 @@ setMethod("show",
 function(object)
 {
   if (missing(object)) {
-    stop(sQuote("object"), " object of class THETA is requested!", call. = FALSE)
+    stop(sQuote("object"), " object of class EMMVNORM.Theta is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"c\":", "\n", sep = "")
 
@@ -755,7 +755,7 @@ function(.Object, ...,
     stop(sQuote("theta2.l"), " in " , sQuote("Theta"), " and ", sQuote("n"), " must match!", call. = FALSE)
   }
   
-  if (class(.Object) == "RNGMIX") {
+  if (as.character(class(.Object)) == "RNGMIX") {
     if (length(grep("theta3", Names)) == 0) {
       stop(sQuote("theta3.1"), " in " , sQuote("Theta"), " numeric vector is requested!", call. = FALSE)
     }   
@@ -801,7 +801,7 @@ function(object)
     stop(sQuote("object"), " object of class RNGMIX is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"w\":", "\n", sep = "")
 
@@ -830,7 +830,7 @@ function(object)
     stop(sQuote("object"), " object of class RNGMVNORM is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"w\":", "\n", sep = "")
 
@@ -861,7 +861,6 @@ slots = c(Dataset = "list",
   theta2 = "numeric",
   theta3 = "numeric",  
   K = "ANY",
-  y0 = "numeric",
   ymin = "numeric",
   ymax = "numeric",
   ar = "numeric",
@@ -901,7 +900,6 @@ function(.Object, ...,
   theta2,
   theta3,  
   K,
-  y0,
   ymin,
   ymax,
   ar,
@@ -924,39 +922,52 @@ function(.Object, ...,
     names(Dataset) <- paste("dataset", 1:length(Dataset), sep = "")
   }
 
-  if (!all(unlist(lapply(Dataset, is.data.frame)))) {
-    stop(sQuote("Dataset"), " list of data frames is requested!", call. = FALSE)
+  if (!all(unlist(lapply(Dataset, function(x) as.character(class(x)) == "Histogram" || as.character(class(x)) == "data.frame")))) {
+    stop(sQuote("Dataset"), " list of data frames or objects of class ", "Histogram", " is requested!", call. = FALSE)
   }
 
-  d <- unique(unlist(lapply(Dataset, ncol)))
+  d <- NULL;
+  
+  for (i in 1:length(Dataset)) {
+    if (as.character(class(Dataset[[i]])) == "data.frame") {
+      di <- ncol(Dataset[[i]])
+    
+      d <- c(d, di)
+    
+      if (di < 1) {
+        stop(sQuote("Dataset"), " numbers of columns in data frames must be greater than 0!", call. = FALSE)
+      }
+
+      Dataset[[i]] <- as.data.frame(Dataset[[i]][complete.cases(Dataset[[i]]), ])
+
+      if (nrow(Dataset[[i]]) < 2) {
+        stop(sQuote("Dataset"), " numbers of rows in data frames must be greater than 1!", call. = FALSE)
+      }
+      
+      # Preprocessing.
+
+      if (missing(Preprocessing) || (length(Preprocessing) == 0)) {
+        stop(sQuote("Preprocessing"), " must not be empty!", call. = FALSE)
+      }
+
+      if (!is.character(Preprocessing)) {
+        stop(sQuote("Preprocessing"), " character vector is requested!", call. = FALSE)
+      }
+
+      Preprocessing <- match.arg(Preprocessing, .rebmix$Preprocessing, several.ok = FALSE)      
+    }
+    else {
+      di <- ncol(Dataset[[i]]@Y) - 1
+      
+      d <- c(d, di)
+    }
+  }
+  
+  d <- unique(d)
 
   if (length(d) != 1) {
-    stop(sQuote("Dataset"), " numbers of columns in data frames must be equal!", call. = FALSE)
-  }
-
-  if (!all(unlist(lapply(Dataset, ncol)) > 0)) {
-    stop(sQuote("Dataset"), " numbers of columns in data frames must be greater than 0!", call. = FALSE)
-  }
-
-  for (j in 1:length(Dataset)) {
-    Dataset[[j]] <- as.data.frame(Dataset[[j]][complete.cases(Dataset[[j]]), ])
-  }
-
-  if (!all(unlist(lapply(Dataset, nrow)) > 1)) {
-    stop(sQuote("Dataset"), " numbers of rows in data frames must be greater than 1!", call. = FALSE)
-  }
-
-  # Preprocessing.
-
-  if (missing(Preprocessing) || (length(Preprocessing) == 0)) {
-    stop(sQuote("Preprocessing"), " must not be empty!", call. = FALSE)
-  }
-
-  if (!is.character(Preprocessing)) {
-    stop(sQuote("Preprocessing"), " character vector is requested!", call. = FALSE)
-  }
-
-  Preprocessing <- match.arg(Preprocessing, .rebmix$Preprocessing, several.ok = FALSE)
+    stop(sQuote("Dataset"), " numbers of variables in data frames must be equal!", call. = FALSE)
+  }  
 
   # cmax.
 
@@ -1130,17 +1141,6 @@ function(.Object, ...,
     K <- "auto"
   }
 
-  # y0.
-
-  if (missing(y0) || (length(y0) == 0)) {
-    y0 <- .Object@y0
-  }
-  else {
-    if (length(y0) != d) {
-      stop("lengths of ", sQuote("y0"), " and ", sQuote("d"), " must match!", call. = FALSE)
-    }
-  }
-
   # ymin.
 
   if (missing(ymin) || (length(ymin) == 0)) {
@@ -1218,8 +1218,8 @@ function(.Object, ...,
     EMcontrol <- new("EM.Control")
   }
 
-  if (class(EMcontrol) != "EM.Control") {
-    stop(sQuote("EMcontrol"), " object of class ", "EM.Control", " is requested!", call. = FALSE)
+  if (as.character(class(EMcontrol)) != "EM.Control") {
+    stop(sQuote("EMcontrol"), " object of class EM.Control is requested!", call. = FALSE)
   }
 ### End  
 
@@ -1233,7 +1233,6 @@ function(.Object, ...,
   .Object@theta2 <- theta2
   .Object@theta3 <- theta3
   .Object@K <- K
-  .Object@y0 <- y0
   .Object@ymin <- ymin
   .Object@ymax <- ymax
   .Object@ar <- ar
@@ -1265,7 +1264,7 @@ function(object)
     stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(object@summary), "!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"w\":", "\n", sep = "")
 
@@ -1310,7 +1309,7 @@ function(object)
     stop(sQuote("pos"), " must be greater than 0 and less or equal than ", nrow(object@summary), "!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"w\":", "\n", sep = "")
 
@@ -1380,7 +1379,7 @@ function(.Object, ...,
     stop(sQuote("x"), " must not be empty!", call. = FALSE)
   }
 
-  if (class(x) != model) {
+  if (as.character(class(x)) != model) {
     stop(sQuote("x"), " object of class ", model, " is requested!", call. = FALSE)
   }
 
@@ -1500,7 +1499,7 @@ function(object)
     stop(sQuote("object"), " object of class REBMIX.boot is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"c\":", "\n", sep = "")
 
@@ -1537,7 +1536,7 @@ function(object)
     stop(sQuote("object"), " object of class REBMVNORM.boot is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"c\":", "\n", sep = "")
 
@@ -1566,7 +1565,7 @@ function(object)
 
 setClass("RCLRMIX",
 slots = c(x = "ANY",
-  Dataset = "data.frame",
+  Dataset = "ANY",
   pos = "numeric",
   Zt = "factor",
   Zp = "factor",
@@ -1601,7 +1600,7 @@ function(.Object, ...,
     stop(sQuote("x"), " must not be empty!", call. = FALSE)
   }
   
-  if (class(x) != model) {
+  if (as.character(class(x)) != model) {
     stop(sQuote("x"), " object of class ", model, " is requested!", call. = FALSE)
   }
 
@@ -1622,26 +1621,46 @@ function(.Object, ...,
   # Dataset.
   
   if (missing(Dataset) || (length(Dataset) == 0)) {
-    Dataset <- .Object@Dataset
+    Dataset <- x@Dataset[[pos]]
     
-    n <- nrow(x@Dataset[[pos]])
+    if (as.character(class(Dataset)) == "data.frame") {
+      n <- nrow(Dataset)
+    }
+    else
+    if (as.character(class(Dataset)) == "Histogram") {
+      n <- nrow(Dataset@Y)
+    }     
   }
   else {
-    if (!is.data.frame(Dataset)) {
-      stop(sQuote("Dataset"), " data frame is requested!", call. = FALSE)
+    if ((as.character(class(Dataset)) != "Histogram") && (as.character(class(Dataset)) != "data.frame")) {
+      stop(sQuote("Dataset"), " data frame or object of class Histogram is requested!", call. = FALSE)
     }
-
+    
     d <- length(x@Variables)
 
-    if (ncol(Dataset) != d) {
-      stop(sQuote("Dataset"), " number of columns in data frame must equal ", d, "!", call. = FALSE)
+    if (as.character(class(Dataset)) == "data.frame") {
+      if (ncol(Dataset) != d) {
+        stop(sQuote("Dataset"), " number of columns in data frame must equal ", d, "!", call. = FALSE)
+      }
+      
+      n <- nrow(Dataset)
+
+      if (n < 1) {
+        stop(sQuote("Dataset"), " number of rows in data frame must be greater than 0!", call. = FALSE)
+      }      
     }
+    else
+    if (as.character(class(Dataset)) == "Histogram") {
+      if (length(Dataset@h) != d) {
+        stop(sQuote("Dataset"), " number of variables in object of class Histogram must equal ", d, "!", call. = FALSE)
+      }
+      
+      n <- nrow(Dataset@Y)
 
-    n <- nrow(Dataset)
-
-    if (n < 1) {
-      stop(sQuote("Dataset"), " number of rows in data frame must be greater than 0!", call. = FALSE)
-    }  
+      if (n < 1) {
+        stop(sQuote("Dataset"), " number of bins in object of class Histogram must be greater than 0!", call. = FALSE)
+      }       
+    }      
   }
 
   # Zt.
@@ -1693,7 +1712,7 @@ function(object)
     stop(sQuote("object"), " object of class RCLRMIX is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"prob\":", "\n", sep = "")
 
@@ -1738,7 +1757,7 @@ function(object)
     stop(sQuote("object"), " object of class RCLRMVNORM is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"prob\":", "\n", sep = "")
 
@@ -1791,7 +1810,7 @@ function(object)
     stop(sQuote("object"), " object of class RCLS.chunk is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"s\":", "\n", sep = "")
 
@@ -1932,7 +1951,7 @@ function(object)
     stop(sQuote("object"), " object of class RCLSMIX is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"CM\":", "\n", sep = "")
 
@@ -1981,7 +2000,7 @@ function(object)
     stop(sQuote("object"), " object of class RCLSMVNORM is requested!", call. = FALSE)
   }
 
-  cat("An object of class ", "\"", class(object), "\"", "\n", sep = "")
+  cat("An object of class ", "\"", as.character(class(object)), "\"", "\n", sep = "")
 
   cat("Slot \"CM\":", "\n", sep = "")
 
@@ -2017,3 +2036,114 @@ function(object)
 
   rm(list = ls())
 }) ## show
+
+# Class Histogram
+
+setClass(Class = "Histogram",
+slots = c(Y = "data.frame",
+  K = "numeric",
+  ymin = "numeric",
+  ymax = "numeric",
+  y0 = "numeric",  
+  h = "numeric",
+  n = "numeric",
+  ns = "numeric"))
+
+setMethod("initialize", "Histogram",
+function(.Object, ...,
+  Y,
+  K,
+  ymin,
+  ymax,
+  y0,
+  h,
+  n,
+  ns)
+{
+  # Y.
+
+  if (missing(Y) || (length(Y) == 0)) {
+    stop(sQuote("Y"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.data.frame(Y)) {
+    stop(sQuote("Y"), " data frame is requested!", call. = FALSE)
+  }
+
+  d <- ncol(Y) - 1
+
+  if (d < 1) {
+    stop(sQuote("Y"), " number of columns in data frame must be greater than 1!", call. = FALSE)
+  }
+
+  Y <- as.data.frame(Y[complete.cases(Y), ])
+
+  if (nrow(Y) < 1) {
+    stop(sQuote("Y"), " number of rows in data frame must be greater than 0!", call. = FALSE)
+  }
+  
+  colnames(Y) <- c(paste("y", if (d > 1) 1:d else "", sep = ""), "k")
+  
+  # K.
+
+  if (missing(K) || (length(K) == 0)) {
+    stop(sQuote("K"), " must not be empty!", call. = FALSE)
+  }
+
+  if (!is.wholenumber(K)) {
+    stop(sQuote("K"), " integer or integer vector is requested!", call. = FALSE)
+  }
+
+  if (!all(K > 0)) {
+    stop("all ", sQuote("K"), " must be greater than 0!", call. = FALSE)
+  }
+  
+  if (length(K) == 1) {
+    K <- rep(K, d)
+  }
+  else
+  if (length(K) != d) {
+    stop("lengths of ", sQuote("K"), " and ", sQuote("d"), " must match!", call. = FALSE)
+  }  
+  
+  # ymin.
+
+  if (missing(ymin) || (length(ymin) == 0)) {
+    stop(sQuote("ymin"), " must not be empty!", call. = FALSE)
+  }
+  else {
+    if (length(ymin) != d) {
+      stop("lengths of ", sQuote("ymin"), " and ", sQuote("d"), " must match!", call. = FALSE)
+    }
+  }
+  
+  # ymax.
+
+  if (missing(ymax) || (length(ymax) == 0)) {
+    stop(sQuote("ymax"), " must not be empty!", call. = FALSE)
+  }
+  else {
+    if (length(ymax) != d) {
+      stop("lengths of ", sQuote("ymax"), " and ", sQuote("d"), " must match!", call. = FALSE)
+    }
+  }
+  
+  h <- (ymax - ymin) / K; y0 <- ymin + 0.5 * h
+  
+  n <- 0
+  
+  ns <- 0
+  
+  .Object@Y <- Y
+  .Object@K <- K
+  .Object@ymin <- ymin
+  .Object@ymax <- ymax
+  .Object@y0 <- y0
+  .Object@h <- h
+  .Object@n <- n
+  .Object@ns <- ns
+
+  rm(list = ls()[!(ls() %in% c(".Object"))])
+
+  .Object
+}) ## initialize

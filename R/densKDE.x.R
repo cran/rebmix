@@ -9,7 +9,7 @@
     PACKAGE = "rebmix")
 
   if (output$error == 1) {
-    stop("in densKDE.x!", call. = FALSE); return(NA)
+    stop("in RdensKDEX!", call. = FALSE); return(NA)
   }
 
   i <- !duplicated(output$x)

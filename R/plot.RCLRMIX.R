@@ -34,12 +34,7 @@ function(x,
     stop(sQuote("ncol"), " must be greater than 0!", call. = FALSE)
   }
 
-  if (length(x@Dataset) == 0) {
-    d <- ncol(x@x@Dataset[[x@pos]])
-  }
-  else {
-    d <- ncol(x@Dataset)
-  }  
+  d <- length(x@x@Variables)
 
   Zp <- as.numeric(levels(x@Zp))[x@Zp]
   Zt <- as.numeric(levels(x@Zt))[x@Zt]
@@ -57,16 +52,22 @@ function(x,
   if ((s < 1) || (s > c)) {
     stop(sQuote("s"), " must be greater than 0 and less or equal than ", c, "!", call. = FALSE)
   }
+  
+  unique.Zp <- unique(Zp)
+  
+  set <- which(x@from %in% unique.Zp)
 
-  i <- c - 1
+  from <- x@from[set]; to <- x@to[set]
+  
+  i <- length(unique.Zp)
 
-  while (s < length(unique(Zp))) {
-    Zp[Zp == x@from[i]] <- x@to[i]
-
+  while (i > s) {
     i <- i - 1
+    
+    Zp[Zp == from[i]] <- to[i]
   }
 
-  unique.Zp <- unique(Zp); sort.unique.Zp <- sort(unique.Zp)
+  sort.unique.Zp <- sort(unique.Zp)
 
   nrow <- max(1, nrow)
   ncol <- max(1, ncol)
@@ -90,12 +91,13 @@ function(x,
 
   par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
 
-  if (length(x@Dataset) == 0) {
-    ey <- as.matrix(x@x@Dataset[[x@pos]]);
+  if (as.character(class(x@Dataset)) == "data.frame") {
+    ey <- as.matrix(x@Dataset)
   }
-  else {
-    ey <- as.matrix(x@Dataset);
-  }
+  else
+  if (as.character(class(x@Dataset)) == "Histogram") {
+    ey <- as.matrix(x@Dataset@Y[, 1:d])
+  }  
   
   ep <- Zp - 1
 
@@ -107,8 +109,8 @@ function(x,
 
   plot.col <- rgb(ramp(ep / zmax), maxColorValue = 255)
 
-  if (i > 0) {
-    plot.mul <- ifelse((Zp == x@from[i]) | (Zp == x@to[i]), 1.5, 1.0)
+  if (i > 1) {
+    plot.mul <- ifelse((Zp == from[i - 1]) | (Zp == to[i - 1]), 1.5, 1.0)
   }
   else {
     plot.mul <- rep(1.0, length(Zp))
@@ -332,12 +334,7 @@ function(x,
     stop(sQuote("ncol"), " must be greater than 0!", call. = FALSE)
   }
 
-  if (length(x@Dataset) == 0) {
-    d <- ncol(x@x@Dataset[[x@pos]])
-  }
-  else {
-    d <- ncol(x@Dataset)
-  }
+  d <- length(x@x@Variables)
 
   Zp <- as.numeric(levels(x@Zp))[x@Zp]
   Zt <- as.numeric(levels(x@Zt))[x@Zt]
@@ -356,15 +353,21 @@ function(x,
     stop(sQuote("s"), " must be greater than 0 and less or equal than ", c, "!", call. = FALSE)
   }
 
-  i <- c - 1
+  unique.Zp <- unique(Zp)
+  
+  set <- which(x@from %in% unique.Zp)
 
-  while (s < length(unique(Zp))) {
-    Zp[Zp == x@from[i]] <- x@to[i]
+  from <- x@from[set]; to <- x@to[set]
+  
+  i <- length(unique.Zp)
 
+  while (i > s) {
     i <- i - 1
+    
+    Zp[Zp == from[i]] <- to[i]
   }
 
-  unique.Zp <- unique(Zp); sort.unique.Zp <- sort(unique.Zp)
+  sort.unique.Zp <- sort(unique.Zp)
 
   nrow <- max(1, nrow)
   ncol <- max(1, ncol)
@@ -388,12 +391,13 @@ function(x,
 
   par(oma = c(1 + 0.2, 0.2, 0.2, 0.2))
 
-  if (length(x@Dataset) == 0) {
-    ey <- as.matrix(x@x@Dataset[[x@pos]]);
+  if (as.character(class(x@Dataset)) == "data.frame") {
+    ey <- as.matrix(x@Dataset)
   }
-  else {
-    ey <- as.matrix(x@Dataset);
-  }
+  else
+  if (as.character(class(x@Dataset)) == "Histogram") {
+    ey <- as.matrix(x@Dataset@Y[, 1:d])
+  }  
 
   ep <- Zp - 1
 
@@ -405,8 +409,8 @@ function(x,
 
   plot.col <- rgb(ramp(ep / zmax), maxColorValue = 255)
 
-  if (i > 0) {
-    plot.mul <- ifelse((Zp == x@from[i]) | (Zp == x@to[i]), 1.5, 1.0)
+  if (i > 1) {
+    plot.mul <- ifelse((Zp == from[i - 1]) | (Zp == to[i - 1]), 1.5, 1.0)
   }
   else {
     plot.mul <- rep(1.0, length(Zp))

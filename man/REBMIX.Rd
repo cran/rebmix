@@ -18,7 +18,7 @@ Returns as default the REBMIX algorithm output for mixtures of conditionally ind
 \S4method{REBMIX}{REBMIX}(model = "REBMIX", Dataset = list(), Preprocessing = character(),
        cmax = 15, cmin = 1, Criterion = "AIC", pdf = character(), 
        theta1 = numeric(), theta2 = numeric(), theta3 = numeric(), K = "auto", 
-       y0 = numeric(), ymin = numeric(), ymax = numeric(), ar = 0.1, 
+       ymin = numeric(), ymax = numeric(), ar = 0.1, 
        Restraints = "loose", EMcontrol = NULL, ...)
 ## ... and for other signatures
 \S4method{summary}{REBMIX}(object, ...)
@@ -29,8 +29,9 @@ Returns as default the REBMIX algorithm output for mixtures of conditionally ind
 see Methods section below.
 }
 \item{Dataset}{
-a list of length \eqn{n_{\mathrm{D}}} of data frames of size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d} columns
-represents one random variable. Numbers of observations \eqn{n} equal the number of rows in the datasets.
+a list of length \eqn{n_{\mathrm{D}}} of data frames or objects of class \code{Histogram}. 
+Data frames should have size \eqn{n \times d} containing \emph{d}-dimensional datasets. Each of the \eqn{d}
+columns represents one random variable. Numbers of observations \eqn{n} equal the number of rows in the datasets.
 }
 \item{Preprocessing}{
 a character giving the preprocessing type. One of \code{"histogram"}, \cr
@@ -71,9 +72,6 @@ or the rule of thumb \eqn{k = \sqrt{n}} to guess the intermediate number of near
 If, e.g., \code{K = matrix(c(10, 15, 18, 5, 7, 9), byrow = TRUE, ncol = 3)} than \eqn{d = 3} and the list \code{Dataset} contains \eqn{n_{\mathrm{D}} = 2} frames. Hence, different numbers of bins can be assigned to \eqn{y_{1}, \ldots, y_{d}}.
 See also \code{\link[rebmix]{kseq}} for sequence of bins or nearest neighbours generation. The default value is \code{"auto"}.
 }
-\item{y0}{
-a vector of length \eqn{d} containing origins. The default value is \code{numeric()}.
-}
 \item{ymin}{
 a vector of length \eqn{d} containing minimum observations. The default value is \code{numeric()}.
 }
@@ -111,7 +109,7 @@ Returns an object of class \code{REBMIX} or \code{REBMVNORM}.
 \author{Marko Nagode}
 \references{
 H. A. Sturges. The choice of a class interval. Journal of American Statistical Association, 21(153):
-65-66, 1926. \url{https://www.jstor.org/stable/2965501}.\cr\cr
+65-66, 1926. https://www.jstor.org/stable/2965501.\cr\cr
 P. F. Velleman. Interactive computing for exploratory data analysis I: display algorithms. Proceedings of the Statistical Computing Section,
 American Statistical Association, 1976.\cr\cr
 W. J. Dixon and R. A. Kronmal. The Choice of origin and scale for graphs. Journal of the ACM, 12(2):
@@ -130,7 +128,7 @@ Communications in Statistics - Theory and Methods, 40(5):876-892, 2011a. \doi{10
 M. Nagode and M. Fajdiga. The rebmix algorithm for the multivariate finite mixture estimation.
 Communications in Statistics - Theory and Methods, 40(11):2022-2034, 2011b. \doi{10.1080/03610921003725788}.\cr\cr
 M. Nagode. Finite mixture modeling via REBMIX.
-Journal of Algorithms and Optimization, 3(2):14-28, 2015. \doi{10.5963/JAO0302001}.\cr\cr
+Journal of Algorithms and Optimization, 3(2):14-28, 2015. \url{https://repozitorij.uni-lj.si/Dokument.php?id=127674&lang=eng}.\cr\cr
 B. Panic, J. Klemenc, M. Nagode. Improved initialization of the EM algorithm for mixture model parameter estimation.
 Mathematics, 8(3):373, 2020.
 \doi{10.3390/math8030373}.

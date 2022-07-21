@@ -56,7 +56,7 @@ function(x,
   }
   
   if (length(model@x@theta3) > 0) {
-    theta3 <- model@x@theta3; theta3[is.na(theta3)] <- 0
+    theta3 <- model@x@theta3
   }
   else {
     theta3 <- numeric()
@@ -107,7 +107,6 @@ function(x,
     theta2 = theta2,
     theta3 = theta3,
     K = eval(parse(text = as.character(model@x@summary[model@pos, "K"]))),
-    y0 = model@x@y0,
     ymin = model@x@ymin,
     ymax = model@x@ymax,
     ar = as.numeric(model@x@summary[model@pos, "ar"]),
@@ -308,7 +307,6 @@ function(x,
     theta1 = theta1,
     theta2 = theta2,
     K = eval(parse(text = as.character(model@x@summary[model@pos, "K"]))),
-    y0 = model@x@y0,
     ymin = model@x@ymin,
     ymax = model@x@ymax,
     ar = as.numeric(model@x@summary[model@pos, "ar"]),

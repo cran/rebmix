@@ -227,11 +227,11 @@ function(x, value)
     stop("length of ", sQuote("value"), " must equal " , x@c, "!", call. = FALSE)
   }
 
-  if (abs(sum(value) - 1.0) > 1e-6){
+  if (abs(sum(value) - 1.0) > 1.E-6){
     stop(sQuote("value"), " must sum to 1.0!", call. = FALSE) 
   }
 
-  value <- value/sum(value)
+  value <- value / sum(value)
 
   x@w <- value
 
@@ -258,7 +258,7 @@ function(x, value)
     stop("length of ", sQuote("value"), " must equal " , x@c, "!", call. = FALSE)
   }
 
-  if (abs(sum(value) - 1.0) > 1e-6){
+  if (abs(sum(value) - 1.0) > 1.E-6){
     stop(sQuote("value"), " must sum to 1.0!", call. = FALSE) 
   }
 
@@ -1056,7 +1056,6 @@ function(x, pos)
 }) ## a.theta2.all
 
 setMethod("a.K", signature(x = "REBMIX"), function(x) x@K)
-setMethod("a.y0", signature(x = "REBMIX"), function(x) x@y0)
 setMethod("a.ymin", signature(x = "REBMIX"), function(x) x@ymin)
 setMethod("a.ymax", signature(x = "REBMIX"), function(x) x@ymax)
 setMethod("a.ar", signature(x = "REBMIX"), function(x) x@ar)
@@ -1227,15 +1226,32 @@ function(x, s)
   if ((s < 1) || (s > c)) {
     stop(sQuote("s"), " must be greater than 0 and less or equal than ", c, "!", call. = FALSE)
   }
+  
+  unique.Zp <- unique(Zp)
+  
+  from <- x@from; to <- x@to
+  
+  for (i in length(x@from):1) {
+    if (from[i] %in% unique.Zp) {
+      if (!(to[i] %in% unique.Zp)) {
+        j <- which(from %in% to[i])[1]
 
-  l <- c - 1
-
-  while (s < length(unique(Zp))) {
-    Zp[Zp == x@from[l]] <- x@to[l]
-
-    l <- l - 1
+        if (!is.na(j)) to[i] <- to[j]      
+      }
+    }
+    else {
+      from <- from[-i]; to <- to[-i]
+    }
   }
+  
+  l <- length(from) + 1  
 
+  while (l > s) {
+    l <- l - 1
+    
+    Zp[Zp == from[l]] <- to[l]
+  }  
+  
   rm(list = ls()[!(ls() %in% c("Zp"))])
 
   as.factor(Zp)
@@ -1458,3 +1474,38 @@ setMethod("a.Precision", signature(x = "RCLSMIX"), function(x) x@Precision)
 setMethod("a.Sensitivity", signature(x = "RCLSMIX"), function(x) x@Sensitivity)
 setMethod("a.Specificity", signature(x = "RCLSMIX"), function(x) x@Specificity)
 setMethod("a.Chunks", signature(x = "RCLSMIX"), function(x) x@Chunks)
+
+setMethod("a.Y", signature(x = "Histogram"), function(x) x@Y)
+
+setMethod("a.Y<-",
+          signature = (x = "Histogram"),
+function(x, value)
+{
+  # value.
+  
+  if (missing(value) || (length(value) == 0)) {
+    stop(sQuote("multiplier"), " must not be empty!", call. = FALSE)
+  }
+
+  length(value) <- 1
+  
+  if ((value <= 0.0) || (value >= 1.0)) {
+    stop(sQuote("multiplier"), " must be greater than 0.0 and less than 1.0!", call. = FALSE)
+  }  
+  
+  d <- ncol(x@Y)
+
+  x@Y[ , d] <- x@Y[ , d] * value
+
+  rm(list = ls()[!(ls() %in% c("x"))])
+
+  x
+}) ## a.Y<-
+
+setMethod("a.K", signature(x = "Histogram"), function(x) x@K)
+setMethod("a.ymin", signature(x = "Histogram"), function(x) x@ymin)
+setMethod("a.ymax", signature(x = "Histogram"), function(x) x@ymax)
+setMethod("a.y0", signature(x = "Histogram"), function(x) x@y0)
+setMethod("a.h", signature(x = "Histogram"), function(x) x@h)
+setMethod("a.n", signature(x = "Histogram"), function(x) x@n)
+setMethod("a.ns", signature(x = "Histogram"), function(x) x@ns)

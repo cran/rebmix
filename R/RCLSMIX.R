@@ -45,7 +45,7 @@ function(model, ...)
   }
 
   output <- .C(C_RCLSMIX,
-    n = model@ntest,
+    n = as.integer(model@ntest),
     X = as.double(unlist(model@Dataset)),
     s = as.integer(model@s),
     o = as.integer(o),
@@ -113,7 +113,7 @@ function(model, ...)
   }
 
   output <- .C(C_RCLSMVNORM,
-    n = model@ntest,
+    n = as.integer(model@ntest),
     X = as.double(unlist(model@Dataset)),
     s = as.integer(model@s),
     o = as.integer(o),
@@ -129,7 +129,7 @@ function(model, ...)
     PACKAGE = "rebmix")
 
   if (output$error == 1) {
-    stop("in RCLSMIX!", call. = FALSE); return(NA)
+    stop("in RCLSMVNORM!", call. = FALSE); return(NA)
   }
 
   model@Zp <- factor(output$Z, levels = levels(model@Zt))
@@ -148,7 +148,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("RCLSMIX Version 2.14.0")
+  message("RCLSMIX Version 2.14.1")
 
   flush.console()
 
@@ -194,7 +194,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("BFSMIX Version 2.14.0")
+  message("BFSMIX Version 2.14.1")
 
   flush.console()
 

@@ -23,11 +23,26 @@ function(x, Criterion, pos, ...)
   }
 
   Dataset <- as.character(x@summary[pos, "Dataset"])
+  
+  Dataset <- x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]]
+  
+  if (as.character(class(Dataset)) == "data.frame") {
+    Y.type <- 0
+    
+    X <- as.matrix(Dataset)
 
-  X <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
+    n <- nrow(X)
+    d <- ncol(X)    
+  }
+  else
+  if (as.character(class(Dataset)) == "Histogram") {
+    Y.type <- 1
+    
+    X <- as.matrix(Dataset@Y)
 
-  n <- nrow(X)
-  d <- ncol(X)
+    n <- nrow(X)
+    d <- ncol(X) - 1 
+  }  
 
   h <- as.double(x@summary[pos, paste("h", if (d > 1) 1:d else "", sep = "")])
 
@@ -55,47 +70,139 @@ function(x, Criterion, pos, ...)
 
   C <- x@summary[pos, "Preprocessing"]
   
-  if (is.na(C)) C <- "NA" 
+  if (Y.type == 0) {
+    if (is.na(C)) {
+      output <- .C(C_RInformationCriterionMIX,
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        Theta1 = as.double(theta1),
+        Theta2 = as.double(theta2),
+        Theta3 = as.double(theta3),        
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(3),
+        length.theta = as.integer(c(d, d, d)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2, theta3)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
 
-  if (C == .rebmix$Preprocessing[1]) {
-    y0 <- as.double(x@summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
-    ymin <- as.double(x@summary[pos, paste("ymin", if (d > 1) 1:d else "", sep = "")])
-    ymax <- as.double(x@summary[pos, paste("ymax", if (d > 1) 1:d else "", sep = "")])
-
-    output <- .C(C_RInformationCriterionHMIX,
-      h = as.double(h),
-      y0 = as.double(y0),
-      ymin = as.double(ymin),
-      ymax = as.double(ymax),
-      k = as.integer(x@summary[pos, "v/k"]),
-      Criterion = as.character(Criterion),
-      c = as.integer(c),
-      w = as.double(x@w[[pos]]),
-      length.pdf = as.integer(d),
-      length.Theta = as.integer(3),
-      length.theta = as.integer(c(d, d, d)),
-      pdf = as.character(pdf),
-      Theta = as.double(c(theta1, theta2, theta3)),
-      n = as.integer(n),
-      x = as.double(X),
-      IC = double(1),
-      logL = double(1),
-      M = integer(1),
-      D = double(1),
-      error = integer(1),
-      PACKAGE = "rebmix")
-
-    if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
+      if (output$error == 1) {
+        stop("in RInformationCriterionMIX!", call. = FALSE); return(NA)
+      }    
     }
-  }
+    else
+    if (C == .rebmix$Preprocessing[1]) {
+      y0 <- as.double(x@summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
+      ymin <- as.double(x@summary[pos, paste("ymin", if (d > 1) 1:d else "", sep = "")])
+      ymax <- as.double(x@summary[pos, paste("ymax", if (d > 1) 1:d else "", sep = "")])
+
+      output <- .C(C_RInformationCriterionHMIX,
+        h = as.double(h),
+        y0 = as.double(y0),
+        ymin = as.double(ymin),
+        ymax = as.double(ymax),
+        k = as.integer(x@summary[pos, "v/k"]),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        Theta1 = as.double(theta1),
+        Theta2 = as.double(theta2),
+        Theta3 = as.double(theta3),        
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(3),
+        length.theta = as.integer(c(d, d, d)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2, theta3)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
+
+      if (output$error == 1) {
+        stop("in RInformationCriterionHMIX!", call. = FALSE); return(NA)
+      }
+    }
+    else
+    if (C == .rebmix$Preprocessing[2]) {
+      output <- .C(C_RInformationCriterionKDEMIX,
+        h = as.double(h),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        Theta1 = as.double(theta1),
+        Theta2 = as.double(theta2),
+        Theta3 = as.double(theta3),        
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(3),
+        length.theta = as.integer(c(d, d, d)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2, theta3)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
+
+      if (output$error == 1) {
+        stop("in RInformationCriterionKDEMIX!", call. = FALSE); return(NA)
+      }
+    }
+    else
+    if (C == .rebmix$Preprocessing[3]) {
+      k <- as.integer(x@summary[pos, "v/k"])
+
+      output <- .C(C_RInformationCriterionKNNMIX,
+        h = as.double(h),
+        k = as.integer(x@summary[pos, "v/k"]),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        Theta1 = as.double(theta1),
+        Theta2 = as.double(theta2),
+        Theta3 = as.double(theta3),        
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(3),
+        length.theta = as.integer(c(d, d, d)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2, theta3)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
+
+      if (output$error == 1) {
+        stop("in RInformationCriterionKNNMIX!", call. = FALSE); return(NA)
+      }
+    }
+  }  
   else
-  if (C == .rebmix$Preprocessing[2]) {
-    output <- .C(C_RInformationCriterionKDEMIX,
+  if (Y.type == 1) {
+    output <- .C(C_RInformationCriterionKMIX,
       h = as.double(h),
       Criterion = as.character(Criterion),
       c = as.integer(c),
       w = as.double(x@w[[pos]]),
+      Theta1 = as.double(theta1),
+      Theta2 = as.double(theta2),
+      Theta3 = as.double(theta3),      
       length.pdf = as.integer(d),
       length.Theta = as.integer(3),
       length.theta = as.integer(c(d, d, d)),
@@ -111,37 +218,9 @@ function(x, Criterion, pos, ...)
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
-    }
-  }
-  else
-  if (C == .rebmix$Preprocessing[3]) {
-    k <- as.integer(x@summary[pos, "v/k"])
-
-    output <- .C(C_RInformationCriterionKNNMIX,
-      h = as.double(h),
-      k = as.integer(x@summary[pos, "v/k"]),
-      Criterion = as.character(Criterion),
-      c = as.integer(c),
-      w = as.double(x@w[[pos]]),
-      length.pdf = as.integer(d),
-      length.Theta = as.integer(3),
-      length.theta = as.integer(c(d, d, d)),
-      pdf = as.character(pdf),
-      Theta = as.double(c(theta1, theta2, theta3)),
-      n = as.integer(n),
-      x = as.double(X),
-      IC = double(1),
-      logL = double(1),
-      M = integer(1),
-      D = double(1),
-      error = integer(1),
-      PACKAGE = "rebmix")
-
-    if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
-    }
-  }
+      stop("in RInformationCriterionKMIX!", call. = FALSE); return(NA)
+    }  
+  }  
 
   rm(list = ls()[!(ls() %in% c("output"))])
 
@@ -173,11 +252,26 @@ function(x, Criterion, pos, ...)
   }
 
   Dataset <- as.character(x@summary[pos, "Dataset"])
+  
+  Dataset <- x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]]
 
-  X <- as.matrix(x@Dataset[[which(names(x@Dataset) == x@summary[pos, "Dataset"])]])
+  if (as.character(class(Dataset)) == "data.frame") {
+    Y.type <- 0
+    
+    X <- as.matrix(Dataset)
 
-  n <- nrow(X)
-  d <- ncol(X)
+    n <- nrow(X)
+    d <- ncol(X)    
+  }
+  else
+  if (as.character(class(Dataset)) == "Histogram") {
+    Y.type <- 1
+    
+    X <- as.matrix(Dataset@Y)
+
+    n <- nrow(X)
+    d <- ncol(X) - 1 
+  } 
 
   h <- as.double(x@summary[pos, paste("h", if (d > 1) 1:d else "", sep = "")])
 
@@ -201,43 +295,120 @@ function(x, Criterion, pos, ...)
 
   C <- x@summary[pos, "Preprocessing"]
   
-  if (is.na(C)) C <- "NA" 
+  if (Y.type == 0) {
+    if (is.na(C)) {
+      output <- .C(C_RInformationCriterionMVNORM,
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(4),
+        length.theta = as.integer(c(d, d * d, -d * d, -1)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
 
-  if (C == .rebmix$Preprocessing[1]) {
-    y0 <- as.double(x@summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
-    ymin <- as.double(x@summary[pos, paste("ymin", if (d > 1) 1:d else "", sep = "")])
-    ymax <- as.double(x@summary[pos, paste("ymax", if (d > 1) 1:d else "", sep = "")])
+      if (output$error == 1) {
+        stop("in RInformationCriterionMVNORM!", call. = FALSE); return(NA)
+      }    
+    }
+    else  
+    if (C == .rebmix$Preprocessing[1]) {
+      y0 <- as.double(x@summary[pos, paste("y0", if (d > 1) 1:d else "", sep = "")])
+      ymin <- as.double(x@summary[pos, paste("ymin", if (d > 1) 1:d else "", sep = "")])
+      ymax <- as.double(x@summary[pos, paste("ymax", if (d > 1) 1:d else "", sep = "")])
 
-    output <- .C(C_RInformationCriterionHMVNORM,
-      h = as.double(h),
-      y0 = as.double(y0),
-      ymin = as.double(ymin),
-      ymax = as.double(ymax),
-      k = as.integer(x@summary[pos, "v/k"]),
-      Criterion = as.character(Criterion),
-      c = as.integer(c),
-      w = as.double(x@w[[pos]]),
-      length.pdf = as.integer(d),
-      length.Theta = as.integer(4),
-      length.theta = as.integer(c(d, d * d, -d * d, -1)),
-      pdf = as.character(pdf),
-      Theta = as.double(c(theta1, theta2)),
-      n = as.integer(n),
-      x = as.double(X),
-      IC = double(1),
-      logL = double(1),
-      M = integer(1),
-      D = double(1),
-      error = integer(1),
-      PACKAGE = "rebmix")
+      output <- .C(C_RInformationCriterionHMVNORM,
+        h = as.double(h),
+        y0 = as.double(y0),
+        ymin = as.double(ymin),
+        ymax = as.double(ymax),
+        k = as.integer(x@summary[pos, "v/k"]),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(4),
+        length.theta = as.integer(c(d, d * d, -d * d, -1)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
 
-    if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
+      if (output$error == 1) {
+        stop("in RInformationCriterionHMVNORM!", call. = FALSE); return(NA)
+      }
+    }
+    else
+    if (C == .rebmix$Preprocessing[2]) {
+      output <- .C(C_RInformationCriterionKDEMVNORM,
+        h = as.double(h),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(4),
+        length.theta = as.integer(c(d, d * d, -d * d, -1)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
+
+      if (output$error == 1) {
+        stop("in RInformationCriterionKDEMVNORM!", call. = FALSE); return(NA)
+      }
+    }
+    else
+    if (C == .rebmix$Preprocessing[3]) {
+      k <- as.integer(x@summary[pos, "v/k"])
+
+      output <- .C(C_RInformationCriterionKNNMVNORM,
+        h = as.double(h),
+        k = as.integer(x@summary[pos, "v/k"]),
+        Criterion = as.character(Criterion),
+        c = as.integer(c),
+        w = as.double(x@w[[pos]]),
+        length.pdf = as.integer(d),
+        length.Theta = as.integer(4),
+        length.theta = as.integer(c(d, d * d, -d * d, -1)),
+        pdf = as.character(pdf),
+        Theta = as.double(c(theta1, theta2)),
+        n = as.integer(n),
+        x = as.double(X),
+        IC = double(1),
+        logL = double(1),
+        M = integer(1),
+        D = double(1),
+        error = integer(1),
+        PACKAGE = "rebmix")
+
+      if (output$error == 1) {
+        stop("in RInformationCriterionKNNMVNORM!", call. = FALSE); return(NA)
+      }
     }
   }
   else
-  if (C == .rebmix$Preprocessing[2]) {
-    output <- .C(C_RInformationCriterionKDEMVNORM,
+  if (Y.type == 1) {
+    output <- .C(C_RInformationCriterionKMVNORM,
       h = as.double(h),
       Criterion = as.character(Criterion),
       c = as.integer(c),
@@ -257,37 +428,9 @@ function(x, Criterion, pos, ...)
       PACKAGE = "rebmix")
 
     if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
-    }
-  }
-  else
-  if (C == .rebmix$Preprocessing[3]) {
-    k <- as.integer(x@summary[pos, "v/k"])
-
-    output <- .C(C_RInformationCriterionKNNMVNORM,
-      h = as.double(h),
-      k = as.integer(x@summary[pos, "v/k"]),
-      Criterion = as.character(Criterion),
-      c = as.integer(c),
-      w = as.double(x@w[[pos]]),
-      length.pdf = as.integer(d),
-      length.Theta = as.integer(4),
-      length.theta = as.integer(c(d, d * d, -d * d, -1)),
-      pdf = as.character(pdf),
-      Theta = as.double(c(theta1, theta2)),
-      n = as.integer(n),
-      x = as.double(X),
-      IC = double(1),
-      logL = double(1),
-      M = integer(1),
-      D = double(1),
-      error = integer(1),
-      PACKAGE = "rebmix")
-
-    if (output$error == 1) {
-      stop("in .IC!", call. = FALSE); return(NA)
-    }
-  }
+      stop("in RInformationCriterionKMVNORM!", call. = FALSE); return(NA)
+    }  
+  }    
 
   rm(list = ls()[!(ls() %in% c("output"))])
 

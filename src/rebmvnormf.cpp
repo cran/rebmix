@@ -4,9 +4,9 @@
 
 // Perform necessary initializations.
 
-int Rebmvnorm::Initialize()
+INT Rebmvnorm::Initialize()
 {
-    int Error = 0;
+    INT Error = 0;
 
     p_value_ = (FLOAT)0.0001;
 
@@ -14,23 +14,23 @@ int Rebmvnorm::Initialize()
 
     var_mul_ = (FLOAT)0.0625;
 
-    kmax_ = (int)floor(((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_) * (FLOAT)pow((FLOAT)n_, (FLOAT)1.0 / ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_)));
+    kmax_ = (INT)floor(((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_) * (FLOAT)pow((FLOAT)n_, (FLOAT)1.0 / ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_)));
 
     Error = GammaInv((FLOAT)1.0 - (FLOAT)2.0 * p_value_, (FLOAT)2.0, length_pdf_ / (FLOAT)2.0, &ChiSqr_);
 
     return (Error);
 } // Initialize
 
-int Rebmvnorm::ComponentConditionalDist(int                  i,           // Index of variable y.
-                                        int                  j,           // Indey of observation. 
+INT Rebmvnorm::ComponentConditionalDist(INT                  i,           // Index of variable y.
+                                        INT                  j,           // Indey of observation. 
                                         FLOAT                **Y,         // Pointer to the input array [y0,...,yd-1,...]
                                         FLOAT                *Cinv,       // Inverse correlation matrix.
                                         CompnentDistribution *CmpTheta,   // Component distribution type.
                                         FLOAT                *CmpMrgDist) // Component marginal distribution.
 {
-    int o;
+    INT o;
     FLOAT y, Mean, Stdev;
-    int   Error = 0;
+    INT   Error = 0;
 
     Mean = CmpTheta->Theta_[0][i];
 
@@ -47,19 +47,19 @@ int Rebmvnorm::ComponentConditionalDist(int                  i,           // Ind
 
 // Rough component parameter estimation for k-nearest neighbours.
 
-int Rebmvnorm::RoughEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
-                                  int                  k,           // k-nearest neighbours.
+INT Rebmvnorm::RoughEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
+                                  INT                  k,           // k-nearest neighbours.
                                   FLOAT                *h,          // Normalizing vector.
                                   FLOAT                nl,          // Total number of observations in class l.
-                                  int                  m,           // Mode index.
+                                  INT                  m,           // Mode index.
                                   CompnentDistribution *RigidTheta, // Rigid parameters.
                                   CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, ii, j, l, o, p, q, r, *N = NULL;
+    INT                i, ii, j, l, o, p, q, r, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, Dlm, Dlmin, Sum, Stdev, Dc, R, *D = NULL;
     FLOAT              *C = NULL, *Cinv = NULL, logCdet;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     // Global mode.
 
@@ -67,7 +67,7 @@ int Rebmvnorm::RoughEstimationKNN(FLOAT                **Y,         // Pointer t
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -81,7 +81,7 @@ int Rebmvnorm::RoughEstimationKNN(FLOAT                **Y,         // Pointer t
         if (length_pdf_ > 1) {
             Mode[i].klm = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Dc = (FLOAT)0.0;
 
                 for (l = 0; l < length_pdf_; l++) if (i != l) {
@@ -94,7 +94,7 @@ int Rebmvnorm::RoughEstimationKNN(FLOAT                **Y,         // Pointer t
 
                 Mode[i].klm += Y[length_pdf_][j];
 
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * D[i]) goto S0;
@@ -107,8 +107,8 @@ S0:;
         else {
             Mode[i].klm = nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * D[i]) goto S1;
@@ -138,7 +138,7 @@ S1:;
         for (i = 0; i < length_pdf_; i++) {
             Sum = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Sum += Y[length_pdf_][j] * (Y[i][j] - Mode[i].ym) * (Y[i][j] - Mode[i].ym);
             }
 
@@ -147,7 +147,7 @@ S1:;
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Sum += Y[length_pdf_][j] * (Y[i][j] - Mode[i].ym) * (Y[ii][j] - Mode[ii].ym);
                 }
 
@@ -333,18 +333,18 @@ E0: if (Cinv) free(Cinv);
 
 // Rough component parameter estimation for kernel density estimation.
 
-int Rebmvnorm::RoughEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+INT Rebmvnorm::RoughEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                   FLOAT                *h,          // Sides of the hypersquare.
                                   FLOAT                nl,          // Total number of observations in class l.
-                                  int                  m,           // Mode index.
+                                  INT                  m,           // Mode index.
                                   CompnentDistribution *RigidTheta, // Rigid parameters.
                                   CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, ii, j, l, o, p, q, r, *N = NULL;
+    INT                i, ii, j, l, o, p, q, r, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, logV, Dlm, Dlmin, Sum, Stdev;
     FLOAT              *C = NULL, *Cinv = NULL, logCdet;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     // Global mode.
 
@@ -352,7 +352,7 @@ int Rebmvnorm::RoughEstimationKDE(FLOAT                **Y,         // Pointer t
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -364,12 +364,12 @@ int Rebmvnorm::RoughEstimationKDE(FLOAT                **Y,         // Pointer t
         if (length_pdf_ > 1) {
             Mode[i].klm = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 for (l = 0; l < length_pdf_; l++) if ((i != l) && ((FLOAT)fabs(Y[l][j] - Y[l][m]) > (FLOAT)0.5 * h[l])) goto S0;
 
                 Mode[i].klm += Y[length_pdf_][j];
 
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * h[i]) goto S0;
@@ -382,8 +382,8 @@ S0:;
         else {
             Mode[i].klm = nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * h[i]) goto S1;
@@ -413,7 +413,7 @@ S1:;
         for (i = 0; i < length_pdf_; i++) {
             Sum = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Sum += Y[length_pdf_][j] * (Y[i][j] - Mode[i].ym) * (Y[i][j] - Mode[i].ym);
             }
 
@@ -422,7 +422,7 @@ S1:;
             for (ii = 0; ii < i; ii++) {
                 Sum = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Sum += Y[length_pdf_][j] * (Y[i][j] - Mode[i].ym) * (Y[ii][j] - Mode[ii].ym);
                 }
 
@@ -606,19 +606,19 @@ E0: if (Cinv) free(Cinv);
 
 // Rough component parameter estimation for histogram.
 
-int Rebmvnorm::RoughEstimationH(int                  k,           // Total number of bins.
+INT Rebmvnorm::RoughEstimationH(INT                  k,           // Total number of bins.
                                 FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl].
                                 FLOAT                *h,          // Sides of the hypersquare.
                                 FLOAT                nl,          // Total number of observations in class l.
-                                int                  m,           // Mode index.
+                                INT                  m,           // Mode index.
                                 CompnentDistribution *RigidTheta, // Rigid parameters.
                                 CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, ii, j, l, o, p, q, r, *N = NULL;
+    INT                i, ii, j, l, o, p, q, r, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, logV, Dlm, Dlmin, Sum, Stdev;
     FLOAT              *C = NULL, *Cinv = NULL, logCdet;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     // Global mode.
 
@@ -626,7 +626,7 @@ int Rebmvnorm::RoughEstimationH(int                  k,           // Total numbe
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -865,15 +865,15 @@ E0: if (Cinv) free(Cinv);
 
 // Enhanced component parameter estimation for k-nearest neighbours.
 
-int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
+INT Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
                                      FLOAT                nl,          // Total number of observations in class l.
                                      CompnentDistribution *RigidTheta, // Rigid parameters.
                                      CompnentDistribution *LooseTheta) // Loose parameters.
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                Sum;
-    int                  i, ii, j, o;
-    int                  Error = 0;
+    INT                  i, ii, j, o;
+    INT                  Error = 0;
 
     EnhanTheta = new CompnentDistribution(this);
 
@@ -892,7 +892,7 @@ int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointe
 
         Sum = (FLOAT)0.0;
 
-        for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+        for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
             Sum += Y[length_pdf_][j] * Y[i][j];
         }
 
@@ -902,7 +902,7 @@ int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointe
 
         Sum = (FLOAT)0.0;
 
-        for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+        for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
             Sum += Y[length_pdf_][j] * (Y[i][j] - EnhanTheta->Theta_[0][i]) * (Y[i][j] - EnhanTheta->Theta_[0][i]);
         }
 
@@ -911,7 +911,7 @@ int Rebmvnorm::EnhancedEstimationKNN(FLOAT                **Y,         // Pointe
         for (ii = 0; ii < i; ii++) {
             Sum = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Sum += Y[length_pdf_][j] * (Y[i][j] - EnhanTheta->Theta_[0][i]) * (Y[ii][j] - EnhanTheta->Theta_[0][ii]);
             }
 
@@ -938,15 +938,15 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Enhanced component parameter estimation for kernel density estimation.
 
-int Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+INT Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                      FLOAT                nl,          // Total number of observations in class l.
                                      CompnentDistribution *RigidTheta, // Rigid parameters.
                                      CompnentDistribution *LooseTheta) // Loose parameters.
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                Sum;
-    int                  i, ii, j, o;
-    int                  Error = 0;
+    INT                  i, ii, j, o;
+    INT                  Error = 0;
 
     EnhanTheta = new CompnentDistribution(this);
 
@@ -965,7 +965,7 @@ int Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointe
 
         Sum = (FLOAT)0.0;
 
-        for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+        for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
             Sum += Y[length_pdf_][j] * Y[i][j];
         }
 
@@ -975,7 +975,7 @@ int Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointe
 
         Sum = (FLOAT)0.0;
 
-        for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+        for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
             Sum += Y[length_pdf_][j] * (Y[i][j] - EnhanTheta->Theta_[0][i]) * (Y[i][j] - EnhanTheta->Theta_[0][i]);
         }
 
@@ -984,7 +984,7 @@ int Rebmvnorm::EnhancedEstimationKDE(FLOAT                **Y,         // Pointe
         for (ii = 0; ii < i; ii++) {
             Sum = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Sum += Y[length_pdf_][j] * (Y[i][j] - EnhanTheta->Theta_[0][i]) * (Y[ii][j] - EnhanTheta->Theta_[0][ii]);
             }
 
@@ -1011,7 +1011,7 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Enhanced component parameter estimation for histogram.
 
-int Rebmvnorm::EnhancedEstimationH(int                  k,           // Total number of bins.
+INT Rebmvnorm::EnhancedEstimationH(INT                  k,           // Total number of bins.
                                    FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                    FLOAT                nl,          // Total number of observations in class l.
                                    FLOAT                *h,          // Sides of the hypersquare.
@@ -1020,8 +1020,8 @@ int Rebmvnorm::EnhancedEstimationH(int                  k,           // Total nu
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                Sum;
-    int                  i, ii, j, o;
-    int                  Error = 0;
+    INT                  i, ii, j, o;
+    INT                  Error = 0;
 
     (void)h;
 
@@ -1088,12 +1088,12 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Moments calculation.
 
-int Rebmvnorm::MomentsCalculation(CompnentDistribution *CmpTheta, // Component parameters.
+INT Rebmvnorm::MomentsCalculation(CompnentDistribution *CmpTheta, // Component parameters.
                                   FLOAT                *FirstM,   // First moment.
                                   FLOAT                *SecondM)  // Second moment.
 {
-    int i, ii, o, p, q;
-    int Error = 0;
+    INT i, ii, o, p, q;
+    INT Error = 0;
 
     for (i = 0; i < length_pdf_; i++) {
         FirstM[i] = CmpTheta->Theta_[0][i];
@@ -1114,18 +1114,18 @@ int Rebmvnorm::MomentsCalculation(CompnentDistribution *CmpTheta, // Component p
 
 // Bayes classification of the remaining observations for k-nearest neighbour.
 
-int Rebmvnorm::BayesClassificationKNN(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                      int                  c,          // Number of components.
+INT Rebmvnorm::BayesClassificationKNN(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
+                                      INT                  c,          // Number of components.
                                       FLOAT                *W,         // Component weights.
                                       CompnentDistribution **MixTheta, // Mixture parameters.
                                       FLOAT                **FirstM,   // First moments.
                                       FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, jj, l, o, p, q, outlier, Outlier = 0;
+    INT   i, j, jj, l, o, p, q, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
             l = 0;
 
@@ -1197,18 +1197,18 @@ E0: return Error;
 
 // Bayes classification of the remaining observations for kernel density estimation.
 
-int Rebmvnorm::BayesClassificationKDE(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                      int                  c,          // Number of components.
+INT Rebmvnorm::BayesClassificationKDE(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
+                                      INT                  c,          // Number of components.
                                       FLOAT                *W,         // Component weights.
                                       CompnentDistribution **MixTheta, // Mixture parameters.
                                       FLOAT                **FirstM,   // First moments.
                                       FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, jj, l, o, p, q, outlier, Outlier = 0;
+    INT   i, j, jj, l, o, p, q, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
             l = 0;
 
@@ -1280,17 +1280,17 @@ E0: return Error;
 
 // Bayes classification of the remaining observations for histogram.
 
-int Rebmvnorm::BayesClassificationH(int                  k,          // Total number of bins.
+INT Rebmvnorm::BayesClassificationH(INT                  k,          // Total number of bins.
                                     FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                    int                  c,          // Number of components.
+                                    INT                  c,          // Number of components.
                                     FLOAT                *W,         // Component weights.
                                     CompnentDistribution **MixTheta, // Mixture parameters.
                                     FLOAT                **FirstM,   // First moments.
                                     FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, jj, l, o, p, q, outlier, Outlier = 0;
+    INT   i, j, jj, l, o, p, q, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
     for (i = 0; i < k; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
@@ -1364,15 +1364,15 @@ E0: return Error;
 
 // Returns component p.d.f..
 
-int Rebmvnorm::ComponentDist(int                  j,         // Indey of observation.  
+INT Rebmvnorm::ComponentDist(INT                  j,         // Indey of observation.  
                              FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
                              CompnentDistribution *CmpTheta, // Component parameters.
                              FLOAT                *CmpDist,  // Component distribution.
-                             int                  *Outlier)  // 1 if outlier otherwise 0.
+                             INT                  *Outlier)  // 1 if outlier otherwise 0.
 {
     FLOAT y, yi, yk;
-    int   i, k;
-    int   Error = 0;
+    INT   i, k;
+    INT   Error = 0;
 
     y = (FLOAT)0.0;
 
@@ -1395,15 +1395,15 @@ int Rebmvnorm::ComponentDist(int                  j,         // Indey of observa
 
 // Returns logarithm of component p.d.f..
 
-int Rebmvnorm::LogComponentDist(int                  j,         // Indey of observation.  
+INT Rebmvnorm::LogComponentDist(INT                  j,         // Indey of observation.  
                                 FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
                                 CompnentDistribution *CmpTheta, // Component parameters.
                                 FLOAT                *CmpDist,  // Component distribution.
-                                int                  *Outlier)  // 1 if outlier otherwise 0.
+                                INT                  *Outlier)  // 1 if outlier otherwise 0.
 {
     FLOAT y, yi, yk;
-    int   i, k;
-    int   Error = 0;
+    INT   i, k;
+    INT   Error = 0;
 
     y = (FLOAT)0.0;
 
@@ -1424,12 +1424,12 @@ int Rebmvnorm::LogComponentDist(int                  j,         // Indey of obse
     return Error;
 } // LogComponentDist
 
-int Rebmvnorm::DegreesOffreedom(int c,                  // Number of components.
+INT Rebmvnorm::DegreesOffreedom(INT c,                  // Number of components.
                                 CompnentDistribution**, // Mixture parameters.
-                                int *M)                 // Degrees of freedom.
+                                INT *M)                 // Degrees of freedom.
 {
-    int i;
-    int Error = 0;
+    INT i;
+    INT Error = 0;
 
     *M = c - 1;
 
@@ -1443,15 +1443,17 @@ int Rebmvnorm::DegreesOffreedom(int c,                  // Number of components.
 /// Panic Branislav
 // Runs the EM algorithm or its variant for the initial parameters assesed by the REBMIX algorithm.
 
-int Rebmvnorm::EMInitialize()
+INT Rebmvnorm::EMInitialize()
 {
-    int Error = 0;
+    INT Error = 0;
 
     EM_ = new Emmvnorm();
 
     Error = EM_ == NULL; if (Error) goto E0;
 
     Error = EM_->Initialize(n_,
+        nr_,
+        nc_,
         Y_,
         cmax_,
         length_pdf_,

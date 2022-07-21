@@ -20,7 +20,7 @@ CompnentDistribution::CompnentDistribution(Base *owner)
 
 CompnentDistribution::~CompnentDistribution()
 {
-    int i;
+    INT i;
 
     if (Theta_) {
         for (i = 0; i < length_Theta_; i++) {
@@ -33,10 +33,10 @@ CompnentDistribution::~CompnentDistribution()
     if (pdf_) free(pdf_);
 } // ~CompnentDistribution
 
-int CompnentDistribution::Realloc(int length_pdf, int length_Theta, int *length_theta)
+INT CompnentDistribution::Realloc(INT length_pdf, INT length_Theta, INT *length_theta)
 {
-    int i;
-    int Error = 0;
+    INT i;
+    INT Error = 0;
 
     length_pdf_ = length_pdf;
 
@@ -46,7 +46,7 @@ int CompnentDistribution::Realloc(int length_pdf, int length_Theta, int *length_
 
     length_Theta_ = length_Theta;
 
-    length_theta_ = (int*)realloc(length_theta_, length_Theta_ * sizeof(int));
+    length_theta_ = (INT*)realloc(length_theta_, length_Theta_ * sizeof(INT));
 
     Error = NULL == length_theta_; if (Error) goto E0;
 
@@ -55,7 +55,7 @@ int CompnentDistribution::Realloc(int length_pdf, int length_Theta, int *length_
     Error = NULL == Theta_; if (Error) goto E0;
 
     for (i = 0; i < length_Theta_; i++) {
-        length_theta_[i] = (int)labs(length_theta[i]);
+        length_theta_[i] = (INT)labs(length_theta[i]);
 
         if (length_theta[i] > 0) {
             Theta_[i] = (FLOAT*)realloc(Theta_[i], length_theta_[i] * sizeof(FLOAT));
@@ -73,10 +73,10 @@ int CompnentDistribution::Realloc(int length_pdf, int length_Theta, int *length_
 E0: return Error;
 } // Realloc
 
-int CompnentDistribution::Memmove(CompnentDistribution *CmpTheta)
+INT CompnentDistribution::Memmove(CompnentDistribution *CmpTheta)
 {
-    int i;
-    int Error = 0;
+    INT i;
+    INT Error = 0;
 
     memmove(pdf_, CmpTheta->pdf_, length_pdf_ * sizeof(ParametricFamilyType_e));
 
@@ -94,7 +94,7 @@ Rebmix::Rebmix()
     p_value_ = (FLOAT)0.0;
     min_dist_mul_ = (FLOAT)0.0;
     var_mul_ = (FLOAT)0.0;
-    kmax_ = (int)0;
+    kmax_ = 0;
     ChiSqr_ = (FLOAT)0.0;
     curr_ = NULL;
     o_ = 0;
@@ -111,6 +111,7 @@ Rebmix::Rebmix()
     y0_ = NULL;
     ymin_ = NULL;
     ymax_ = NULL;
+    h_ = NULL;
     ar_ = (FLOAT)0.1;
     Restraints_ = rtLoose;
 /// Panic Branislav
@@ -124,7 +125,10 @@ Rebmix::Rebmix()
     EM_accel_ = acc_fixed;
 /// End
     n_ = 0;
+    nr_ = 0;
+    nc_ = 0;
     Y_ = NULL;
+    Y_type_ = 0;
     X_ = NULL;
     W_ = NULL;
     MixTheta_ = NULL;
@@ -150,7 +154,7 @@ Rebmix::Rebmix()
 
 Rebmix::~Rebmix()
 {
-    int i;
+    INT i;
 
     if (all_IC_) free(all_IC_);
 
@@ -185,7 +189,7 @@ Rebmix::~Rebmix()
     if (W_) free(W_);
 
     if (X_) {
-        for (i = 0; i < length_pdf_; i++) {
+        for (i = 0; i < nc_; i++) {
             if (X_[i]) free(X_[i]);
         }
 
@@ -193,7 +197,7 @@ Rebmix::~Rebmix()
     }
 
     if (Y_) {
-        for (i = 0; i < length_pdf_; i++) {
+        for (i = 0; i < nc_; i++) {
             if (Y_[i]) free(Y_[i]);
         }
 
@@ -201,6 +205,8 @@ Rebmix::~Rebmix()
     }
 
     if (EM_) delete EM_;
+
+    if (h_) free(h_);
 
     if (ymax_) free(ymax_);
 
@@ -227,10 +233,10 @@ Rebmix::~Rebmix()
 
 // Adds number of classes or k-nearest neighbours to be processed. Returns 0 if none is added. Otherwise 1 is returned.
 
-int Rebmix::Golden()
+INT Rebmix::Golden()
 {
     FLOAT ICopt;
-    int   i, iopt, Stop = 0;
+    INT   i, iopt, Stop = 0;
 
     if (additional_.Bracket) {
         ICopt = FLOAT_MAX; iopt = 0;
@@ -253,8 +259,8 @@ int Rebmix::Golden()
             }
         }
 
-        additional_.c = additional_.b - (int)ceil((additional_.b - additional_.a) / Phi);
-        additional_.d = additional_.a + (int)ceil((additional_.b - additional_.a) / Phi);
+        additional_.c = additional_.b - (INT)ceil((additional_.b - additional_.a) / Phi);
+        additional_.d = additional_.a + (INT)ceil((additional_.b - additional_.a) / Phi);
         
         for (i = 0; i < length_pdf_; i++) {
             all_K_[i * all_length_ + additional_.c] = additional_.c + all_K_[0];
@@ -271,8 +277,8 @@ int Rebmix::Golden()
             additional_.a = additional_.c;
         }
 
-        additional_.c = additional_.b - (int)ceil((additional_.b - additional_.a) / Phi);
-        additional_.d = additional_.a + (int)ceil((additional_.b - additional_.a) / Phi);
+        additional_.c = additional_.b - (INT)ceil((additional_.b - additional_.a) / Phi);
+        additional_.d = additional_.a + (INT)ceil((additional_.b - additional_.a) / Phi);
 
         Stop = additional_.b - additional_.a < 3;
 
@@ -289,9 +295,9 @@ int Rebmix::Golden()
 
 // Perform necessary initializations.
 
-int Rebmix::Initialize()
+INT Rebmix::Initialize()
 {
-    int Error = 0;
+    INT Error = 0;
 
     p_value_ = (FLOAT)0.0001;
 
@@ -299,7 +305,7 @@ int Rebmix::Initialize()
 
     var_mul_ = (FLOAT)0.0625;
 
-    kmax_ = (int)floor(((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_) * (FLOAT)pow((FLOAT)n_, (FLOAT)1.0 / ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_)));
+    kmax_ = (INT)floor(((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_) * (FLOAT)pow((FLOAT)n_, (FLOAT)1.0 / ((FLOAT)1.0 + (FLOAT)1.0 / length_pdf_)));
 
     Error = GammaInv((FLOAT)1.0 - (FLOAT)2.0 * p_value_, (FLOAT)2.0, length_pdf_ / (FLOAT)2.0, &ChiSqr_);
 
@@ -308,14 +314,14 @@ int Rebmix::Initialize()
 
 // Preprocessing of observations for k-nearest neighbour.
 
-int Rebmix::PreprocessingKNN(int   k,    // k-nearest neighbours.
+INT Rebmix::PreprocessingKNN(INT   k,    // k-nearest neighbours.
                              FLOAT *h,   // Normalizing vector.
                              FLOAT **Y)  // Pointer to the input array [y0,...,yd-1,kl,logV,R].
 {
     FLOAT *Dk = NULL;
     FLOAT Dc, R, logV, logVn;
-    int   i, j, l, m, q;
-    int   Error = n_ < 1;
+    INT   i, j, l, m, q;
+    INT   Error = n_ < 1;
 
     if (Error) goto E0;
 
@@ -327,10 +333,10 @@ int Rebmix::PreprocessingKNN(int   k,    // k-nearest neighbours.
 
     logVn = length_pdf_ * LogPi / (FLOAT)2.0 - Gammaln((FLOAT)1.0 + length_pdf_ / (FLOAT)2.0);
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Dk[0] = FLOAT_MAX; q = 0;
 
-        for (j = 0; j < n_; j++) if (i != j) {
+        for (j = 0; j < nr_; j++) if (i != j) {
             Dc = (FLOAT)0.0;
 
             for (l = 0; l < length_pdf_; l++) {
@@ -368,20 +374,20 @@ E0: if (Dk) free(Dk);
 
 // Preprocessing of observations for kernel density estimation.
 
-int Rebmix::PreprocessingKDE(FLOAT *h,   // Sides of the hypersquare.
+INT Rebmix::PreprocessingKDE(FLOAT *h,   // Sides of the hypersquare.
                              FLOAT **Y)  // Pointer to the input array [y0,...,yd-1,kl,k].
 {
-    int i, j, l;
-    int Error = n_ < 1;
+    INT i, j, l;
+    INT Error = n_ < 1;
 
     if (Error) goto E0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Y[length_pdf_][i] = (FLOAT)1.0; Y[length_pdf_ + 1][i] = (FLOAT)0.0;
     }
 
-    for (i = 0; i < n_; i++) {
-        for (j = i; j < n_; j++) {
+    for (i = 0; i < nr_; i++) {
+        for (j = i; j < nr_; j++) {
             for (l = 0; l < length_pdf_; l++) if ((FLOAT)fabs(Y[l][i] - Y[l][j]) > (FLOAT)0.5 * h[l]) goto S0;
 
             Y[length_pdf_ + 1][i] += (FLOAT)1.0; if (i != j) Y[length_pdf_ + 1][j] += (FLOAT)1.0;
@@ -394,23 +400,23 @@ E0: return Error;
 
 // Preprocessing of observations for histogram.
 
-int Rebmix::PreprocessingH(FLOAT *h,    // Sides of the hypersquare.
+INT Rebmix::PreprocessingH(FLOAT *h,    // Sides of the hypersquare.
                            FLOAT *y0,   // Origins.
                            FLOAT *ymin, // Minimum observations.
                            FLOAT *ymax, // Maximum observations.
-                           int   *k,    // Total number of bins.
+                           INT   *k,    // Total number of bins.
                            FLOAT **Y)   // Pointer to the input array [y0,...,yd-1,kl].
 {
-    int i, j, l;
-    int Error = n_ < 1;
+    INT i, j, l;
+    INT Error = n_ < 1;
 
     if (Error) goto E0;
 
     *k = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         for (j = 0; j < length_pdf_; j++) {
-            l = (int)floor((Y_[j][i] - y0[j]) / h[j] + (FLOAT)0.5);
+            l = (INT)floor((Y_[j][i] - y0[j]) / h[j] + (FLOAT)0.5);
 
             Y[j][*k] = y0[j] + l * h[j];
 
@@ -439,24 +445,24 @@ E0: return Error;
 
 // Preprocessing of observations for histogram.
 
-int Rebmix::PreprocessingH(FLOAT *h,     // Sides of the hypersquare.
+INT Rebmix::PreprocessingH(FLOAT *h,     // Sides of the hypersquare.
                            FLOAT *y0,    // Origins.
                            FLOAT *ymin,  // Minimum observations.
                            FLOAT *ymax,  // Maximum observations.
-                           int   *k,     // Total number of bins.
+                           INT   *k,     // Total number of bins.
                            FLOAT **Y,    // Pointer to the input array [y0,...,yd-1,kl].
-                           int   *State) // State variable.
+                           INT   *State) // State variable.
 {
-    int i, j, l;
-    int Error = n_ < 1;
+    INT i, j, l;
+    INT Error = n_ < 1;
 
     if (Error) goto E0;
 
     *k = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         for (j = 0; j < length_pdf_; j++) {
-            l = (int)floor((Y_[j][i] - y0[j]) / h[j] + (FLOAT)0.5);
+            l = (INT)floor((Y_[j][i] - y0[j]) / h[j] + (FLOAT)0.5);
 
             Y[j][*k] = y0[j] + l * h[j];
 
@@ -489,17 +495,17 @@ E0: return Error;
 
 // Global mode detection for k-nearest neighbour.
 
-int Rebmix::GlobalModeKNN(int   *m,  // Global mode.
+INT Rebmix::GlobalModeKNN(INT   *m,  // Global mode.
                           FLOAT **Y, // Pointer to the input array [y0,...,yd-1,kl,logV,R].
-                          int   *O)  // Pointer to the outlier observations.
+                          INT   *O)  // Pointer to the outlier observations.
 {
     FLOAT cur, imax, omax;
-    int   i, im, om, j;
-    int   Error = 0;
+    INT   i, im, om, j;
+    INT   Error = 0;
 
     im = om = -1; imax = omax = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         cur = Y[length_pdf_][i] / (FLOAT)exp(Y[length_pdf_ + 1][i]);
 
         if (O[i]) {
@@ -520,7 +526,7 @@ int Rebmix::GlobalModeKNN(int   *m,  // Global mode.
     else {
         *m = im;
 
-        for (j = 0; j < n_; j++) O[j] = 1;
+        for (j = 0; j < nr_; j++) O[j] = 1;
     }
 
     return Error;
@@ -528,17 +534,17 @@ int Rebmix::GlobalModeKNN(int   *m,  // Global mode.
 
 // Global mode detection for kernel density estimation.
 
-int Rebmix::GlobalModeKDE(int   *m,  // Global mode.
+INT Rebmix::GlobalModeKDE(INT   *m,  // Global mode.
                           FLOAT **Y, // Pointer to the input array [y0,...,yd-1,kl,k].
-                          int   *O)  // Pointer to the outlier observations.
+                          INT   *O)  // Pointer to the outlier observations.
 {
     FLOAT cur, imax, omax;
-    int   i, im, om, j;
-    int   Error = 0;
+    INT   i, im, om, j;
+    INT   Error = 0;
 
     im = om = -1; imax = omax = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         cur = Y[length_pdf_][i] * Y[length_pdf_ + 1][i];
 
         if (O[i]) {
@@ -559,7 +565,7 @@ int Rebmix::GlobalModeKDE(int   *m,  // Global mode.
     else {
         *m = im;
 
-        for (j = 0; j < n_; j++) O[j] = 1;
+        for (j = 0; j < nr_; j++) O[j] = 1;
     }
 
     return Error;
@@ -567,14 +573,14 @@ int Rebmix::GlobalModeKDE(int   *m,  // Global mode.
 
 // Global mode detection for histogram.
 
-int Rebmix::GlobalModeH(int   *m,  // Global mode.
-                        int   k,   // Total number of bins.
+INT Rebmix::GlobalModeH(INT   *m,  // Global mode.
+                        INT   k,   // Total number of bins.
                         FLOAT **Y, // Pointer to the input array [y0,...,yd-1,kl].
-                        int   *O)  // Pointer to the outlier observations.
+                        INT   *O)  // Pointer to the outlier observations.
 {
     FLOAT cur, imax, omax;
-    int   i, im, om, j;
-    int   Error = 0;
+    INT   i, im, om, j;
+    INT   Error = 0;
 
     im = om = -1; imax = omax = (FLOAT)0.0;
 
@@ -607,12 +613,12 @@ int Rebmix::GlobalModeH(int   *m,  // Global mode.
 
 // Returns rough normal parameters.
 
-int RoughNormalParameters(FLOAT ym,
+INT RoughNormalParameters(FLOAT ym,
                           FLOAT fm,
                           FLOAT *Mean,
                           FLOAT *Stdev)
 {
-    int Error = 0;
+    INT Error = 0;
 
     *Mean = ym; *Stdev = (FLOAT)1.0 / (SqrtPi2 * fm);
 
@@ -621,15 +627,15 @@ int RoughNormalParameters(FLOAT ym,
 
 // Returns rough lognormal parameters.
 
-int RoughLognormalParameters(FLOAT ym,
+INT RoughLognormalParameters(FLOAT ym,
                              FLOAT fm,
                              FLOAT *Mean,
                              FLOAT *Stdev)
 {
     FLOAT Lambda, dLambda;
     FLOAT A[3];
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     Error = ym <= FLOAT_MIN; if (Error) goto E0;
 
@@ -666,15 +672,15 @@ E0: return Error;
 
 // Returns rough Weibull parameters.
 
-int RoughWeibullParameters(FLOAT ym,
+INT RoughWeibullParameters(FLOAT ym,
                            FLOAT fm,
                            FLOAT *Theta,
                            FLOAT *Beta)
 {
     FLOAT Alpha, dAlpha;
     FLOAT A[4];
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     Error = ym <= FLOAT_MIN; if (Error) goto E0;
 
@@ -717,7 +723,7 @@ E0: return Error;
 
 // Returns rough Gamma parameters.
 
-int RoughGammaParameters(FLOAT ym,
+INT RoughGammaParameters(FLOAT ym,
                          FLOAT fm,
                          FLOAT *Theta,
                          FLOAT *Beta)
@@ -725,8 +731,8 @@ int RoughGammaParameters(FLOAT ym,
 
     FLOAT Alpha, dAlpha;
     FLOAT A[5];
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     Error = ym <= FLOAT_MIN; if (Error) goto E0;
 
@@ -771,12 +777,12 @@ E0: return Error;
 
 // Returns rough Gumbel parameters.
 
-int RoughGumbelParameters(FLOAT ym,
+INT RoughGumbelParameters(FLOAT ym,
                           FLOAT fm,
                           FLOAT *Mean,
                           FLOAT *Sigma)
 {
-    int Error = 0;
+    INT Error = 0;
 
     *Mean = ym; *Sigma = (FLOAT)1.0 / ((FLOAT)exp((FLOAT)1.0) * fm);
 
@@ -785,7 +791,7 @@ int RoughGumbelParameters(FLOAT ym,
 
 // Returns rough von Mises parameters.
 
-int RoughvonMisesParameters(FLOAT h,
+INT RoughvonMisesParameters(FLOAT h,
                             FLOAT ym,
                             FLOAT fm,
                             FLOAT *Mean,
@@ -793,8 +799,8 @@ int RoughvonMisesParameters(FLOAT h,
 {
     FLOAT dKappa;
     FLOAT A[3];
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     A[0] = (FLOAT)0.5 * h; A[1] = Pi2 - A[0];
 
@@ -843,7 +849,7 @@ E0: return Error;
 
 // Returns rough binomial parameters.
 
-int RoughBinomialParameters(FLOAT ym,
+INT RoughBinomialParameters(FLOAT ym,
                             FLOAT ymean,
                             FLOAT fm,
                             FLOAT n,
@@ -851,14 +857,14 @@ int RoughBinomialParameters(FLOAT ym,
 {
     FLOAT dp;
     FLOAT A;
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
-    if ((int)ym == 0) {
+    if ((INT)ym == 0) {
         *p = (fm < (FLOAT)1.0) ? (FLOAT)1.0 - (FLOAT)pow(fm, (FLOAT)1.0 / n) : (FLOAT)0.0;
     }
     else
-    if ((int)ym == (int)n) {
+    if ((INT)ym == (INT)n) {
         *p = (fm < (FLOAT)1.0) ? (FLOAT)pow(fm, (FLOAT)1.0 / n) : (FLOAT)1.0;
     }
     else {
@@ -911,17 +917,17 @@ int RoughBinomialParameters(FLOAT ym,
 
 // Returns rough Poisson parameters.
 
-int RoughPoissonParameters(FLOAT ym,
+INT RoughPoissonParameters(FLOAT ym,
                            FLOAT ymean,
                            FLOAT fm,
                            FLOAT *Theta)
 {
     FLOAT dTheta;
     FLOAT A;
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
-    if ((int)ym == 0) {
+    if ((INT)ym == 0) {
         *Theta = (fm < (FLOAT)1.0) ? -(FLOAT)log(fm) : (FLOAT)0.0;
     }
     else {
@@ -971,15 +977,15 @@ int RoughPoissonParameters(FLOAT ym,
 
 // Returns component marginal p.d.f..
 
-int ComponentMarginalDist(int                  i,           // Index of variable y.
-                          int                  j,           // Indey of observation.  
+INT ComponentMarginalDist(INT                  i,           // Index of variable y.
+                          INT                  j,           // Indey of observation.  
                           FLOAT                **Y,         // Pointer to the input array [y0,...,yd-1,...]
                           CompnentDistribution *CmpTheta,   // Component distribution type.
                           FLOAT                *CmpMrgDist) // Component marginal distribution.
 {
     FLOAT y, ypb, p, Theta;
-    int   k, n;
-    int   Error = 0;
+    INT   k, n;
+    INT   Error = 0;
 
     switch (CmpTheta->pdf_[i]) {
     case pfNormal:
@@ -1039,7 +1045,7 @@ int ComponentMarginalDist(int                  i,           // Index of variable
 
         break;
     case pfBinomial:
-        k = (int)Y[i][j]; n = (int)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
+        k = (INT)Y[i][j]; n = (INT)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
 
         if (k < 0)
             *CmpMrgDist = (FLOAT)0.0;
@@ -1058,7 +1064,7 @@ int ComponentMarginalDist(int                  i,           // Index of variable
 
         break;
     case pfPoisson:
-        k = (int)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
+        k = (INT)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
 
         *CmpMrgDist = (FLOAT)exp(k * (FLOAT)log(Theta) - Theta - Gammaln(k + (FLOAT)1.0));
 
@@ -1086,24 +1092,24 @@ int ComponentMarginalDist(int                  i,           // Index of variable
 
 // Rough component parameter estimation for k-nearest neighbours.
 
-int Rebmix::RoughEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
-                               int                  k,           // k-nearest neighbours.
+INT Rebmix::RoughEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
+                               INT                  k,           // k-nearest neighbours.
                                FLOAT                *h,          // Normalizing vector.
                                FLOAT                nl,          // Total number of observations in class l.
-                               int                  m,           // Mode index.
+                               INT                  m,           // Mode index.
                                CompnentDistribution *RigidTheta, // Rigid parameters.
                                CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, ii, j, l, *N = NULL;
+    INT                i, ii, j, l, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, Dlm, Dlmin, Dc, R, *D = NULL;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     Mode = (RoughParameterType*)malloc(length_pdf_ * sizeof(RoughParameterType));
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -1121,7 +1127,7 @@ int Rebmix::RoughEstimationKNN(FLOAT                **Y,         // Pointer to t
         if (length_pdf_ > 1) {
             Mode[i].klm = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 Dc = (FLOAT)0.0;
 
                 for (l = 0; l < length_pdf_; l++) if (i != l) {
@@ -1134,7 +1140,7 @@ int Rebmix::RoughEstimationKNN(FLOAT                **Y,         // Pointer to t
 
                 Mode[i].klm += Y[length_pdf_][j];
 
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * D[i]) goto S0;
@@ -1148,7 +1154,7 @@ S0:;
             case pfBinomial: case pfPoisson: case pfGumbel:
                 Mode[i].ymean = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Dc = (FLOAT)0.0;
 
                     for (l = 0; l < length_pdf_; l++) if (i != l) {
@@ -1168,7 +1174,7 @@ S0:;
             case pfUniform:
                 Mode[i].ymin = FLOAT_MAX; Mode[i].ymax = -FLOAT_MAX;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Dc = (FLOAT)0.0;
 
                     for (l = 0; l < length_pdf_; l++) if (i != l) {
@@ -1196,8 +1202,8 @@ S0:;
         else {
             Mode[i].klm = nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / D[i] + (FLOAT)0.5) * D[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * D[i]) goto S1;
@@ -1211,7 +1217,7 @@ S1:;
             case pfBinomial: case pfPoisson: case pfGumbel:
                 Mode[i].ymean = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Mode[i].ymean += Y[length_pdf_][j] * Y[i][j];
                 }
 
@@ -1221,7 +1227,7 @@ S1:;
             case pfUniform:
                 Mode[i].ymin = FLOAT_MAX; Mode[i].ymax = -FLOAT_MAX;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     if (Y[i][j] < Mode[i].ymin) {
                         Mode[i].ymin = Y[i][j];
                     }
@@ -1450,23 +1456,23 @@ E0: if (D) free(D);
 
 // Rough component parameter estimation for kernel density estimation.
 
-int Rebmix::RoughEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+INT Rebmix::RoughEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                FLOAT                *h,          // Sides of the hypersquare.
                                FLOAT                nl,          // Total number of observations in class l.
-                               int                  m,           // Mode index.
+                               INT                  m,           // Mode index.
                                CompnentDistribution *RigidTheta, // Rigid parameters.
                                CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, ii, j, l, *N = NULL;
+    INT                i, ii, j, l, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, logV, Dlm, Dlmin;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     Mode = (RoughParameterType*)malloc(length_pdf_ * sizeof(RoughParameterType));
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -1480,12 +1486,12 @@ int Rebmix::RoughEstimationKDE(FLOAT                **Y,         // Pointer to t
         if (length_pdf_ > 1) {
             Mode[i].klm = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 for (l = 0; l < length_pdf_; l++) if ((i != l) && ((FLOAT)fabs(Y[l][j] - Y[l][m]) > (FLOAT)0.5 * h[l])) goto S0;
 
                 Mode[i].klm += Y[length_pdf_][j];
 
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * h[i]) goto S0;
@@ -1499,7 +1505,7 @@ S0:;
             case pfBinomial: case pfPoisson: case pfGumbel:
                 Mode[i].ymean = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     for (l = 0; l < length_pdf_; l++) if ((i != l) && ((FLOAT)fabs(Y[l][j] - Y[l][m]) > (FLOAT)0.5 * h[l])) goto S1;
 
                     Mode[i].ymean += Y[length_pdf_][j] * Y[i][j];
@@ -1512,7 +1518,7 @@ S1:;
             case pfUniform:
                 Mode[i].ymin = FLOAT_MAX; Mode[i].ymax = -FLOAT_MAX;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     for (l = 0; l < length_pdf_; l++) if ((i != l) && ((FLOAT)fabs(Y[l][j] - Y[l][m]) > (FLOAT)0.5 * h[l])) goto S2;
 
                     if (Y[i][j] < Mode[i].ymin) {
@@ -1533,8 +1539,8 @@ S2:;
         else {
             Mode[i].klm = nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
-                X_[i][N[i]] = Y[i][m] + (int)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                X_[i][N[i]] = Y[i][m] + (INT)floor((Y[i][j] - Y[i][m]) / h[i] + (FLOAT)0.5) * h[i];
 
                 for (ii = 0; ii < N[i]; ii++) {
                     if ((FLOAT)fabs(X_[i][N[i]] - X_[i][ii]) < (FLOAT)0.5 * h[i]) goto S3;
@@ -1548,7 +1554,7 @@ S3:;
             case pfBinomial: case pfPoisson: case pfGumbel:
                 Mode[i].ymean = (FLOAT)0.0;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     Mode[i].ymean += Y[length_pdf_][j] * Y[i][j];
                 }
 
@@ -1558,7 +1564,7 @@ S3:;
             case pfUniform:
                 Mode[i].ymin = FLOAT_MAX; Mode[i].ymax = -FLOAT_MAX;
 
-                for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+                for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                     if (Y[i][j] < Mode[i].ymin) {
                         Mode[i].ymin = Y[i][j];
                     }
@@ -1785,24 +1791,24 @@ E0: if (N) free(N);
 
 // Rough component parameter estimation for histogram.
 
-int Rebmix::RoughEstimationH(int                  k,           // Total number of bins.
+INT Rebmix::RoughEstimationH(INT                  k,           // Total number of bins.
                              FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl].
                              FLOAT                *h,          // Sides of the hypersquare.
                              FLOAT                nl,          // Total number of observations in class l.
-                             int                  m,           // Mode index.
+                             INT                  m,           // Mode index.
                              CompnentDistribution *RigidTheta, // Rigid parameters.
                              CompnentDistribution *LooseTheta) // Loose parameters.
 {
-    int                i, j, l, *N = NULL;
+    INT                i, j, l, *N = NULL;
     RoughParameterType *Mode = NULL;
     FLOAT              CmpMrgDist, epsilon, logflm, flm, flmin, flmax, logV, Dlm, Dlmin;
-    int                Error = 0, Stop;
+    INT                Error = 0, Stop;
 
     Mode = (RoughParameterType*)malloc(length_pdf_ * sizeof(RoughParameterType));
 
     Error = NULL == Mode; if (Error) goto E0;
 
-    N = (int*)malloc(length_pdf_ * sizeof(int));
+    N = (INT*)malloc(length_pdf_ * sizeof(INT));
 
     Error = NULL == N; if (Error) goto E0;
 
@@ -2114,15 +2120,15 @@ E0: if (N) free(N);
 
 // Returns component p.d.f..
 
-int Rebmix::ComponentDist(int                  j,         // Indey of observation.  
+INT Rebmix::ComponentDist(INT                  j,         // Indey of observation.  
                           FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
                           CompnentDistribution *CmpTheta, // Component parameters.
                           FLOAT                *CmpDist,  // Component distribution.
-                          int                  *Outlier)  // 1 if outlier otherwise 0.
+                          INT                  *Outlier)  // 1 if outlier otherwise 0.
 {
     FLOAT y, ypb, p, Theta;
-    int   i, k, n;
-    int   Error = 0;
+    INT   i, k, n;
+    INT   Error = 0;
 
     *CmpDist = (FLOAT)1.0; if (Outlier) *Outlier = 0;
 
@@ -2247,7 +2253,7 @@ int Rebmix::ComponentDist(int                  j,         // Indey of observatio
                 *Outlier |= Y[i][j] < y;
             }
 
-            k = (int)Y[i][j]; n = (int)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
+            k = (INT)Y[i][j]; n = (INT)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
 
             if (k < 0) {
                 *CmpDist = (FLOAT)0.0; goto E0;
@@ -2278,7 +2284,7 @@ int Rebmix::ComponentDist(int                  j,         // Indey of observatio
                 *Outlier |= Y[i][j] < y;
             }
 
-            k = (int)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
+            k = (INT)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
 
             *CmpDist *= (FLOAT)exp(k * (FLOAT)log(Theta) - Theta - Gammaln(k + (FLOAT)1.0));
 
@@ -2307,15 +2313,15 @@ E0: return Error;
 
 // Returns logarithm of component p.d.f..
 
-int Rebmix::LogComponentDist(int                  j,         // Indey of observation.  
+INT Rebmix::LogComponentDist(INT                  j,         // Indey of observation.  
                              FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
                              CompnentDistribution *CmpTheta, // Component parameters.
                              FLOAT                *CmpDist,  // Component distribution.
-                             int                  *Outlier)  // 1 if outlier otherwise 0.
+                             INT                  *Outlier)  // 1 if outlier otherwise 0.
 {
     FLOAT y, ypb, p, Theta;
-    int   i, k, n;
-    int   Error = 0;
+    INT   i, k, n;
+    INT   Error = 0;
 
     *CmpDist = (FLOAT)0.0; if (Outlier) *Outlier = 0;
 
@@ -2440,7 +2446,7 @@ int Rebmix::LogComponentDist(int                  j,         // Indey of observa
                 *Outlier |= Y[i][j] < y;
             }
 
-            k = (int)Y[i][j]; n = (int)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
+            k = (INT)Y[i][j]; n = (INT)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
 
             if (k < 0) {
                 *CmpDist = -FLOAT_MAX; goto E0;
@@ -2471,7 +2477,7 @@ int Rebmix::LogComponentDist(int                  j,         // Indey of observa
                 *Outlier |= Y[i][j] < y;
             }
 
-            k = (int)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
+            k = (INT)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
 
             *CmpDist += k * (FLOAT)log(Theta) - Theta - Gammaln(k + (FLOAT)1.0);
 
@@ -2500,16 +2506,16 @@ E0: return Error;
 
 // Enhanced component parameter estimation for k-nearest neighbours.
 
-int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
+INT Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,logV,R].
                                   FLOAT                nl,          // Total number of observations in class l.
                                   CompnentDistribution *RigidTheta, // Rigid parameters.
                                   CompnentDistribution *LooseTheta) // Loose parameters.
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                A[4], T[2];
-    int                  i, j, l;
+    INT                  i, j, l;
     FLOAT                dP, MrgVar, TmpVar;
-    int                  Error = 0;
+    INT                  Error = 0;
 
     EnhanTheta = new CompnentDistribution(this);
 
@@ -2528,13 +2534,13 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
         case pfNormal:
             EnhanTheta->pdf_[i] = pfNormal;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 EnhanTheta->Theta_[0][i] += Y[length_pdf_][j] * Y[i][j];
             }
 
             EnhanTheta->Theta_[0][i] /= nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] = Y[i][j] - EnhanTheta->Theta_[0][i];
 
                 EnhanTheta->Theta_[1][i] += Y[length_pdf_][j] * T[0] * T[0];
@@ -2561,7 +2567,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
         case pfLognormal:
             EnhanTheta->pdf_[i] = pfLognormal;
 
-            for (j = 0; j < n_; j++) {
+            for (j = 0; j < nr_; j++) {
                 if ((Y[length_pdf_][j] > FLOAT_MIN) && (Y[i][j] > FLOAT_MIN)) {
                     T[0] = Y[length_pdf_][j] * (FLOAT)log(Y[i][j]);
 
@@ -2599,7 +2605,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
             while ((j <= ItMax) && Error) {
                 memset(&A, 0, 4 * sizeof(FLOAT));
 
-                for (l = 0; l < n_; l++) {
+                for (l = 0; l < nr_; l++) {
                     if ((Y[length_pdf_][l] > FLOAT_MIN) && (Y[i][l] > FLOAT_MIN)) {
                         T[0] = (FLOAT)log(Y[i][l]);
                         T[1] = (FLOAT)exp(T[0] * EnhanTheta->Theta_[1][i]);
@@ -2654,7 +2660,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
 
             memset(&A, 0, 2 * sizeof(FLOAT));
 
-            for (l = 0; l < n_; l++) {
+            for (l = 0; l < nr_; l++) {
                 if ((Y[length_pdf_][l] > FLOAT_MIN) && (Y[i][l] > FLOAT_MIN)) {
                     A[0] += Y[length_pdf_][l] * Y[i][l];
                     A[1] += Y[length_pdf_][l] * (FLOAT)log(Y[i][l]);
@@ -2708,7 +2714,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
             while ((j <= ItMax) && Error) {
                 memset(&A, 0, 4 * sizeof(FLOAT));
 
-                for (l = 0; l < n_; l++) if (Y[length_pdf_][l] > FLOAT_MIN) {
+                for (l = 0; l < nr_; l++) if (Y[length_pdf_][l] > FLOAT_MIN) {
                     T[0] = (FLOAT)exp(EnhanTheta->Theta_[2][i] * Y[i][l] / EnhanTheta->Theta_[1][i]);
 
                     A[0] += Y[length_pdf_][l] * Y[i][l];
@@ -2755,7 +2761,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
 
             memset(&A, 0, 3 * sizeof(FLOAT));
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 A[0] += Y[length_pdf_][j] * (FLOAT)cos(Y[i][j]);
                 A[1] += Y[length_pdf_][j] * (FLOAT)sin(Y[i][j]);
             }
@@ -2819,7 +2825,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
 
             T[0] = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] += Y[length_pdf_][j] * Y[i][j];
             }
 
@@ -2844,7 +2850,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
 
             T[0] = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] += Y[length_pdf_][j] * Y[i][j];
             }
 
@@ -2876,7 +2882,7 @@ int Rebmix::EnhancedEstimationKNN(FLOAT                **Y,         // Pointer t
             EnhanTheta->Theta_[0][i] = FLOAT_MAX;
             EnhanTheta->Theta_[1][i] = -FLOAT_MAX;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 if (Y[i][j] < EnhanTheta->Theta_[0][i]) {
                     EnhanTheta->Theta_[0][i] = Y[i][j];
                 }
@@ -2899,16 +2905,16 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Enhanced component parameter estimation for kernel density estimation.
 
-int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
+INT Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                   FLOAT                nl,          // Total number of observations in class l.
                                   CompnentDistribution *RigidTheta, // Rigid parameters.
                                   CompnentDistribution *LooseTheta) // Loose parameters.
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                A[4], T[2];
-    int                  i, j, l;
+    INT                  i, j, l;
     FLOAT                dP, MrgVar, TmpVar;
-    int                  Error = 0;
+    INT                  Error = 0;
 
     EnhanTheta = new CompnentDistribution(this);
 
@@ -2927,13 +2933,13 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
         case pfNormal:
             EnhanTheta->pdf_[i] = pfNormal;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 EnhanTheta->Theta_[0][i] += Y[length_pdf_][j] * Y[i][j];
             }
 
             EnhanTheta->Theta_[0][i] /= nl;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] = Y[i][j] - EnhanTheta->Theta_[0][i];
 
                 EnhanTheta->Theta_[1][i] += Y[length_pdf_][j] * T[0] * T[0];
@@ -2960,7 +2966,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
         case pfLognormal:
             EnhanTheta->pdf_[i] = pfLognormal;
 
-            for (j = 0; j < n_; j++) {
+            for (j = 0; j < nr_; j++) {
                 if ((Y[length_pdf_][j] > FLOAT_MIN) && (Y[i][j] > FLOAT_MIN)) {
                     T[0] = Y[length_pdf_][j] * (FLOAT)log(Y[i][j]);
 
@@ -2998,7 +3004,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
             while ((j <= ItMax) && Error) {
                 memset(&A, 0, 4 * sizeof(FLOAT));
 
-                for (l = 0; l < n_; l++) {
+                for (l = 0; l < nr_; l++) {
                     if ((Y[length_pdf_][l] > FLOAT_MIN) && (Y[i][l] > FLOAT_MIN)) {
                         T[0] = (FLOAT)log(Y[i][l]);
                         T[1] = (FLOAT)exp(T[0] * EnhanTheta->Theta_[1][i]);
@@ -3053,7 +3059,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
 
             memset(&A, 0, 2 * sizeof(FLOAT));
 
-            for (l = 0; l < n_; l++) {
+            for (l = 0; l < nr_; l++) {
                 if ((Y[length_pdf_][l] > FLOAT_MIN) && (Y[i][l] > FLOAT_MIN)) {
                     A[0] += Y[length_pdf_][l] * Y[i][l];
                     A[1] += Y[length_pdf_][l] * (FLOAT)log(Y[i][l]);
@@ -3107,7 +3113,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
             while ((j <= ItMax) && Error) {
                 memset(&A, 0, 4 * sizeof(FLOAT));
 
-                for (l = 0; l < n_; l++) if (Y[length_pdf_][l] > FLOAT_MIN) {
+                for (l = 0; l < nr_; l++) if (Y[length_pdf_][l] > FLOAT_MIN) {
                     T[0] = (FLOAT)exp(EnhanTheta->Theta_[2][i] * Y[i][l] / EnhanTheta->Theta_[1][i]);
 
                     A[0] += Y[length_pdf_][l] * Y[i][l];
@@ -3154,7 +3160,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
 
             memset(&A, 0, 3 * sizeof(FLOAT));
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 A[0] += Y[length_pdf_][j] * (FLOAT)cos(Y[i][j]);
                 A[1] += Y[length_pdf_][j] * (FLOAT)sin(Y[i][j]);
             }
@@ -3218,7 +3224,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
 
             T[0] = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] += Y[length_pdf_][j] * Y[i][j];
             }
 
@@ -3243,7 +3249,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
 
             T[0] = (FLOAT)0.0;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 T[0] += Y[length_pdf_][j] * Y[i][j];
             }
 
@@ -3275,7 +3281,7 @@ int Rebmix::EnhancedEstimationKDE(FLOAT                **Y,         // Pointer t
             EnhanTheta->Theta_[0][i] = FLOAT_MAX;
             EnhanTheta->Theta_[1][i] = -FLOAT_MAX;
 
-            for (j = 0; j < n_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
+            for (j = 0; j < nr_; j++) if (Y[length_pdf_][j] > FLOAT_MIN) {
                 if (Y[i][j] < EnhanTheta->Theta_[0][i]) {
                     EnhanTheta->Theta_[0][i] = Y[i][j];
                 }
@@ -3298,7 +3304,7 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Enhanced component parameter estimation for histogram.
 
-int Rebmix::EnhancedEstimationH(int                  k,           // Total number of bins.
+INT Rebmix::EnhancedEstimationH(INT                  k,           // Total number of bins.
                                 FLOAT                **Y,         // Pointer to the input points [y0,...,yd-1,kl,k].
                                 FLOAT                nl,          // Total number of observations in class l.
                                 FLOAT                *h,          // Sides of the hypersquare.
@@ -3307,9 +3313,9 @@ int Rebmix::EnhancedEstimationH(int                  k,           // Total numbe
 {
     CompnentDistribution *EnhanTheta = NULL;
     FLOAT                A[4], T[2];
-    int                  i, j, l;
+    INT                  i, j, l;
     FLOAT                dP, MrgVar, TmpVar;
-    int                  Error = 0;
+    INT                  Error = 0;
 
     EnhanTheta = new CompnentDistribution(this);
 
@@ -3698,13 +3704,13 @@ E0: if (EnhanTheta) delete EnhanTheta;
 
 // Moments calculation.
 
-int Rebmix::MomentsCalculation(CompnentDistribution *CmpTheta, // Component parameters.
+INT Rebmix::MomentsCalculation(CompnentDistribution *CmpTheta, // Component parameters.
                                FLOAT                *FirstM,   // First moment.
                                FLOAT                *SecondM)  // Second moment.
 {
     FLOAT R;
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     for (i = 0; i < length_pdf_; i++) {
         switch (CmpTheta->pdf_[i]) {
@@ -3784,7 +3790,7 @@ void BayesWeibullParameters(FLOAT FirstM,  // First moment.
     FLOAT A;
     FLOAT xl, xm, xh, fl, fm, fh;
     FLOAT i;
-    int   Error = 0, Stop;
+    INT   Error = 0, Stop;
 
     A = (FLOAT)log(SecondM / FirstM / FirstM); xl = 0.001; xh = (FLOAT)10.0;
 
@@ -3849,7 +3855,7 @@ void BayesvonMisesParameters(FLOAT FirstM,  // First moment.
     FLOAT A[3];
     FLOAT dP, theta1, theta2;
     FLOAT i;
-    int   Error = 0;
+    INT   Error = 0;
 
     A[2] = (FLOAT)sqrt((FLOAT)pow(FirstM, (FLOAT)2.0) + (FLOAT)pow(SecondM, (FLOAT)2.0));
 
@@ -3900,18 +3906,18 @@ E0: return;
 
 // Bayes classification of the remaining observations for k-nearest neighbour.
 
-int Rebmix::BayesClassificationKNN(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                   int                  c,          // Number of components.
+INT Rebmix::BayesClassificationKNN(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
+                                   INT                  c,          // Number of components.
                                    FLOAT                *W,         // Component weights.
                                    CompnentDistribution **MixTheta, // Mixture parameters.
                                    FLOAT                **FirstM,   // First moments.
                                    FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, l, outlier, Outlier = 0;
+    INT   i, j, l, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
             l = 0;
 
@@ -4016,18 +4022,18 @@ E0: return Error;
 
 // Bayes classification of the remaining observations for kernel density estimation.
 
-int Rebmix::BayesClassificationKDE(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                   int                  c,          // Number of components.
+INT Rebmix::BayesClassificationKDE(FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
+                                   INT                  c,          // Number of components.
                                    FLOAT                *W,         // Component weights.
                                    CompnentDistribution **MixTheta, // Mixture parameters.
                                    FLOAT                **FirstM,   // First moments.
                                    FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, l, outlier, Outlier = 0;
+    INT   i, j, l, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
             l = 0;
 
@@ -4132,17 +4138,17 @@ E0: return Error;
 
 // Bayes classification of the remaining observations for histogram.
 
-int Rebmix::BayesClassificationH(int                  k,          // Total number of bins.
+INT Rebmix::BayesClassificationH(INT                  k,          // Total number of bins.
                                  FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1].
-                                 int                  c,          // Number of components.
+                                 INT                  c,          // Number of components.
                                  FLOAT                *W,         // Component weights.
                                  CompnentDistribution **MixTheta, // Mixture parameters.
                                  FLOAT                **FirstM,   // First moments.
                                  FLOAT                **SecondM)  // Second moments.
 {
-    int   i, j, l, outlier, Outlier = 0;
+    INT   i, j, l, outlier, Outlier = 0;
     FLOAT CmpDist, Max, Tmp, dW, N = (FLOAT)0.0;
-    int   Error = 0;
+    INT   Error = 0;
 
     for (i = 0; i < k; i++) {
         if (Y[length_pdf_][i] > FLOAT_MIN) {
@@ -4247,12 +4253,12 @@ int Rebmix::BayesClassificationH(int                  k,          // Total numbe
 E0: return Error;
 } // BayesClassificationH
 
-int Rebmix::DegreesOffreedom(int                  c,          // Number of components.
+INT Rebmix::DegreesOffreedom(INT                  c,          // Number of components.
                              CompnentDistribution **MixTheta, // Mixture parameters.
-                             int                  *M)         // Degrees of freedom.
+                             INT                  *M)         // Degrees of freedom.
 {
-    int i, j;
-    int Error = 0;
+    INT i, j;
+    INT Error = 0;
 
     *M = c - 1;
 
@@ -4315,16 +4321,16 @@ int Rebmix::DegreesOffreedom(int                  c,          // Number of compo
 
 // Returns mixture p.d.f..
 
-int Rebmix::MixtureDist(int                  j,          // Indey of observation.  
+INT Rebmix::MixtureDist(INT                  j,          // Indey of observation.  
                         FLOAT                **Y,        // Pointer to the input array [y0,...,yd-1,...]
-                        int                  c,          // Number of components.
+                        INT                  c,          // Number of components.
                         FLOAT                *W,         // Component weights.
                         CompnentDistribution **MixTheta, // Mixture parameters.
                         FLOAT                *MixDist)   // Mixture distribution.
 {
     FLOAT CmpDist;
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     *MixDist = (FLOAT)0.0;
 
@@ -4341,17 +4347,17 @@ E0: return Error;
 
 // Returns mixture probability.
 
-int Rebmix::MixtureDist(FLOAT                logV,       // Logarithm of volume of the hypersquare.
-                        int                  j,          // Indey of observation.  
+INT Rebmix::MixtureDist(FLOAT                logV,       // Logarithm of volume of the hypersquare.
+                        INT                  j,          // Indey of observation.  
                         FLOAT                **Y,        // Pointer to the input array [y0,...,yd-1,...]
-                        int                  c,          // Number of components.
+                        INT                  c,          // Number of components.
                         FLOAT                *W,         // Component weights.
                         CompnentDistribution **MixTheta, // Mixture parameters.
                         FLOAT                *MixDist)   // Mixture distribution.
 {
     FLOAT logCmpDist;
-    int   i;
-    int   Error = 0;
+    INT   i;
+    INT   Error = 0;
 
     *MixDist = (FLOAT)0.0;
 
@@ -4369,15 +4375,17 @@ E0: return Error;
 /// Panic Branislav
 // Initializes the EM algorithm or its variant for the initial parameters assesed by the REBMIX algorithm.
 
-int Rebmix::EMInitialize()
+INT Rebmix::EMInitialize()
 {
-    int Error = 0;
+    INT Error = 0;
 
     EM_ = new Emmix();
 
     Error = EM_ == NULL; if (Error) goto E0;
 
     Error = EM_->Initialize(n_,
+                            nr_,
+                            nc_,
                             Y_,
                             cmax_, 
                             length_pdf_, 
@@ -4398,11 +4406,11 @@ E0: return Error;
 
 // Runs the EM algorithm or its variant for the parameters assesed by the REBMIX algorithm.
 
-int Rebmix::EMRun(int                  *c,         // Number of components.
+INT Rebmix::EMRun(INT                  *c,         // Number of components.
                   FLOAT                *W,         // Initial weights of the components in mixture model (assesed by REBMIX).
                   CompnentDistribution **MixTheta) // Initial parameters of the components in mixture model (assesed by REBMIX).  
 {
-    int Error = 0;
+    INT Error = 0;
 
     Error = *c < 1; if (Error) goto E0;
 
@@ -4418,19 +4426,19 @@ E0: return Error;
 
 // Returns information criterion for k-nearest neighbour.
 
-int Rebmix::InformationCriterionKNN(int                  k,          // k-nearest neighbours.
+INT Rebmix::InformationCriterionKNN(INT                  k,          // k-nearest neighbours.
                                     FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1,kl,logV,R].
-                                    int                  c,          // Number of components.
+                                    INT                  c,          // Number of components.
                                     FLOAT                *W,         // Component weights.
                                     CompnentDistribution **MixTheta, // Mixture parameters.
                                     FLOAT                *IC,        // Information criterion.
                                     FLOAT                *logL,      // log-likelihood.
-                                    int                  *M,         // Degrees of freedom.
+                                    INT                  *M,         // Degrees of freedom.
                                     FLOAT                *D)         // Total of positive relative deviations.
 {
-    int   i, j;
+    INT   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
-    int   Error = 0;
+    INT   Error = 0;
 
     Error = DegreesOffreedom(c, MixTheta, M);
 
@@ -4438,7 +4446,7 @@ int Rebmix::InformationCriterionKNN(int                  k,          // k-neares
 
     *IC = *logL = EN = *D = SSE = PW = K = PC = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Error = MixtureDist(Y[length_pdf_ + 1][i], i, Y, c, W, MixTheta, &MixDist);
 
         if (Error) goto E0;
@@ -4563,19 +4571,19 @@ E0: return Error;
 
 // Returns information criterion for kernel density estimation.
 
-int Rebmix::InformationCriterionKDE(FLOAT                logV,       // Logarithm of volume of the hypersquare.
+INT Rebmix::InformationCriterionKDE(FLOAT                logV,       // Logarithm of volume of the hypersquare.
                                     FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1,kl,k].
-                                    int                  c,          // Number of components.
+                                    INT                  c,          // Number of components.
                                     FLOAT                *W,         // Component weights.
                                     CompnentDistribution **MixTheta, // Mixture parameters.
                                     FLOAT                *IC,        // Information criterion.
                                     FLOAT                *logL,      // log-likelihood.
-                                    int                  *M,         // Degrees of freedom.
+                                    INT                  *M,         // Degrees of freedom.
                                     FLOAT                *D)         // Total of positive relative deviations.
 {
-    int   i, j;
+    INT   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
-    int   Error = 0;
+    INT   Error = 0;
 
     Error = DegreesOffreedom(c, MixTheta, M);
 
@@ -4583,7 +4591,7 @@ int Rebmix::InformationCriterionKDE(FLOAT                logV,       // Logarith
 
     *IC = *logL = EN = *D = SSE = PW = K = PC = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Error = MixtureDist(logV, i, Y, c, W, MixTheta, &MixDist);
 
         if (Error) goto E0;
@@ -4708,20 +4716,20 @@ E0: return Error;
 
 // Returns information criterion for histogram.
 
-int Rebmix::InformationCriterionH(FLOAT                logV,       // Logarithm of volume of the hypersquare.
-                                  int                  k,          // Total number of bins.
+INT Rebmix::InformationCriterionH(FLOAT                logV,       // Logarithm of volume of the hypersquare.
+                                  INT                  k,          // Total number of bins.
                                   FLOAT                **Y,        // Pointer to the input points [y0,...,yd-1,kl].
-                                  int                  c,          // Number of components.
+                                  INT                  c,          // Number of components.
                                   FLOAT                *W,         // Component weights.
                                   CompnentDistribution **MixTheta, // Mixture parameters.
                                   FLOAT                *IC,        // Information criterion.
                                   FLOAT                *logL,      // log-likelihood.
-                                  int                  *M,         // Degrees of freedom.
+                                  INT                  *M,         // Degrees of freedom.
                                   FLOAT                *D)         // Total of positive relative deviations.
 {
-    int   i, j;
+    INT   i, j;
     FLOAT E, SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
-    int   Error = 0;
+    INT   Error = 0;
 
     Error = DegreesOffreedom(c, MixTheta, M);
 
@@ -4743,41 +4751,85 @@ int Rebmix::InformationCriterionH(FLOAT                logV,       // Logarithm 
         SSE += E * E;
     }
 
-    for (i = 0; i < n_; i++) {
-        Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
+    if (Y_type_ == 0) {
+        for (i = 0; i < nr_; i++) {
+            Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
 
-        if (Error) goto E0;
+            if (Error) goto E0;
 
-        if (MixDist > FLOAT_MIN) {
-            *logL += (FLOAT)log(MixDist);
-        }
-        else {
-            *logL += (FLOAT)log(FLOAT_MIN);
-        }
-
-        switch (Criterion_) {
-        case icAWE: case icCLC: case icICL: case icPC: case icICLBIC:
-            for (j = 0; j < c; j++) {
-                Error = ComponentDist(i, Y_, MixTheta[j], &CmpDist, NULL);
-
-                if (Error) goto E0;
-
-                if (MixDist > FLOAT_MIN) {
-                    tau = W[j] * CmpDist / MixDist;
-                }
-                else {
-                    tau = (FLOAT)0.0;
-                }
-
-                EN -= xlogx(tau); PC += tau * tau;
+            if (MixDist > FLOAT_MIN) {
+                *logL += (FLOAT)log(MixDist);
+            }
+            else {
+                *logL += (FLOAT)log(FLOAT_MIN);
             }
 
-            break;
-        case icSSE:
-            break;
-        case icAIC: case icAIC3: case icAIC4: case icAICc: case icBIC: case icCAIC: case icHQC: case icMDL2: case icMDL5: case icD: default:
-            break;
+            switch (Criterion_) {
+            case icAWE: case icCLC: case icICL: case icPC: case icICLBIC:
+                for (j = 0; j < c; j++) {
+                    Error = ComponentDist(i, Y_, MixTheta[j], &CmpDist, NULL);
+
+                    if (Error) goto E0;
+
+                    if (MixDist > FLOAT_MIN) {
+                        tau = W[j] * CmpDist / MixDist;
+                    }
+                    else {
+                        tau = (FLOAT)0.0;
+                    }
+
+                    EN -= xlogx(tau); PC += tau * tau;
+                }
+
+                break;
+            case icSSE:
+                break;
+            case icAIC: case icAIC3: case icAIC4: case icAICc: case icBIC: case icCAIC: case icHQC: case icMDL2: case icMDL5: case icD: default:
+                break;
+            }
         }
+    }
+    else
+    if (Y_type_ == 1) {
+        for (i = 0; i < k; i++) {
+            Error = MixtureDist(i, Y, c, W, MixTheta, &MixDist);
+
+            if (Error) goto E0;
+
+            if (MixDist > FLOAT_MIN) {
+                *logL += Y[length_pdf_][i] * (FLOAT)log(MixDist);
+            }
+            else {
+                *logL += (FLOAT)log(FLOAT_MIN);
+            }
+
+            switch (Criterion_) {
+            case icAWE: case icCLC: case icICL: case icPC: case icICLBIC:
+                for (j = 0; j < c; j++) {
+                    Error = ComponentDist(i, Y, MixTheta[j], &CmpDist, NULL);
+
+                    if (Error) goto E0;
+
+                    if (MixDist > FLOAT_MIN) {
+                        tau = W[j] * CmpDist / MixDist;
+                    }
+                    else {
+                        tau = (FLOAT)0.0;
+                    }
+
+                    EN -= Y[length_pdf_][i] * xlogx(tau); PC += Y[length_pdf_][i] * tau * tau;
+                }
+
+                break;
+            case icSSE:
+                break;
+            case icAIC: case icAIC3: case icAIC4: case icAICc: case icBIC: case icCAIC: case icHQC: case icMDL2: case icMDL5: case icD: default:
+                break;
+            }
+        }
+    }
+    else {
+        Error = 1; goto E0;
     }
 
     switch (Criterion_) {
@@ -4854,28 +4906,164 @@ int Rebmix::InformationCriterionH(FLOAT                logV,       // Logarithm 
 E0: return Error;
 } // InformationCriterionH
 
+// Returns information criterion for dataset.
+
+INT Rebmix::InformationCriterion(INT                  c,          // Number of components.
+                                 FLOAT                *W,         // Component weights.
+                                 CompnentDistribution **MixTheta, // Mixture parameters.
+                                 FLOAT                *IC,        // Information criterion.
+                                 FLOAT                *logL,      // log-likelihood.
+                                 INT                  *M,         // Degrees of freedom.
+                                 FLOAT                *D)         // Total of positive relative deviations.
+{
+    INT   i, j;
+    FLOAT SSE, EN, PW, K, PC, CmpDist, MixDist, tau;
+    INT   Error = 0;
+
+    Error = DegreesOffreedom(c, MixTheta, M);
+
+    if (Error) goto E0;
+
+    *IC = *logL = EN = *D = SSE = PW = K = PC = (FLOAT)0.0;
+
+    if (Y_type_ == 0) {
+        for (i = 0; i < n_; i++) {
+            Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
+
+            if (Error) goto E0;
+
+            if (MixDist > FLOAT_MIN) {
+                *logL += (FLOAT)log(MixDist);
+            }
+            else {
+                *logL += (FLOAT)log(FLOAT_MIN);
+            }
+
+            switch (Criterion_) {
+            case icAWE: case icCLC: case icICL: case icPC: case icICLBIC:
+                for (j = 0; j < c; j++) {
+                    Error = ComponentDist(i, Y_, MixTheta[j], &CmpDist, NULL);
+
+                    if (Error) goto E0;
+
+                    if (MixDist > FLOAT_MIN) {
+                        tau = W[j] * CmpDist / MixDist;
+                    }
+                    else {
+                        tau = (FLOAT)0.0;
+                    }
+
+                    EN -= xlogx(tau); PC += tau * tau;
+                }
+
+                break;
+            case icSSE:
+                break;
+            case icAIC: case icAIC3: case icAIC4: case icAICc: case icBIC: case icCAIC: case icHQC: case icMDL2: case icMDL5: case icD: default:
+                break;
+            }
+        }
+    }
+    else {
+      Error = 1; goto E0;
+    }
+
+    switch (Criterion_) {
+    case icAIC: // AIC - Akaike information criterion Akaike (1973).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M);
+
+        break;
+    case icAIC3: // AIC3 - Modified Akaike information criterion Smith & Spiegelhalter (1980).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)3.0 * (*M);
+
+        break;
+    case icAIC4: // AIC4 - Modified Akaike information criterion Smith & Spiegelhalter (1980).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)4.0 * (*M);
+
+        break;
+    case icAICc: // AICc - Akaike second-order corrected information criterion for small sample sizes Hurvich & Tsai (1989).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * ((FLOAT)1.0 + ((*M) + 1) / (n_ - (*M) - (FLOAT)1.0));
+
+        break;
+    case icBIC: // BIC - Bayesian information criterion Schwarz (1978).
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * (FLOAT)log((FLOAT)n_);
+
+        break;
+    case icCAIC: // CAIC - Consistent Akaike information criterion Bozdogan (1987).
+        *IC = -(FLOAT)2.0 * (*logL) + (*M) * ((FLOAT)log((FLOAT)n_) + (FLOAT)1.0);
+
+        break;
+    case icHQC: // HQC - Hannan-Quinn information criterion Hannan & Quinn (1979).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log((FLOAT)log((FLOAT)n_));
+
+        break;
+    case icMDL2: // MDL2 - Minimum description length Liang et al.(1992).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * (*M) * (FLOAT)log((FLOAT)n_);
+
+        break;
+    case icMDL5: // MDL5 - Minimum description length Liang et al.(1992).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)5.0 * (*M) * (FLOAT)log((FLOAT)n_);
+
+        break;
+    case icAWE: // AWE - Approximate weight of evidence criterion Banfield & Raftery (1993).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * (*M) * ((FLOAT)3.0 / (FLOAT)2.0 + (FLOAT)log((FLOAT)n_));
+
+        break;
+    case icCLC: // CLC - Classification likelihood criterion Biernacki & Govaert (1997).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN;
+
+        break;
+    case icICL: // ICL - Integrated classification likelihood Biernacki et al.(1998).
+        for (j = 0; j < c; j++) {
+            PW += W[j] * (FLOAT)log(W[j]); K += (FLOAT)Gammaln(W[j] * n_ + (FLOAT)0.5);
+        }
+
+        K += Gammaln(c * (FLOAT)0.5) - c * Gammaln((FLOAT)0.5) - Gammaln(n_ + c * (FLOAT)0.5);
+
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (FLOAT)2.0 * n_ * PW - (FLOAT)2.0 * K + ((*M) - c + (FLOAT)1.0) * (FLOAT)log((FLOAT)n_);
+
+        break;
+    case icPC: // PC - Partition coeficient Bezdek (1981).
+        *IC = PC;
+
+        break;
+    case icICLBIC: // ICL-BIC - Integrated classification likelihood criterion Biernacki et al.(1998).
+        *IC = -(FLOAT)2.0 * (*logL) + (FLOAT)2.0 * EN + (*M) * (FLOAT)log((FLOAT)n_);
+
+        break;
+    case icD: // D - Total of positive relative deviations Nagode & Fajdiga (2011).
+        *IC = *D;
+
+        break;
+    case icSSE: // SSE - Sum of squares error Bishop (1998).
+        *IC = (FLOAT)0.5 * SSE;
+    }
+
+E0: return Error;
+} // InformationCriterion
+
 // Returns combined components.
 
-int Rebmix::CombineComponents(int                  c,          // Number of components.
-                              FLOAT                *W,         // Component weights.
-                              CompnentDistribution **MixTheta, // Mixture parameters.
-                              FLOAT                *tau,       // Conditional probabilities.
-                              int                  *F,         // From components.
-                              int                  *T,         // To components.
-                              FLOAT                *EN,        // Entropy.
-                              FLOAT                *ED)        // Entropy decrease.
+INT Rebmix::CombineComponentsEntropy(INT                  c,          // Number of components.
+                                     FLOAT                *W,         // Component weights.
+                                     CompnentDistribution **MixTheta, // Mixture parameters.
+                                     FLOAT                *tau,       // Conditional probabilities.
+                                     INT                  *F,         // From components.
+                                     INT                  *T,         // To components.
+                                     FLOAT                *EN,        // Entropy.
+                                     FLOAT                *ED)        // Entropy decrease.
 {
-    int   *C = NULL, i, ii, j, jj, II, J, k, l;
+    INT   *C = NULL, i, ii, j, jj, II, J, k, l;
     FLOAT CmpDist, ed, en, MixDist, *Tmp = NULL;
-    int   Error = 0;
+    INT   Error = 0;
 
-    Tmp = (FLOAT*)malloc(n_ * c * sizeof(FLOAT));
+    Tmp = (FLOAT*)malloc(nr_ * c * sizeof(FLOAT));
 
     Error = NULL == Tmp; if (Error) goto E0;
 
     en = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
 
         if (Error) goto E0;
@@ -4890,7 +5078,15 @@ int Rebmix::CombineComponents(int                  c,          // Number of comp
 
                 l = k + j;
 
-                Tmp[l] = tau[l] = W[j] * CmpDist / MixDist; en -= xlogx(tau[l]);
+                Tmp[l] = tau[l] = W[j] * CmpDist / MixDist; 
+                
+                if (Y_type_ == 0) {
+                    en -= xlogx(tau[l]);
+                }
+                else
+                if (Y_type_ == 1) {
+                    en -= Y_[length_pdf_][i] * xlogx(tau[l]);
+                }
             }
         }
         else {
@@ -4902,7 +5098,7 @@ int Rebmix::CombineComponents(int                  c,          // Number of comp
         }
     }
 
-    C = (int*)malloc(c * sizeof(int));
+    C = (INT*)malloc(c * sizeof(INT));
 
     Error = NULL == C; if (Error) goto E0;
 
@@ -4919,10 +5115,16 @@ int Rebmix::CombineComponents(int                  c,          // Number of comp
             for (j = ii + 1; j < i; j++) {
                 ed = (FLOAT)0.0;
 
-                for (jj = 0; jj < n_; jj++) {
+                for (jj = 0; jj < nr_; jj++) {
                     k = jj * c + ii; l = jj * c + j;
 
-                    ed += xlogx(Tmp[k] + Tmp[l]) - xlogx(Tmp[k]) - xlogx(Tmp[l]);
+                    if (Y_type_ == 0) {
+                        ed += xlogx(Tmp[k] + Tmp[l]) - xlogx(Tmp[k]) - xlogx(Tmp[l]);
+                    }
+                    else
+                    if (Y_type_ == 1) {
+                        ed += Y_[length_pdf_][jj] * (xlogx(Tmp[k] + Tmp[l]) - xlogx(Tmp[k]) - xlogx(Tmp[l]));
+                    }
                 }
 
                 if (ed >= ED[i - 2]) {
@@ -4933,7 +5135,7 @@ int Rebmix::CombineComponents(int                  c,          // Number of comp
 
         F[i - 2] = C[J] + 1, T[i - 2] = C[II] + 1; EN[i - 2] = (FLOAT)0.0;
 
-        for (j = 0; j < n_; j++) {
+        for (j = 0; j < nr_; j++) {
             k = j * c;
 
             Tmp[k + II] += Tmp[k + J];
@@ -4943,7 +5145,13 @@ int Rebmix::CombineComponents(int                  c,          // Number of comp
             }
 
             for (ii = 0; ii < i - 1; ii++) {
-                EN[i - 2] -= xlogx(Tmp[k + ii]);
+                if (Y_type_ == 0) {
+                    EN[i - 2] -= xlogx(Tmp[k + ii]);
+                }
+                else
+                if (Y_type_ == 1) {
+                    EN[i - 2] -= Y_[length_pdf_][j] * xlogx(Tmp[k + ii]);
+                }
             }
         }
 
@@ -4959,29 +5167,29 @@ E0: if (C) free(C);
     if (Tmp) free(Tmp);
 
     return Error;
-} // CombineComponents
+} // CombineComponentsEntropy
 
 /// Panic Branislav
-int Rebmix::CombineComponentsDemp(int                  c,          // Number of components.
+INT Rebmix::CombineComponentsDemp(INT                  c,          // Number of components.
                                   FLOAT                *W,         // Component weights.
                                   CompnentDistribution **MixTheta, // Mixture parameters.
                                   FLOAT                *tau,       // Conditional probabilities.
-                                  int                  *F,         // From components.
-                                  int                  *T,         // To components.
+                                  INT                  *F,         // From components.
+                                  INT                  *T,         // To components.
                                   FLOAT                *EN,        // Entropy.
                                   FLOAT                *ED)        // Entropy decrease.
 {
-    int   *C = NULL, *L = NULL, i, ii, j, jj, II, J, k, l;
+    INT   *C = NULL, *L = NULL, i, ii, j, jj, II, J, k, l;
     FLOAT CmpDist, ed, en, MixDist, *Tmp = NULL, *TmpW = NULL;
-    int   Error = 0;
+    INT   Error = 0;
 
-    Tmp = (FLOAT*)malloc(n_ * c * sizeof(FLOAT));
+    Tmp = (FLOAT*)malloc(nr_ * c * sizeof(FLOAT));
 
     Error = NULL == Tmp; if (Error) goto E0;
 
     en = (FLOAT)0.0;
 
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
 
         if (Error) goto E0;
@@ -4996,7 +5204,15 @@ int Rebmix::CombineComponentsDemp(int                  c,          // Number of 
 
                 l = k + j;
 
-                Tmp[l] = tau[l] = W[j] * CmpDist / MixDist; en -= xlogx(tau[l]);
+                Tmp[l] = tau[l] = W[j] * CmpDist / MixDist;
+
+                if (Y_type_ == 0) {
+                    en -= xlogx(tau[l]);
+                }
+                else
+                if (Y_type_ == 1) {
+                    en -= Y_[length_pdf_][i] * xlogx(tau[l]);
+                }
             }
         }
         else {
@@ -5008,11 +5224,11 @@ int Rebmix::CombineComponentsDemp(int                  c,          // Number of 
         }
     }
 
-    L = (int*)malloc(n_* c * sizeof(int));
+    L = (INT*)malloc(nr_* c * sizeof(INT));
     
     Error = NULL == L; if (Error) goto E0;
     
-    for (i = 0; i < n_; i++) {
+    for (i = 0; i < nr_; i++) {
         k = i * c; J = 0;
         
         L[k] = 0;
@@ -5035,7 +5251,7 @@ int Rebmix::CombineComponentsDemp(int                  c,          // Number of 
 
     }
 
-    C = (int*)malloc(c * sizeof(int));
+    C = (INT*)malloc(c * sizeof(INT));
 
     Error = NULL == C; if (Error) goto E0;
 
@@ -5056,15 +5272,27 @@ int Rebmix::CombineComponentsDemp(int                  c,          // Number of 
             for (j = ii + 1; j < i; j++) {
                 ed = en = (FLOAT)0.0;
 
-                for (jj = 0; jj < n_; jj++) {
+                for (jj = 0; jj < nr_; jj++) {
                     k = jj * c + ii; l = jj * c + j;
 
                     if (L[k]) {
-                        ed += Tmp[l];
+                        if (Y_type_ == 0) {
+                            ed += Tmp[l];
+                        }
+                        else
+                        if (Y_type_ == 1) {
+                            ed += Y_[length_pdf_][jj] * Tmp[l];
+                        }
                     }
                     else
                     if (L[l]) {
-                        en += Tmp[k];
+                        if (Y_type_ == 0){
+                            en += Tmp[k];
+                        }
+                        else
+                        if(Y_type_ == 1) {
+                            en += Y_[length_pdf_][jj] * Tmp[k];  
+                        }
                     }
                 }
 
@@ -5084,7 +5312,7 @@ int Rebmix::CombineComponentsDemp(int                  c,          // Number of 
 
         TmpW[II] += TmpW[J];
 
-        for (j = 0; j < n_; j++) {
+        for (j = 0; j < nr_; j++) {
             k = j * c;
 
             Tmp[k + II] += Tmp[k + J];
@@ -5125,7 +5353,7 @@ E0: if (TmpW) free(TmpW);
 
 // REBMIX algorithm for k-nearest neighbours.
 
-int Rebmix::REBMIXKNN()
+INT Rebmix::REBMIXKNN()
 {
     FLOAT                **Y = NULL;
     FLOAT                *ymin = NULL, *ymax = NULL, *h = NULL;
@@ -5133,15 +5361,15 @@ int Rebmix::REBMIXKNN()
     FLOAT                *W = NULL;
     CompnentDistribution **RigidTheta = NULL, **LooseTheta = NULL;
     FLOAT                **FirstM = NULL, **SecondM = NULL;
-    int                  opt_length;
-    int                  *O = NULL, *opt_c = NULL;
+    INT                  opt_length;
+    INT                  *O = NULL, *opt_c = NULL;
     FLOAT                *opt_IC = NULL;
     FLOAT                *opt_logL = NULL;
     FLOAT                *opt_D = NULL;
-    int                  c = 0, i, I, j, J, l, m, M, EMM;
+    INT                  c = 0, i, I, j, J, l, m, M, EMM;
     FLOAT                Dmin, r, lognl, nl, elp, eln, epsilonlmax, logfl, fl, Dl, f, IC, logL, D, EMIC, EMlogL, EMD;
     FLOAT                A = (FLOAT)0.0, ar;
-    int                  Error = 0, Stop = 0, Found = 0, Outlier = 0, all_c = 0, emp;
+    INT                  Error = 0, Stop = 0, Found = 0, Outlier = 0, all_c = 0, emp;
 
     // Allocation and initialisation.
 
@@ -5165,7 +5393,7 @@ int Rebmix::REBMIXKNN()
 
     Error = NULL == W_; if (Error) goto E0;
 
-    MixTheta_ = new CompnentDistribution* [(unsigned int)cmax_];
+    MixTheta_ = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == MixTheta_; if (Error) goto E0;
 
@@ -5181,7 +5409,7 @@ int Rebmix::REBMIXKNN()
 
     opt_length_ = ItMax;
 
-    opt_c_ = (int*)malloc(ItMax * sizeof(int));
+    opt_c_ = (INT*)malloc(ItMax * sizeof(INT));
 
     Error = NULL == opt_c_; if (Error) goto E0;
 
@@ -5199,11 +5427,11 @@ int Rebmix::REBMIXKNN()
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
 
-    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+    all_I_ = (INT*)calloc((size_t)all_length_, sizeof(INT));
 
     Error = NULL == all_I_; if (Error) goto E0;
 
-    all_K_ = (int*)calloc((size_t)(all_length_ * length_pdf_), sizeof(int));
+    all_K_ = (INT*)calloc((size_t)(all_length_ * length_pdf_), sizeof(INT));
 
     Error = NULL == all_K_; if (Error) goto E0;
 
@@ -5228,12 +5456,12 @@ int Rebmix::REBMIXKNN()
     Error = NULL == Y; if (Error) goto E0;
 
     for (i = 0; i < length_pdf_ + 3; i++) {
-        Y[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+        Y[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
         Error = NULL == Y[i]; if (Error) goto E0;
 
         if (i < length_pdf_) {
-            for (j = 0; j < n_; j++) Y[i][j] = Y_[i][j];
+            for (j = 0; j < nr_; j++) Y[i][j] = Y_[i][j];
         }
     }
 
@@ -5245,7 +5473,7 @@ int Rebmix::REBMIXKNN()
         for (i = 0; i < length_pdf_; i++) {
             ymin[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] < ymin[i]) ymin[i] = Y_[i][j];
             }
         }
@@ -5264,7 +5492,7 @@ int Rebmix::REBMIXKNN()
         for (i = 0; i < length_pdf_; i++) {
             ymax[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] > ymax[i]) ymax[i] = Y_[i][j];
             }
         }
@@ -5283,15 +5511,15 @@ int Rebmix::REBMIXKNN()
         h[i] = ymax[i] - ymin[i];
     }
 
-    R = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    R = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == R; if (Error) goto E0;
 
-    E = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    E = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == E; if (Error) goto E0;
 
-    Epsilon = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    Epsilon = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == Epsilon; if (Error) goto E0;
 
@@ -5299,7 +5527,7 @@ int Rebmix::REBMIXKNN()
 
     Error = NULL == W; if (Error) goto E0;
 
-    RigidTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    RigidTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == RigidTheta; if (Error) goto E0;
 
@@ -5317,7 +5545,7 @@ int Rebmix::REBMIXKNN()
         if (Error) goto E0;
     }
 
-    LooseTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    LooseTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == LooseTheta; if (Error) goto E0;
 
@@ -5357,7 +5585,7 @@ int Rebmix::REBMIXKNN()
 
     opt_length = ItMax;
 
-    opt_c = (int*)malloc(opt_length * sizeof(int));
+    opt_c = (INT*)malloc(opt_length * sizeof(INT));
 
     Error = NULL == opt_c; if (Error) goto E0;
 
@@ -5373,7 +5601,7 @@ int Rebmix::REBMIXKNN()
 
     Error = NULL == opt_D; if (Error) goto E0;
 
-    O = (int*)malloc(n_ * sizeof(int));
+    O = (INT*)malloc(nr_ * sizeof(INT));
 
     Error = NULL == O; if (Error) goto E0;
 
@@ -5399,7 +5627,7 @@ int Rebmix::REBMIXKNN()
 
         Error = OptMixTheta_[i].W == NULL; if (Error) goto E0;
 
-        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned int)cmax_];
+        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned INT)cmax_];
 
         Error = OptMixTheta_[i].MixTheta == NULL; if (Error) goto E0;
 
@@ -5467,12 +5695,14 @@ int Rebmix::REBMIXKNN()
         while (J <= ItMax) {
             l = 0; r = (FLOAT)n_; nl = (FLOAT)n_;
 
-            for (j = 0; j < n_; j++) O[j] = 1;
+            for (j = 0; j < nr_; j++) O[j] = 1;
 
             // Middle loop.
 
             while (nl / n_ > Dmin * l) {
-                if (l >= cmax_) goto E2;
+                if (l >= cmax_) {
+                    Stop = 1; goto E2;
+                }
 
                 // Global mode detection.
 
@@ -5480,7 +5710,7 @@ int Rebmix::REBMIXKNN()
 
                 if (Error) goto E0;
 
-                I = 1; W[l] = nl / n_; memset(R, 0, n_ * sizeof(FLOAT));
+                I = 1; W[l] = nl / n_; memset(R, 0, nr_ * sizeof(FLOAT));
 
                 // Inner loop.
 
@@ -5493,7 +5723,7 @@ int Rebmix::REBMIXKNN()
 
                     elp = eln = epsilonlmax = (FLOAT)0.0; lognl = (FLOAT)log(nl);
 
-                    for (j = 0; j < n_; j++) {
+                    for (j = 0; j < nr_; j++) {
                         E[j] = Epsilon[j] = (FLOAT)0.0;
 
                         if ((Y[length_pdf_][j] > FLOAT_MIN) || (R[j] > FLOAT_MIN)) {
@@ -5536,14 +5766,14 @@ int Rebmix::REBMIXKNN()
 
                         epsilonlmax *= (FLOAT)1.0 - ar;
 
-                        for (j = 0; j < n_; j++) if (Epsilon[j] > epsilonlmax) {
+                        for (j = 0; j < nr_; j++) if (Epsilon[j] > epsilonlmax) {
                             Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
                         }
 
                         if (eln > FLOAT_MIN) {
                             elp = elp / Dl - nl; if (eln > elp) f = elp / eln; else f = (FLOAT)1.0;
 
-                            for (j = 0; j < n_; j++) if (E[j] < (FLOAT)0.0) {
+                            for (j = 0; j < nr_; j++) if (E[j] < (FLOAT)0.0) {
                                 E[j] *= f; Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
                             }
                         }
@@ -5556,7 +5786,7 @@ int Rebmix::REBMIXKNN()
 
                 // Outlier detection.
 
-                for (j = 0; j < n_; j++) {
+                for (j = 0; j < nr_; j++) {
                     Error = ComponentDist(j, Y, LooseTheta[l], &fl, &Outlier);
 
                     if (Error) goto E0;
@@ -5572,7 +5802,7 @@ int Rebmix::REBMIXKNN()
 
                 c = ++l;
 
-                r -= nl; nl = r; for (j = 0; j < n_; j++) Y[length_pdf_][j] = R[j];
+                r -= nl; nl = r; for (j = 0; j < nr_; j++) Y[length_pdf_][j] = R[j];
 
                 Stop = c >= n_;
 
@@ -5581,11 +5811,11 @@ int Rebmix::REBMIXKNN()
 
             // Bayes classification of the remaining observations.
 
-            Error = BayesClassificationKNN(Y, c, W, LooseTheta, FirstM, SecondM);
+E2:         Error = BayesClassificationKNN(Y, c, W, LooseTheta, FirstM, SecondM);
 
             if (Error) goto E0;
 
-            for (j = 0; j < n_; j++) Y[length_pdf_][j] = (FLOAT)1.0;
+            for (j = 0; j < nr_; j++) Y[length_pdf_][j] = (FLOAT)1.0;
 
             Error = InformationCriterionKNN(all_K_[i], Y, c, W, LooseTheta, &IC, &logL, &M, &D);
 
@@ -5605,7 +5835,7 @@ int Rebmix::REBMIXKNN()
 
                         memmove(OptMixTheta_[j].ymax, ymax, length_pdf_ * sizeof(FLOAT));
 
-                        for (int ii = 0; ii < c; ii++) {
+                        for (INT ii = 0; ii < c; ii++) {
                             OptMixTheta_[j].W[ii] = W[ii];
 
                             OptMixTheta_[j].MixTheta[ii]->Memmove(LooseTheta[ii]);
@@ -5649,7 +5879,7 @@ int Rebmix::REBMIXKNN()
         }
 
 /// Panic Branislav
-E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
+        if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
             EMIC = FLOAT_MAX; EMlogL = (FLOAT)0.0; EMM = 0; EMD = (FLOAT)0.0; emp = -1;
 
             for (j = 0; j < all_c; j++) {
@@ -5720,7 +5950,7 @@ E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_sing
         if (Found) {
             opt_length_ = opt_length;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
             memmove(opt_logL_, opt_logL, opt_length_ * sizeof(FLOAT));
             memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
@@ -5785,7 +6015,7 @@ E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_sing
 
             summary_.IC = EMIC; summary_.logL = EMlogL; summary_.M = EMM; summary_.c = OptMixTheta_[emp].c;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
 
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
 
@@ -5891,7 +6121,7 @@ E0: if (O) free(O);
 
 // REBMIX algorithm for kernel density estimation.
 
-int Rebmix::REBMIXKDE()
+INT Rebmix::REBMIXKDE()
 {
     FLOAT                **Y = NULL;
     FLOAT                *ymin = NULL, *ymax = NULL, *h = NULL;
@@ -5899,15 +6129,15 @@ int Rebmix::REBMIXKDE()
     FLOAT                *W = NULL;
     CompnentDistribution **RigidTheta = NULL, **LooseTheta = NULL;
     FLOAT                **FirstM = NULL, **SecondM = NULL;
-    int                  opt_length;
-    int                  *O = NULL, *opt_c = NULL;
+    INT                  opt_length;
+    INT                  *O = NULL, *opt_c = NULL;
     FLOAT                *opt_IC = NULL;
     FLOAT                *opt_logL = NULL;
     FLOAT                *opt_D = NULL;
-    int                  c = 0, i, I, j, J, l, m, M, EMM;
+    INT                  c = 0, i, I, j, J, l, m, M, EMM;
     FLOAT                logV = (FLOAT)0.0, Dmin, r, lognl, nl, elp, eln, epsilonlmax, logfl, fl, Dl, f, IC, logL, D, EMIC, EMlogL, EMD;
     FLOAT                A = (FLOAT)0.0, ar;
-    int                  Error = 0, Stop = 0, Found = 0, Outlier = 0, all_c = 0, emp;
+    INT                  Error = 0, Stop = 0, Found = 0, Outlier = 0, all_c = 0, emp;
 
     // Allocation and initialisation.
 
@@ -5931,7 +6161,7 @@ int Rebmix::REBMIXKDE()
 
     Error = NULL == W_; if (Error) goto E0;
 
-    MixTheta_ = new CompnentDistribution* [(unsigned int)cmax_];
+    MixTheta_ = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == MixTheta_; if (Error) goto E0;
 
@@ -5947,7 +6177,7 @@ int Rebmix::REBMIXKDE()
 
     opt_length_ = ItMax;
 
-    opt_c_ = (int*)malloc(ItMax * sizeof(int));
+    opt_c_ = (INT*)malloc(ItMax * sizeof(INT));
 
     Error = NULL == opt_c_; if (Error) goto E0;
 
@@ -5965,11 +6195,11 @@ int Rebmix::REBMIXKDE()
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
 
-    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+    all_I_ = (INT*)calloc((size_t)all_length_, sizeof(INT));
 
     Error = NULL == all_I_; if (Error) goto E0;
 
-    all_K_ = (int*)calloc((size_t)(all_length_ * length_pdf_), sizeof(int));
+    all_K_ = (INT*)calloc((size_t)(all_length_ * length_pdf_), sizeof(INT));
 
     Error = NULL == all_K_; if (Error) goto E0;
 
@@ -5994,12 +6224,12 @@ int Rebmix::REBMIXKDE()
     Error = NULL == Y; if (Error) goto E0;
 
     for (i = 0; i < length_pdf_ + 2; i++) {
-        Y[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+        Y[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
         Error = NULL == Y[i]; if (Error) goto E0;
 
         if (i < length_pdf_) {
-            for (j = 0; j < n_; j++) Y[i][j] = Y_[i][j];
+            for (j = 0; j < nr_; j++) Y[i][j] = Y_[i][j];
         }
     }
 
@@ -6011,7 +6241,7 @@ int Rebmix::REBMIXKDE()
         for (i = 0; i < length_pdf_; i++) {
             ymin[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] < ymin[i]) ymin[i] = Y_[i][j];
             }
         }
@@ -6030,7 +6260,7 @@ int Rebmix::REBMIXKDE()
         for (i = 0; i < length_pdf_; i++) {
             ymax[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] > ymax[i]) ymax[i] = Y_[i][j];
             }
         }
@@ -6045,15 +6275,15 @@ int Rebmix::REBMIXKDE()
 
     Error = NULL == h; if (Error) goto E0;
 
-    R = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    R = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == R; if (Error) goto E0;
 
-    E = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    E = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == E; if (Error) goto E0;
 
-    Epsilon = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    Epsilon = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == Epsilon; if (Error) goto E0;
 
@@ -6061,7 +6291,7 @@ int Rebmix::REBMIXKDE()
 
     Error = NULL == W; if (Error) goto E0;
 
-    RigidTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    RigidTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == RigidTheta; if (Error) goto E0;
 
@@ -6079,7 +6309,7 @@ int Rebmix::REBMIXKDE()
         if (Error) goto E0;
     }
 
-    LooseTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    LooseTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == LooseTheta; if (Error) goto E0;
 
@@ -6119,7 +6349,7 @@ int Rebmix::REBMIXKDE()
 
     opt_length = ItMax;
 
-    opt_c = (int*)malloc(ItMax * sizeof(int));
+    opt_c = (INT*)malloc(ItMax * sizeof(INT));
 
     Error = NULL == opt_c; if (Error) goto E0;
 
@@ -6135,7 +6365,7 @@ int Rebmix::REBMIXKDE()
 
     Error = NULL == opt_D; if (Error) goto E0;
 
-    O = (int*)malloc(n_ * sizeof(int));
+    O = (INT*)malloc(nr_ * sizeof(INT));
 
     Error = NULL == O; if (Error) goto E0;
 
@@ -6161,7 +6391,7 @@ int Rebmix::REBMIXKDE()
 
         Error = OptMixTheta_[i].W == NULL; if (Error) goto E0;
 
-        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned int)cmax_];
+        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned INT)cmax_];
 
         Error = OptMixTheta_[i].MixTheta == NULL; if (Error) goto E0;
 
@@ -6244,12 +6474,14 @@ int Rebmix::REBMIXKDE()
         while (J <= ItMax) {
             l = 0; r = (FLOAT)n_; nl = (FLOAT)n_;
 
-            for (j = 0; j < n_; j++) O[j] = 1;
+            for (j = 0; j < nr_; j++) O[j] = 1;
 
             // Middle loop.
 
             while (nl / n_ > Dmin * l) {
-                if (l >= cmax_) goto E2;
+                if (l >= cmax_) {
+                    Stop = 1; goto E2;
+                }
 
                 // Global mode detection.
 
@@ -6257,7 +6489,7 @@ int Rebmix::REBMIXKDE()
 
                 if (Error) goto E0;
 
-                I = 1; W[l] = nl / n_; memset(R, 0, n_ * sizeof(FLOAT));
+                I = 1; W[l] = nl / n_; memset(R, 0, nr_ * sizeof(FLOAT));
 
                 // Inner loop.
 
@@ -6270,7 +6502,7 @@ int Rebmix::REBMIXKDE()
 
                     elp = eln = epsilonlmax = (FLOAT)0.0; lognl = (FLOAT)log(nl);
 
-                    for (j = 0; j < n_; j++) {
+                    for (j = 0; j < nr_; j++) {
                         E[j] = Epsilon[j] = (FLOAT)0.0;
 
                         if ((Y[length_pdf_][j] > FLOAT_MIN) || (R[j] > FLOAT_MIN)) {
@@ -6313,14 +6545,14 @@ int Rebmix::REBMIXKDE()
 
                         epsilonlmax *= (FLOAT)1.0 - ar;
 
-                        for (j = 0; j < n_; j++) if (Epsilon[j] > epsilonlmax) {
+                        for (j = 0; j < nr_; j++) if (Epsilon[j] > epsilonlmax) {
                             Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
                         }
 
                         if (eln > FLOAT_MIN) {
                             elp = elp / Dl - nl; if (eln > elp) f = elp / eln; else f = (FLOAT)1.0;
 
-                            for (j = 0; j < n_; j++) if (E[j] < (FLOAT)0.0) {
+                            for (j = 0; j < nr_; j++) if (E[j] < (FLOAT)0.0) {
                                 E[j] *= f; Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
                             }
                         }
@@ -6333,7 +6565,7 @@ int Rebmix::REBMIXKDE()
 
                 // Outlier detection.
 
-                for (j = 0; j < n_; j++) {
+                for (j = 0; j < nr_; j++) {
                     Error = ComponentDist(j, Y, LooseTheta[l], &fl, &Outlier);
 
                     if (Error) goto E0;
@@ -6349,7 +6581,7 @@ int Rebmix::REBMIXKDE()
 
                 c = ++l;
 
-                r -= nl; nl = r; for (j = 0; j < n_; j++) Y[length_pdf_][j] = R[j];
+                r -= nl; nl = r; for (j = 0; j < nr_; j++) Y[length_pdf_][j] = R[j];
 
                 Stop = c >= n_;
 
@@ -6358,11 +6590,11 @@ int Rebmix::REBMIXKDE()
 
             // Bayes classification of the remaining observations.
 
-            Error = BayesClassificationKDE(Y, c, W, LooseTheta, FirstM, SecondM);
+E2:         Error = BayesClassificationKDE(Y, c, W, LooseTheta, FirstM, SecondM);
 
             if (Error) goto E0;
 
-            for (j = 0; j < n_; j++) Y[length_pdf_][j] = (FLOAT)1.0;
+            for (j = 0; j < nr_; j++) Y[length_pdf_][j] = (FLOAT)1.0;
 
             Error = InformationCriterionKDE(logV, Y, c, W, LooseTheta, &IC, &logL, &M, &D);
 
@@ -6384,7 +6616,7 @@ int Rebmix::REBMIXKDE()
 
                         memmove(OptMixTheta_[j].ymax, ymax, length_pdf_ * sizeof(FLOAT));
 
-                        for (int ii = 0; ii < c; ii++) {
+                        for (INT ii = 0; ii < c; ii++) {
                             OptMixTheta_[j].W[ii] = W[ii];
 
                             OptMixTheta_[j].MixTheta[ii]->Memmove(LooseTheta[ii]);
@@ -6428,7 +6660,7 @@ int Rebmix::REBMIXKDE()
         }
 
 /// Panic Branislav
-E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
+        if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
             EMIC = FLOAT_MAX; EMlogL = (FLOAT)0.0; EMM = 0; EMD = (FLOAT)0.0; emp = -1;
 
             for (j = 0; j < all_c; j++) {
@@ -6499,7 +6731,7 @@ E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_sing
         if (Found) {
             opt_length_ = opt_length;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
             memmove(opt_logL_, opt_logL, opt_length_ * sizeof(FLOAT));
             memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
@@ -6564,7 +6796,7 @@ E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_sing
 
             summary_.IC = EMIC; summary_.logL = EMlogL; summary_.M = EMM; summary_.c = OptMixTheta_[emp].c;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
 
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
 
@@ -6670,7 +6902,7 @@ E0: if (O) free(O);
 
 // REBMIX algorithm for histogram.
 
-int Rebmix::REBMIXH()
+INT Rebmix::REBMIXH()
 {
     FLOAT                **Y = NULL;
     FLOAT                *y0 = NULL, *ymin = NULL, *ymax = NULL, *h = NULL;
@@ -6679,15 +6911,15 @@ int Rebmix::REBMIXH()
     FLOAT                *W = NULL;
     CompnentDistribution **RigidTheta = NULL, **LooseTheta = NULL;
     FLOAT                **FirstM = NULL, **SecondM = NULL;
-    int                  opt_length;
-    int                  *O = NULL, *opt_c = NULL;
+    INT                  opt_length;
+    INT                  *O = NULL, *opt_c = NULL;
     FLOAT                *opt_IC = NULL;
     FLOAT                *opt_logL = NULL;
     FLOAT                *opt_D = NULL;
-    int                  c = 0, i, I, j, J, k = 0, l, m, M, EMM;
+    INT                  c = 0, i, I, j, J, k = 0, l, m, M, EMM;
     FLOAT                logV = (FLOAT)0.0, Dmin, r, lognl, nl, elp, eln, epsilonlmax, logfl, fl, Dl, f, IC, logL, D, EMIC, EMlogL, EMD;
     FLOAT                A = (FLOAT)0.0, ar;
-    int                  Error = 0, Stop = 0, Found = 0, Outlier = 0, State = 0, all_c = 0, emp;
+    INT                  Error = 0, Stop = 0, Found = 0, Outlier = 0, State = 0, all_c = 0, emp;
 
     // Allocation and initialisation.
 
@@ -6715,7 +6947,7 @@ int Rebmix::REBMIXH()
 
     Error = NULL == W_; if (Error) goto E0;
 
-    MixTheta_ = new CompnentDistribution* [(unsigned int)cmax_];
+    MixTheta_ = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == MixTheta_; if (Error) goto E0;
 
@@ -6731,7 +6963,7 @@ int Rebmix::REBMIXH()
 
     opt_length_ = ItMax;
 
-    opt_c_ = (int*)malloc(ItMax * sizeof(int));
+    opt_c_ = (INT*)malloc(ItMax * sizeof(INT));
 
     Error = NULL == opt_c_; if (Error) goto E0;
 
@@ -6749,11 +6981,11 @@ int Rebmix::REBMIXH()
 
     all_length_ = K_[length_K_ - 1] - K_[0] + 1;
 
-    all_I_ = (int*)calloc((size_t)all_length_, sizeof(int));
+    all_I_ = (INT*)calloc((size_t)all_length_, sizeof(INT));
 
     Error = NULL == all_I_; if (Error) goto E0;
 
-    all_K_ = (int*)calloc((size_t)(all_length_ * length_pdf_), sizeof(int));
+    all_K_ = (INT*)calloc((size_t)(all_length_ * length_pdf_), sizeof(INT));
 
     Error = NULL == all_K_; if (Error) goto E0;
 
@@ -6778,7 +7010,7 @@ int Rebmix::REBMIXH()
     Error = NULL == Y; if (Error) goto E0;
 
     for (i = 0; i < length_pdf_ + 1; i++) {
-        Y[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+        Y[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
         Error = NULL == Y[i]; if (Error) goto E0;
     }
@@ -6795,7 +7027,7 @@ int Rebmix::REBMIXH()
         for (i = 0; i < length_pdf_; i++) {
             ymin[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] < ymin[i]) ymin[i] = Y_[i][j];
             }
         }
@@ -6814,7 +7046,7 @@ int Rebmix::REBMIXH()
         for (i = 0; i < length_pdf_; i++) {
             ymax[i] = Y_[i][0];
 
-            for (j = 1; j < n_; j++) {
+            for (j = 1; j < nr_; j++) {
                 if (Y_[i][j] > ymax[i]) ymax[i] = Y_[i][j];
             }
         }
@@ -6829,19 +7061,19 @@ int Rebmix::REBMIXH()
 
     Error = NULL == h; if (Error) goto E0;
 
-    R = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    R = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == R; if (Error) goto E0;
 
-    E = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    E = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == E; if (Error) goto E0;
 
-    Epsilon = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    Epsilon = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == Epsilon; if (Error) goto E0;
 
-    K = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    K = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
     Error = NULL == K; if (Error) goto E0;
 
@@ -6849,7 +7081,7 @@ int Rebmix::REBMIXH()
 
     Error = NULL == W; if (Error) goto E0;
 
-    RigidTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    RigidTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == RigidTheta; if (Error) goto E0;
 
@@ -6867,7 +7099,7 @@ int Rebmix::REBMIXH()
         if (Error) goto E0;
     }
 
-    LooseTheta = new CompnentDistribution* [(unsigned int)cmax_];
+    LooseTheta = new CompnentDistribution* [(unsigned INT)cmax_];
 
     Error = NULL == LooseTheta; if (Error) goto E0;
 
@@ -6907,7 +7139,7 @@ int Rebmix::REBMIXH()
 
     opt_length = ItMax;
 
-    opt_c = (int*)malloc(ItMax * sizeof(int));
+    opt_c = (INT*)malloc(ItMax * sizeof(INT));
 
     Error = NULL == opt_c; if (Error) goto E0;
 
@@ -6923,7 +7155,7 @@ int Rebmix::REBMIXH()
 
     Error = NULL == opt_D; if (Error) goto E0;
 
-    O = (int*)malloc(n_ * sizeof(int));
+    O = (INT*)malloc(nr_ * sizeof(INT));
 
     Error = NULL == O; if (Error) goto E0;
 
@@ -6949,7 +7181,7 @@ int Rebmix::REBMIXH()
 
         Error = OptMixTheta_[i].W == NULL; if (Error) goto E0;
 
-        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned int)cmax_];
+        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned INT)cmax_];
 
         Error = OptMixTheta_[i].MixTheta == NULL; if (Error) goto E0;
 
@@ -7013,12 +7245,7 @@ int Rebmix::REBMIXH()
             case vtContinuous:
                 h[j] = (ymax[j] - ymin[j]) / all_K_[j * all_length_ + i];
 
-                if (y0_ == NULL) {
-                    y0[j] = ymin[j] + (FLOAT)0.5 * h[j];
-                }
-                else {
-                    y0[j] = y0_[j];
-                }
+                y0[j] = ymin[j] + (FLOAT)0.5 * h[j];
 
                 logV += (FLOAT)log(h[j]);
 
@@ -7056,7 +7283,9 @@ int Rebmix::REBMIXH()
             // Middle loop.
 
             while (nl / n_ > Dmin * l) {
-                if (l >= cmax_) goto E2;
+                if (l >= cmax_) {
+                    Stop = 1; goto E2;
+                }
 
                 // Global mode detection.
 
@@ -7165,7 +7394,7 @@ int Rebmix::REBMIXH()
 
             // Bayes classification of the remaining observations.
 
-            Error = BayesClassificationH(all_K_[i], Y, c, W, LooseTheta, FirstM, SecondM);
+E2:         Error = BayesClassificationH(all_K_[i], Y, c, W, LooseTheta, FirstM, SecondM);
 
             if (Error) goto E0;
 
@@ -7193,7 +7422,7 @@ int Rebmix::REBMIXH()
 
                         memmove(OptMixTheta_[j].ymax, ymax, length_pdf_ * sizeof(FLOAT));
 
-                        for (int ii = 0; ii < c; ii++) {
+                        for (INT ii = 0; ii < c; ii++) {
                             OptMixTheta_[j].W[ii] = W[ii];
 
                             OptMixTheta_[j].MixTheta[ii]->Memmove(LooseTheta[ii]);
@@ -7239,7 +7468,7 @@ int Rebmix::REBMIXH()
         }
 
 /// Panic Branislav
-E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
+        if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
             EMIC = FLOAT_MAX; EMlogL = (FLOAT)0.0; EMM = 0; EMD = (FLOAT)0.0; emp = -1;
 
             for (j = 0; j < all_c; j++) {
@@ -7312,7 +7541,7 @@ E2:     if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_sing
         if (Found) {
             opt_length_ = opt_length;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
             memmove(opt_logL_, opt_logL, opt_length_ * sizeof(FLOAT));
             memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
@@ -7385,7 +7614,7 @@ E1:     all_K_[i] = k;
 
             summary_.IC = EMIC; summary_.logL = EMlogL; summary_.M = EMM; summary_.c = OptMixTheta_[emp].c;
 
-            memmove(opt_c_, opt_c, opt_length_ * sizeof(int));
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
 
             memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
 
@@ -7493,26 +7722,726 @@ E0: if (O) free(O);
     return Error;
 } // REBMIXH
 
+// REBMIX algorithm for histogram input.
+
+INT Rebmix::REBMIXK()
+{
+    FLOAT                **Y = NULL;
+    FLOAT                *R = NULL, *E = NULL, *Epsilon = NULL;
+    FLOAT                *K = NULL;
+    FLOAT                *W = NULL;
+    CompnentDistribution **RigidTheta = NULL, **LooseTheta = NULL;
+    FLOAT                **FirstM = NULL, **SecondM = NULL;
+    INT                  opt_length;
+    INT                  *O = NULL, *opt_c = NULL;
+    FLOAT                *opt_IC = NULL;
+    FLOAT                *opt_logL = NULL;
+    FLOAT                *opt_D = NULL;
+    INT                  c = 0, i, I, j, J, l, m, M, EMM;
+    FLOAT                logV = (FLOAT)0.0, Dmin, r, lognl, nl, elp, eln, epsilonlmax, logfl, fl, Dl, f, IC, logL, D, EMIC, EMlogL, EMD;
+    FLOAT                A = (FLOAT)0.0, ar;
+    INT                  Error = 0, Stop = 0, Found = 0, Outlier = 0, all_c = 0, emp;
+
+    // Allocation and initialisation.
+
+    EMM = 0; EMIC = EMlogL = EMD = (FLOAT)0.0;
+
+    summary_.IC = FLOAT_MAX;
+
+    summary_.h = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
+
+    Error = NULL == summary_.h; if (Error) goto E0;
+
+    summary_.y0 = NULL;
+
+    summary_.ymin = NULL;
+
+    summary_.ymax = NULL;
+
+    W_ = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
+
+    Error = NULL == W_; if (Error) goto E0;
+
+    MixTheta_ = new CompnentDistribution*[(unsigned INT)cmax_];
+
+    Error = NULL == MixTheta_; if (Error) goto E0;
+
+    for (i = 0; i < cmax_; i++) {
+        MixTheta_[i] = new CompnentDistribution(this);
+
+        Error = NULL == MixTheta_[i]; if (Error) goto E0;
+
+        Error = MixTheta_[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
+
+        if (Error) goto E0;
+    }
+
+    opt_length_ = ItMax;
+
+    opt_c_ = (INT*)malloc(ItMax * sizeof(INT));
+
+    Error = NULL == opt_c_; if (Error) goto E0;
+
+    opt_IC_ = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_IC_; if (Error) goto E0;
+
+    opt_logL_ = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_logL_; if (Error) goto E0;
+
+    opt_D_ = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_D_; if (Error) goto E0;
+
+    all_length_ = 1;
+
+    all_I_ = (INT*)calloc((size_t)all_length_, sizeof(INT));
+
+    Error = NULL == all_I_; if (Error) goto E0;
+
+    all_I_[0] = 1;
+
+    all_K_ = (INT*)calloc((size_t)all_length_, sizeof(INT));
+
+    Error = NULL == all_K_; if (Error) goto E0;
+
+    all_K_[0] = nr_;
+
+    additional_.Bracket = 1;
+
+    all_IC_ = (FLOAT*)malloc(all_length_ * sizeof(FLOAT));
+
+    Error = NULL == all_IC_; if (Error) goto E0;
+
+    all_IC_[0] = FLOAT_MAX;
+
+    Y = (FLOAT**)malloc(nr_ * sizeof(FLOAT*));
+
+    Error = NULL == Y; if (Error) goto E0;
+
+    for (i = 0; i < length_pdf_ + 1; i++) {
+        Y[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
+
+        Error = NULL == Y[i]; if (Error) goto E0;
+
+        for (j = 0; j < nr_; j++) {
+            Y[i][j] = Y_[i][j];
+        }
+    }
+
+    R = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
+
+    Error = NULL == R; if (Error) goto E0;
+
+    E = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
+
+    Error = NULL == E; if (Error) goto E0;
+
+    Epsilon = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
+
+    Error = NULL == Epsilon; if (Error) goto E0;
+
+    K = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
+
+    Error = NULL == K; if (Error) goto E0;
+
+    W = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
+
+    Error = NULL == W; if (Error) goto E0;
+
+    RigidTheta = new CompnentDistribution*[(unsigned INT)cmax_];
+
+    Error = NULL == RigidTheta; if (Error) goto E0;
+
+    for (i = 0; i < cmax_; i++) {
+        RigidTheta[i] = new CompnentDistribution(this);
+
+        Error = NULL == RigidTheta[i]; if (Error) goto E0;
+
+        Error = RigidTheta[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
+
+        if (Error) goto E0;
+
+        Error = RigidTheta[i]->Memmove(IniTheta_);
+
+        if (Error) goto E0;
+    }
+
+    LooseTheta = new CompnentDistribution*[(unsigned INT)cmax_];
+
+    Error = NULL == LooseTheta; if (Error) goto E0;
+
+    for (i = 0; i < cmax_; i++) {
+        LooseTheta[i] = new CompnentDistribution(this);
+
+        Error = NULL == LooseTheta[i]; if (Error) goto E0;
+
+        Error = LooseTheta[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
+
+        if (Error) goto E0;
+
+        Error = LooseTheta[i]->Memmove(IniTheta_);
+
+        if (Error) goto E0;
+    }
+
+    FirstM = (FLOAT**)malloc(cmax_ * sizeof(FLOAT*));
+
+    Error = NULL == FirstM; if (Error) goto E0;
+
+    for (i = 0; i < cmax_; i++) {
+        FirstM[i] = (FLOAT*)malloc(length_theta_[0] * sizeof(FLOAT));
+
+        Error = NULL == FirstM[i]; if (Error) goto E0;
+    }
+
+    SecondM = (FLOAT**)malloc(cmax_ * sizeof(FLOAT*));
+
+    Error = NULL == SecondM; if (Error) goto E0;
+
+    for (i = 0; i < cmax_; i++) {
+        SecondM[i] = (FLOAT*)malloc(length_theta_[1] * sizeof(FLOAT));
+
+        Error = NULL == SecondM[i]; if (Error) goto E0;
+    }
+
+    opt_length = ItMax;
+
+    opt_c = (INT*)malloc(ItMax * sizeof(INT));
+
+    Error = NULL == opt_c; if (Error) goto E0;
+
+    opt_IC = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_IC; if (Error) goto E0;
+
+    opt_logL = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_logL; if (Error) goto E0;
+
+    opt_D = (FLOAT*)malloc(ItMax * sizeof(FLOAT));
+
+    Error = NULL == opt_D; if (Error) goto E0;
+
+    O = (INT*)malloc(nr_ * sizeof(INT));
+
+    Error = NULL == O; if (Error) goto E0;
+
+    Error = Initialize();
+
+    if (Error) goto E0;
+
+    if (n_ <= length_pdf_) cmin_ = cmax_ = 1;
+
+    /// Panic Branislav
+    all_c = cmax_ - cmin_ + 1;
+
+    if (all_c <= 0) {
+        Error = 1; goto E0;
+    }
+
+    OptMixTheta_ = (MixtureParameterType*)malloc(all_c * sizeof(MixtureParameterType));
+
+    Error = OptMixTheta_ == NULL; if (Error) goto E0;
+
+    for (i = 0; i < all_c; i++) {
+        OptMixTheta_[i].W = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
+
+        Error = OptMixTheta_[i].W == NULL; if (Error) goto E0;
+
+        OptMixTheta_[i].MixTheta = new CompnentDistribution*[(unsigned INT)cmax_];
+
+        Error = OptMixTheta_[i].MixTheta == NULL; if (Error) goto E0;
+
+        for (j = 0; j < cmax_; j++) {
+            OptMixTheta_[i].MixTheta[j] = new CompnentDistribution(this);
+
+            Error = NULL == OptMixTheta_[i].MixTheta[j];
+
+            if (Error) goto E0;
+
+            Error = OptMixTheta_[i].MixTheta[j]->Realloc(length_pdf_, length_Theta_, length_theta_);
+
+            if (Error) goto E0;
+
+            Error = OptMixTheta_[i].MixTheta[j]->Memmove(IniTheta_);
+
+            if (Error) goto E0;
+        }
+
+        OptMixTheta_[i].c = i + cmin_;
+
+        OptMixTheta_[i].logL = -FLOAT_MAX;
+
+        OptMixTheta_[i].logV = (FLOAT)0.0;
+
+        OptMixTheta_[i].k = 0;
+
+        OptMixTheta_[i].h = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
+
+        Error = OptMixTheta_[i].h == NULL; if (Error) goto E0;
+
+        OptMixTheta_[i].y0 = NULL;
+
+        OptMixTheta_[i].ymin = NULL;
+
+        OptMixTheta_[i].ymax = NULL;
+
+        OptMixTheta_[i].n_iter_em = 0;
+
+        OptMixTheta_[i].initialized = 0;
+    }
+
+    if (EM_strategy_ != strategy_none) {
+        EMInitialize();
+    }
+    /// End 
+
+    // Preprocessing of observations.
+
+    logV = (FLOAT)0.0;
+
+    for (j = 0; j < length_pdf_; j++) {
+        logV += (FLOAT)log(h_[j]);
+    }
+
+    for (j = 0; j < nr_; j++) K[j] = Y[length_pdf_][j];
+
+    Found = 0; Dmin = (FLOAT)0.5 / cmin_; J = 1;
+
+    // Outer loop.
+
+    while (J <= ItMax) {
+        l = 0; r = (FLOAT)n_; nl = (FLOAT)n_;
+
+        for (j = 0; j < nr_; j++) O[j] = 1;
+
+        // Middle loop.
+
+        while (nl / n_ > Dmin * l) {
+           if (l >= cmax_) {
+               Stop = 1; goto E2;
+           }
+
+            // Global mode detection.
+
+            Error = GlobalModeH(&m, nr_, Y, O);
+
+            if (Error) goto E0;
+
+            I = 1; W[l] = nl / n_; memset(R, 0, nr_ * sizeof(FLOAT));
+
+            // Inner loop.
+
+            while ((I <= ItMax) && (Y[length_pdf_][m] > Eps)) {
+                // Rough component parameter estimation.
+
+                Error = RoughEstimationH(nr_, Y, h_, nl, m, RigidTheta[l], LooseTheta[l]);
+
+                if (Error) goto E0;
+
+                elp = eln = epsilonlmax = (FLOAT)0.0; lognl = (FLOAT)log(nl);
+
+                for (j = 0; j < nr_; j++) {
+                    E[j] = Epsilon[j] = (FLOAT)0.0;
+
+                    if ((Y[length_pdf_][j] > FLOAT_MIN) || (R[j] > FLOAT_MIN)) {
+                        Error = LogComponentDist(j, Y, LooseTheta[l], &logfl, NULL);
+
+                        if (Error) goto E0;
+
+                        E[j] = Y[length_pdf_][j] - (FLOAT)exp(lognl + logfl + logV);
+
+                        if (E[j] > (FLOAT)0.0) {
+                            Epsilon[j] = E[j] / Y[length_pdf_][j];
+
+                            if (Epsilon[j] > epsilonlmax) epsilonlmax = Epsilon[j];
+
+                            elp += E[j];
+                        }
+                        else {
+                            if (E[j] < -R[j]) E[j] = -R[j];
+
+                            eln -= E[j];
+                        }
+                    }
+                }
+
+                Dl = elp / nl;
+
+                if ((Dl <= Dmin / W[l]) || (I == ItMax) || (nl <= length_pdf_)) {
+                    // Enhanced component parameter estimation.
+
+                    EnhancedEstimationH(nr_, Y, nl, h_, RigidTheta[l], LooseTheta[l]);
+
+                    break;
+                }
+                else {
+                    if (I == 1) {
+                        A = ((FLOAT)1.0 - ar_) / ar_ / (Dl * W[l] - Dmin);
+                    }
+
+                    ar = (FLOAT)1.0 / (A * (Dl * W[l] - Dmin) + (FLOAT)1.0);
+
+                    epsilonlmax *= (FLOAT)1.0 - ar;
+
+                    for (j = 0; j < nr_; j++) if (Epsilon[j] > epsilonlmax) {
+                        Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
+                    }
+
+                    if (eln > FLOAT_MIN) {
+                        elp = elp / Dl - nl; if (eln > elp) f = elp / eln; else f = (FLOAT)1.0;
+
+                        for (j = 0; j < nr_; j++) if (E[j] < (FLOAT)0.0) {
+                            E[j] *= f; Y[length_pdf_][j] -= E[j]; R[j] += E[j]; nl -= E[j];
+                        }
+                    }
+
+                    W[l] = nl / n_;
+                }
+
+                I++;
+            }
+
+            // Outlier detection.
+
+            for (j = 0; j < nr_; j++) {
+                Error = ComponentDist(j, Y, LooseTheta[l], &fl, &Outlier);
+
+                if (Error) goto E0;
+
+                if (!Outlier) O[j] = 0;
+            }
+
+            // Moments calculation.
+
+            Error = MomentsCalculation(LooseTheta[l], FirstM[l], SecondM[l]);
+
+            if (Error) goto E0;
+
+            c = ++l;
+
+            r -= nl; nl = r; for (j = 0; j < nr_; j++) Y[length_pdf_][j] = R[j];
+
+            Stop = c >= nr_;
+
+            if (Stop) break;
+        }
+
+        // Bayes classification of the remaining observations.
+
+E2:     Error = BayesClassificationH(nr_, Y, c, W, LooseTheta, FirstM, SecondM);
+
+        if (Error) goto E0;
+
+        for (j = 0; j < nr_; j++) Y[length_pdf_][j] = K[j];
+
+        Error = InformationCriterionH(logV, nr_, Y, c, W, LooseTheta, &IC, &logL, &M, &D);
+
+        if (Error) goto E0;
+
+        /// Panic Branislav
+        for (j = 0; j < all_c; j++) {
+            if (OptMixTheta_[j].c == c) {
+                if (OptMixTheta_[j].logL < logL) {
+                    OptMixTheta_[j].logL = logL;
+
+                    OptMixTheta_[j].logV = logV;
+
+                    memmove(OptMixTheta_[j].h, h_, length_pdf_ * sizeof(FLOAT));
+
+                    for (INT ii = 0; ii < c; ii++) {
+                        OptMixTheta_[j].W[ii] = W[ii];
+
+                        OptMixTheta_[j].MixTheta[ii]->Memmove(LooseTheta[ii]);
+                    }
+
+                    OptMixTheta_[j].initialized = 1;
+                }
+            }
+        }
+        /// End 
+
+        if (IC < all_IC_[0]) all_IC_[0] = IC;
+
+        if ((IC < summary_.IC) && (c >= cmin_)) {
+            Found = 1;
+
+            memmove(summary_.h, h_, length_pdf_ * sizeof(FLOAT));
+
+            summary_.IC = IC; summary_.logL = logL; summary_.M = M; summary_.c = c;
+
+            memmove(W_, W, c * sizeof(FLOAT));
+
+            for (j = 0; j < c; j++) {
+                Error = MixTheta_[j]->Memmove(LooseTheta[j]);
+
+                if (Error) goto E0;
+            }
+        }
+
+        j = J - 1; opt_c[j] = c; opt_IC[j] = IC; opt_logL[j] = logL; opt_D[j] = D;
+
+        Dmin = Min(D, Dmin * c) / (c + (FLOAT)1.0); J++;
+
+        if (Stop) break;
+    }
+
+    /// Panic Branislav
+    if (EM_strategy_ == strategy_exhaustive || EM_strategy_ == strategy_single) {
+        EMIC = FLOAT_MAX; EMlogL = (FLOAT)0.0; EMM = 0; EMD = (FLOAT)0.0; emp = -1;
+
+        for (j = 0; j < all_c; j++) {
+            if (OptMixTheta_[j].initialized) {
+                if (!EMRun(&OptMixTheta_[j].c, OptMixTheta_[j].W, OptMixTheta_[j].MixTheta)) {
+                    n_iter_sum_ += EM_->n_iter_;
+
+                    OptMixTheta_[j].n_iter_em = EM_->n_iter_;
+
+                    Error = InformationCriterionH(OptMixTheta_[j].logV, nr_, Y, OptMixTheta_[j].c, OptMixTheta_[j].W, OptMixTheta_[j].MixTheta, &IC, &logL, &M, &D);
+
+                    if (Error) goto E0;
+
+                    if (IC < EMIC) {
+                        EMIC = IC; EMlogL = logL; EMM = M; EMD = D; emp = j;
+                    }
+                }
+                else {
+                    n_iter_sum_ += EM_->n_iter_;
+                }
+            }
+        }
+
+        if (emp > -1) {
+            memmove(W, OptMixTheta_[emp].W, OptMixTheta_[emp].c * sizeof(FLOAT));
+
+            for (j = 0; j < OptMixTheta_[emp].c; j++) {
+                Error = LooseTheta[j]->Memmove(OptMixTheta_[emp].MixTheta[j]);
+
+                if (Error) goto E0;
+            }
+
+            n_iter_ = OptMixTheta_[emp].n_iter_em;
+
+            if (EMIC < all_IC_[0]) all_IC_[0] = EMIC;
+
+            if ((EMIC < summary_.IC) && (OptMixTheta_[emp].c >= cmin_)) {
+                memmove(summary_.h, OptMixTheta_[emp].h, length_pdf_ * sizeof(FLOAT));
+
+                summary_.IC = EMIC; summary_.logL = EMlogL; summary_.M = EMM; summary_.c = OptMixTheta_[emp].c;
+
+                memmove(W_, W, OptMixTheta_[emp].c * sizeof(FLOAT));
+
+                for (j = 0; j < OptMixTheta_[emp].c; j++) {
+                    Error = MixTheta_[j]->Memmove(LooseTheta[j]);
+
+                    if (Error) goto E0;
+                }
+            }
+        }
+
+        for (j = 0; j < all_c; j++) {
+            OptMixTheta_[j].logL = -FLOAT_MAX;
+
+            OptMixTheta_[j].initialized = 0;
+        }
+    }
+    /// End
+
+    opt_length = J - 1;
+
+    if (Found) {
+        opt_length_ = opt_length;
+
+        memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
+        memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
+        memmove(opt_logL_, opt_logL, opt_length_ * sizeof(FLOAT));
+        memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
+    }
+
+    /// Panic Branislav
+    if (EM_strategy_ == strategy_best) {
+        EMIC = FLOAT_MAX; EMlogL = (FLOAT)0.0; EMM = 0; EMD = (FLOAT)0.0; emp = -1;
+
+        opt_length_ = all_c;
+
+        for (j = 0; j < all_c; j++) {
+            if (OptMixTheta_[j].initialized) {
+                Error = InformationCriterionH(OptMixTheta_[j].logV, nr_, Y, OptMixTheta_[j].c, OptMixTheta_[j].W, OptMixTheta_[j].MixTheta, &IC, &logL, &M, &D);
+
+                if (Error) goto E0;
+
+                opt_c[j] = OptMixTheta_[j].c; opt_IC[j] = IC; opt_logL[j] = logL; opt_D[j] = D;
+
+                if (!EMRun(&OptMixTheta_[j].c, OptMixTheta_[j].W, OptMixTheta_[j].MixTheta)) {
+                    n_iter_sum_ += EM_->n_iter_;
+
+                    OptMixTheta_[j].n_iter_em = EM_->n_iter_;
+
+                    Error = InformationCriterionH(OptMixTheta_[j].logV, nr_, Y, OptMixTheta_[j].c, OptMixTheta_[j].W, OptMixTheta_[j].MixTheta, &IC, &logL, &M, &D);
+
+                    if (Error) goto E0;
+
+                    if (IC < EMIC) {
+                        EMIC = IC; EMlogL = logL; EMM = M; EMD = D; emp = j;
+                    }
+                }
+                else {
+                    n_iter_sum_ += EM_->n_iter_;
+                }
+            }
+            else {
+                opt_c[j] = OptMixTheta_[j].c, opt_IC[j] = (FLOAT)0.0; opt_logL[j] = (FLOAT)0.0; opt_D[j] = (FLOAT)0.0;
+            }
+        }
+
+        if (emp > -1) {
+            memmove(W_, OptMixTheta_[emp].W, OptMixTheta_[emp].c * sizeof(FLOAT));
+
+            for (j = 0; j < OptMixTheta_[emp].c; j++) {
+                Error = MixTheta_[j]->Memmove(OptMixTheta_[emp].MixTheta[j]);
+
+                if (Error) goto E0;
+            }
+
+            n_iter_ = OptMixTheta_[emp].n_iter_em;
+
+            memmove(summary_.h, OptMixTheta_[emp].h, length_pdf_ * sizeof(FLOAT));
+
+            summary_.IC = EMIC; summary_.logL = EMlogL; summary_.M = EMM; summary_.c = OptMixTheta_[emp].c;
+
+            memmove(opt_c_, opt_c, opt_length_ * sizeof(INT));
+
+            memmove(opt_IC_, opt_IC, opt_length_ * sizeof(FLOAT));
+
+            memmove(opt_logL_, opt_logL, opt_length_ * sizeof(FLOAT));
+
+            memmove(opt_D_, opt_D, opt_length_ * sizeof(FLOAT));
+        }
+    }
+    /// End 
+
+E0: if (O) free(O);
+
+    if (opt_D) free(opt_D);
+
+    if (opt_logL) free(opt_logL);
+
+    if (opt_IC) free(opt_IC);
+
+    if (opt_c) free(opt_c);
+
+    if (SecondM) {
+        for (i = 0; i < cmax_; i++) {
+            if (SecondM[i]) free(SecondM[i]);
+        }
+
+        free(SecondM);
+    }
+
+    if (FirstM) {
+        for (i = 0; i < cmax_; i++) {
+            if (FirstM[i]) free(FirstM[i]);
+        }
+
+        free(FirstM);
+    }
+
+    if (LooseTheta) {
+        for (i = 0; i < cmax_; i++) {
+            if (LooseTheta[i]) delete LooseTheta[i];
+        }
+
+        delete[] LooseTheta;
+    }
+
+    if (RigidTheta) {
+        for (i = 0; i < cmax_; i++) {
+            if (RigidTheta[i]) delete RigidTheta[i];
+        }
+
+        delete[] RigidTheta;
+    }
+
+    if (W) free(W);
+
+    if (K) free(K);
+
+    if (Epsilon) free(Epsilon);
+
+    if (E) free(E);
+
+    if (R) free(R);
+
+    if (Y) {
+        for (i = 0; i < length_pdf_ + 1; i++) {
+            if (Y[i]) free(Y[i]);
+        }
+
+        free(Y);
+    }
+
+    /// Panic Branislav
+    if (OptMixTheta_) {
+        for (j = 0; j < all_c; j++) {
+            if (OptMixTheta_[j].MixTheta) {
+                for (i = 0; i < cmax_; i++) {
+                    if (OptMixTheta_[j].MixTheta[i]) delete OptMixTheta_[j].MixTheta[i];
+                }
+
+                delete[] OptMixTheta_[j].MixTheta;
+            }
+
+            if (OptMixTheta_[j].W) free(OptMixTheta_[j].W);
+
+            if (OptMixTheta_[j].h) free(OptMixTheta_[j].h);
+
+            if (OptMixTheta_[j].y0) free(OptMixTheta_[j].y0);
+
+            if (OptMixTheta_[j].ymin) free(OptMixTheta_[j].ymin);
+
+            if (OptMixTheta_[j].ymax) free(OptMixTheta_[j].ymax);
+        }
+
+        free(OptMixTheta_);
+    }
+    /// End
+
+    return Error;
+} // REBMIXK
+
 #if (_MAINTAIN_SWITCH)
 // Reads data file.
 
-int Rebmix::ReadDataFile()
+INT Rebmix::ReadDataFile()
 {
     char line[65536];
     char *pchar = NULL;
-    int  i, j, BufSize = 0;
+    INT  i, j, BufSize = 0;
     FILE *fp = NULL;
-    int  Error = 0;
+    INT  Error = 0;
 
     if ((fp = fopen(curr_, "r")) == NULL) {
         Error = 1; goto E0;
     }
 
-    Y_ = (FLOAT**)malloc(length_pdf_ * sizeof(FLOAT*));
+    if (Y_type_ == 0) {
+        nc_ = length_pdf_;
+    }
+    else 
+    if (Y_type_ == 1) {
+        nc_ = length_pdf_ + 1;
+    }
+    else {
+        Error = 1; goto E0;
+    }
+
+    Y_ = (FLOAT**)malloc(nc_ * sizeof(FLOAT*));
 
     Error = NULL == Y_; if (Error) goto E0;
 
-    for (i = 0; i < length_pdf_; i++) {
+    for (i = 0; i < nc_; i++) {
         Y_[i] = (FLOAT*)malloc((BufSize + BufInc) * sizeof(FLOAT));
 
         Error = NULL == Y_[i]; if (Error) goto E0;
@@ -7520,7 +8449,7 @@ int Rebmix::ReadDataFile()
 
     BufSize += BufInc;
 
-    n_ = 0;
+    nr_ = 0;
 
 S0: while (fgets(line, 2048, fp) != NULL) {
         pchar = strtok(line, "\n");
@@ -7528,7 +8457,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         if (!pchar) goto S0;
 
         j = 0;
-        for (i = 0; i < (int)strlen(pchar); i++) {
+        for (i = 0; i < (INT)strlen(pchar); i++) {
             if (pchar[i] == ',') {
                 line[j] = '.'; j++;
             }
@@ -7544,8 +8473,8 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
         pchar = strtok(pchar, "\t");
 
-        if (n_ == BufSize) {
-            for (i = 0; i < length_pdf_; i++) {
+        if (nr_ == BufSize) {
+            for (i = 0; i < nc_; i++) {
                 Y_[i] = (FLOAT*)realloc(Y_[i], (BufSize + BufInc) * sizeof(FLOAT));
 
                 Error = NULL == Y_[i]; if (Error) goto E0;
@@ -7556,26 +8485,41 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
         i = 0;
         while (pchar) {
-            if (i < length_pdf_) Y_[i][n_] = (FLOAT)atof(pchar); 
+            if (i < nc_) Y_[i][nr_] = (FLOAT)atof(pchar);
             
             pchar = strtok(NULL, "\t"); i++;
         }
 
-        n_++;
+        nr_++;
     }
 
-    for (i = 0; i < length_pdf_; i++) {
-        Y_[i] = (FLOAT*)realloc(Y_[i], n_ * sizeof(FLOAT));
+    if (Y_type_ == 0) {
+        n_ = nr_;
+    }
+    else
+    if (Y_type_ == 1) {
+        n_ = 0;
+
+        for (i = 0; i < nr_; i++) {
+            n_ += (INT)Y_[nc_ - 1][i];
+        }
+    }
+    else {
+        Error = 1; if (Error) goto E0;
+    }
+
+    for (i = 0; i < nc_; i++) {
+        Y_[i] = (FLOAT*)realloc(Y_[i], nr_ * sizeof(FLOAT));
 
         Error = NULL == Y_[i]; if (Error) goto E0;
     }
 
-    X_ = (FLOAT**)malloc(length_pdf_ * sizeof(FLOAT*));
+    X_ = (FLOAT**)malloc(nc_ * sizeof(FLOAT*));
 
     Error = NULL == X_; if (Error) goto E0;
 
-    for (i = 0; i < length_pdf_; i++) {
-        X_[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+    for (i = 0; i < nc_; i++) {
+        X_[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
         Error = NULL == X_[i]; if (Error) goto E0;
     }
@@ -7589,16 +8533,16 @@ E0: if (fp) fclose(fp);
 #if (_MAINTAIN_SWITCH)
 // Writes data file.
 
-int Rebmix::WriteDataFile()
+INT Rebmix::WriteDataFile()
 {
-    int  i, j, k;
+    INT  i, j, k;
     char line[65536];
     char mode[2];
     char path[FILENAME_MAX];
     char ext[FILENAME_MAX];
     char *pchar = NULL;
     FILE *fp0 = NULL, *fp1 = NULL;
-    int  Error = 0;
+    INT  Error = 0;
 
     if (curr_ == open_[0])
         strcpy(mode, "w");
@@ -7648,72 +8592,73 @@ int Rebmix::WriteDataFile()
                                                        "ar",
                                                        "Restraints",
                                                        "c");
+        if (Y_type_ == 0) {
+            switch (Preprocessing_) {
+            case poHistogram:
+                fprintf(fp0, "\t%s", "k");
 
-        switch (Preprocessing_) {
-        case poHistogram:
-            fprintf(fp0, "\t%s", "k");
+                for (i = 0; i < length_pdf_; i++) {
+                    if (length_pdf_ == 1)
+                        sprintf(line, "%s", "y0");
+                    else
+                        sprintf(line, "%s%d", "y0", i + 1);
+
+                    fprintf(fp0, "\t%s", line);
+                }
+
+                for (i = 0; i < length_pdf_; i++) {
+                    if (length_pdf_ == 1)
+                        sprintf(line, "%s", "h");
+                    else
+                        sprintf(line, "%s%d", "h", i + 1);
+
+                    fprintf(fp0, "\t%s", line);
+                }
+
+                break;
+            case poKDE:
+                fprintf(fp0, "\t%s", "k");
+
+                for (i = 0; i < length_pdf_; i++) {
+                    if (length_pdf_ == 1)
+                        sprintf(line, "%s", "h");
+                    else
+                        sprintf(line, "%s%d", "h", i + 1);
+
+                    fprintf(fp0, "\t%s", line);
+                }
+
+                break;
+            case poKNearestNeighbour:
+                fprintf(fp0, "\t%s", "k");
+
+                for (i = 0; i < length_pdf_; i++) {
+                    if (length_pdf_ == 1)
+                        sprintf(line, "%s", "h");
+                    else
+                        sprintf(line, "%s%d", "h", i + 1);
+
+                    fprintf(fp0, "\t%s", line);
+                }
+            }
 
             for (i = 0; i < length_pdf_; i++) {
                 if (length_pdf_ == 1)
-                    sprintf(line, "%s", "y0");
+                    sprintf(line, "%s", "ymin");
                 else
-                    sprintf(line, "%s%d", "y0", i + 1);
+                    sprintf(line, "%s%d", "ymin", i + 1);
 
                 fprintf(fp0, "\t%s", line);
             }
 
             for (i = 0; i < length_pdf_; i++) {
                 if (length_pdf_ == 1)
-                    sprintf(line, "%s", "h");
+                    sprintf(line, "%s", "ymax");
                 else
-                    sprintf(line, "%s%d", "h", i + 1);
+                    sprintf(line, "%s%d", "ymax", i + 1);
 
                 fprintf(fp0, "\t%s", line);
             }
-
-            break;
-        case poKDE:
-            fprintf(fp0, "\t%s", "k");
-
-            for (i = 0; i < length_pdf_; i++) {
-                if (length_pdf_ == 1)
-                    sprintf(line, "%s", "h");
-                else
-                    sprintf(line, "%s%d", "h", i + 1);
-
-                fprintf(fp0, "\t%s", line);
-            }
-
-            break;
-        case poKNearestNeighbour:
-            fprintf(fp0, "\t%s", "k");
-
-            for (i = 0; i < length_pdf_; i++) {
-                if (length_pdf_ == 1)
-                    sprintf(line, "%s", "h");
-                else
-                    sprintf(line, "%s%d", "h", i + 1);
-
-                fprintf(fp0, "\t%s", line);
-            }
-        }
-
-        for (i = 0; i < length_pdf_; i++) {
-            if (length_pdf_ == 1)
-                sprintf(line, "%s", "ymin");
-            else
-                sprintf(line, "%s%d", "ymin", i + 1);
-
-            fprintf(fp0, "\t%s", line);
-        }
-
-        for (i = 0; i < length_pdf_; i++) {
-            if (length_pdf_ == 1)
-                sprintf(line, "%s", "ymax");
-            else
-                sprintf(line, "%s%d", "ymax", i + 1);
-
-            fprintf(fp0, "\t%s", line);
         }
 
         fprintf(fp0, "\t%s\t%s\t", "IC",
@@ -7728,7 +8673,7 @@ int Rebmix::WriteDataFile()
                                                          "maximum.iterations",
                                                          "opt.number.iterations",
                                                          "total.number.iterations");
-/// End 
+/// End
 
         fprintf(fp1, "%s\t%s", "Dataset",
                                "w");
@@ -7767,17 +8712,23 @@ int Rebmix::WriteDataFile()
 
     fprintf(fp0, "%s", path);
 
-    switch (Preprocessing_) {
-    case poHistogram:
-        strcpy(line, "histogram");
+    if (Y_type_ == 0) {
+        switch (Preprocessing_) {
+        case poHistogram:
+            strcpy(line, "histogram");
 
-        break;
-    case poKDE:
-        strcpy(line, "kernel density estimation");
+            break;
+        case poKDE:
+            strcpy(line, "kernel density estimation");
 
-        break;
-    case poKNearestNeighbour:
-        strcpy(line, "k-nearest neighbour");
+            break;
+        case poKNearestNeighbour:
+            strcpy(line, "k-nearest neighbour");
+        }
+    }
+    else
+    if (Y_type_ == 1) {
+        strcpy(line, "NA");
     }
 
     fprintf(fp0, "\t%s", line);
@@ -7868,41 +8819,43 @@ int Rebmix::WriteDataFile()
 
     fprintf(fp0, "\t%d", summary_.c);
 
-    switch (Preprocessing_) {
-    case poHistogram:
-        fprintf(fp0, "\t%d", summary_.k);
+    if (Y_type_ == 0) {
+        switch (Preprocessing_) {
+        case poHistogram:
+            fprintf(fp0, "\t%d", summary_.k);
 
-        for (i = 0; i < length_pdf_; i++) {
-            fprintf(fp0, "\t%E", summary_.y0[i]);
+            for (i = 0; i < length_pdf_; i++) {
+                fprintf(fp0, "\t%E", summary_.y0[i]);
+            }
+
+            for (i = 0; i < length_pdf_; i++) {
+                fprintf(fp0, "\t%E", summary_.h[i]);
+            }
+
+            break;
+        case poKDE:
+            fprintf(fp0, "\t%d", summary_.k);
+
+            for (i = 0; i < length_pdf_; i++) {
+                fprintf(fp0, "\t%E", summary_.h[i]);
+            }
+
+            break;
+        case poKNearestNeighbour:
+            fprintf(fp0, "\t%d", summary_.k);
+
+            for (i = 0; i < length_pdf_; i++) {
+                fprintf(fp0, "\t%E", summary_.h[i]);
+            }
         }
 
         for (i = 0; i < length_pdf_; i++) {
-            fprintf(fp0, "\t%E", summary_.h[i]);
+            fprintf(fp0, "\t%E", summary_.ymin[i]);
         }
-
-        break;
-    case poKDE:
-        fprintf(fp0, "\t%d", summary_.k);
 
         for (i = 0; i < length_pdf_; i++) {
-            fprintf(fp0, "\t%E", summary_.h[i]);
+            fprintf(fp0, "\t%E", summary_.ymax[i]);
         }
-
-        break;
-    case poKNearestNeighbour:
-        fprintf(fp0, "\t%d", summary_.k);
-
-        for (i = 0; i < length_pdf_; i++) {
-            fprintf(fp0, "\t%E", summary_.h[i]);
-        }
-    }
-
-    for (i = 0; i < length_pdf_; i++) {
-        fprintf(fp0, "\t%E", summary_.ymin[i]);
-    }
-
-    for (i = 0; i < length_pdf_; i++) {
-        fprintf(fp0, "\t%E", summary_.ymax[i]);
     }
 
     fprintf(fp0, "\t%E\t%E", summary_.IC,
@@ -7949,10 +8902,10 @@ int Rebmix::WriteDataFile()
     }
     
     fprintf(fp0, "\t%E\t%E\t%d\t%d\t%d\n", EM_am_,
-                                           EM_TOL_,
-                                           EM_max_iter_,
-                                           n_iter_,
-                                           n_iter_sum_);
+                                              EM_TOL_,
+                                              EM_max_iter_,
+                                              n_iter_,
+                                              n_iter_sum_);
 /// End
 
     for (i = 0; i < summary_.c; i++) {
@@ -8060,7 +9013,7 @@ E0: if (fp0) fclose(fp0);
     }
 
     if (X_) {
-        for (i = 0; i < length_pdf_; i++) {
+        for (i = 0; i < nc_; i++) {
             if (X_[i]) free(X_[i]);
         }
 
@@ -8068,7 +9021,7 @@ E0: if (fp0) fclose(fp0);
     }
 
     if (Y_) {
-        for (i = 0; i < length_pdf_; i++) {
+        for (i = 0; i < nc_; i++) {
             if (Y_[i]) free(Y_[i]);
         }
 
@@ -8082,16 +9035,16 @@ E0: if (fp0) fclose(fp0);
 #if (_MAINTAIN_SWITCH)
 // Runs template file.
 
-int Rebmix::RunTemplateFile(char *file)
+INT Rebmix::RunTemplateFile(char *file)
 {
     char  line[65536], ident[65536], list[65536];
     char  *pchar = NULL, *rchar = NULL;
-    int   i, imin, imax, iinc, j, k, isI;
+    INT   i, imin, imax, iinc, j, k, isI;
     FLOAT isF;
     FILE  *fp = NULL;
-    int   Error = 0;
+    INT   Error = 0;
 
-    printf("REBMIX Version 2.14.0\n");
+    printf("REBMIX Version 2.14.1\n");
 
     if ((fp = fopen(file, "r")) == NULL) {
         Error = 1; goto E0;
@@ -8106,7 +9059,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
         j = 0;
 
-        for (i = 0; i < (int)strlen(pchar); i++) {
+        for (i = 0; i < (INT)strlen(pchar); i++) {
             if (pchar[i] != ' ') {
                 ident[j] = (char)toupper(pchar[i]); j++;
             }
@@ -8196,13 +9149,13 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         }
         else
         if (!strcmp(ident, "CMAX")) {
-            cmax_ = isI = (int)atol(pchar);
+            cmax_ = isI = (INT)atol(pchar);
 
             Error = isI <= 0; if (Error) goto E0;
         }
         else
         if (!strcmp(ident, "CMIN")) {
-            cmin_ = isI = (int)atol(pchar);
+            cmin_ = isI = (INT)atol(pchar);
 
             Error = isI <= 0; if (Error) goto E0;
         }
@@ -8289,7 +9242,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         }
         else
         if (!strcmp(ident, "LENGTHPDF")) {
-            length_pdf_ = isI = (int)atol(pchar);
+            length_pdf_ = isI = (INT)atol(pchar);
 
             Error = isI < 1; if (Error) goto E0;
         }
@@ -8298,11 +9251,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             i = 0;
 
             while (pchar) {
-                length_theta_ = (int*)realloc(length_theta_, (i + 1) * sizeof(int));
+                length_theta_ = (INT*)realloc(length_theta_, (i + 1) * sizeof(INT));
 
                 Error = NULL == length_theta_; if (Error) goto E0;
 
-                length_theta_[i] = isI = (int)atol(pchar);
+                length_theta_[i] = isI = (INT)atol(pchar);
 
                 Error = isI == 0; if (Error) goto E0;
 
@@ -8427,18 +9380,18 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
             while (pchar != NULL) {
                 if ((rchar = strrchr(pchar, '-')) != NULL) {
-                    imin = (int)atol(pchar); imax = (int)atol(rchar + 1);
+                    imin = (INT)atol(pchar); imax = (INT)atol(rchar + 1);
 
                     if (imin > imax) {
                         j = imin; imin = imax; imax = j;
                     }
 
                     if ((rchar = strrchr(pchar, '+')) != NULL)
-                        iinc = (int)atol(rchar + 1);
+                        iinc = (INT)atol(rchar + 1);
                     else
                         iinc = 1;
 
-                    K_ = (int*)realloc(K_, (i + (imax - imin) / iinc + 1) * sizeof(int));
+                    K_ = (INT*)realloc(K_, (i + (imax - imin) / iinc + 1) * sizeof(INT));
 
                     Error = NULL == K_; if (Error) goto E0;
 
@@ -8453,11 +9406,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                     length_K_ = i;
                 }
                 else {
-                    K_ = (int*)realloc(K_, (i + 1) * sizeof(int));
+                    K_ = (INT*)realloc(K_, (i + 1) * sizeof(INT));
 
                     Error = NULL == K_; if (Error) goto E0;
 
-                    K_[i] = isI = (int)atol(pchar);
+                    K_[i] = isI = (INT)atol(pchar);
 
                     Error = isI <= 0; if (Error) goto E0;
 
@@ -8467,7 +9420,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 pchar = strtok(NULL, "\t");
             }
 
-            K_ = (int*)realloc(K_, length_K_ * length_pdf_ * sizeof(int));
+            K_ = (INT*)realloc(K_, length_K_ * length_pdf_ * sizeof(INT));
 
             for (i = 1; i < length_pdf_; i++) {
                 for (j = 0; j < length_K_; j++) {
@@ -8480,11 +9433,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             i = 0;
 
             while (pchar != NULL) {
-                K_ = (int*)realloc(K_, (i + 1) * sizeof(int));
+                K_ = (INT*)realloc(K_, (i + 1) * sizeof(INT));
 
                 Error = NULL == K_; if (Error) goto E0;
 
-                K_[i] = isI = (int)atol(pchar);
+                K_[i] = isI = (INT)atol(pchar);
 
                 Error = isI <= 0; if (Error) goto E0;
 
@@ -8498,27 +9451,6 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             }
 
             length_K_ = 1;
-        }
-        else
-        if (!strcmp(ident, "Y0")) {
-            i = 0;
-
-            while (pchar) {
-                y0_ = (FLOAT*)realloc(y0_, (i + 1) * sizeof(FLOAT));
-
-                Error = NULL == y0_; if (Error) goto E0;
-
-                y0_[i] = (FLOAT)atof(pchar);
-
-                pchar = strtok(NULL, "\t"); ++i;
-            }
-
-            if ((length_pdf_ > 0) && (length_pdf_ != i)) {
-                Error = 1; goto E0;
-            }
-            else {
-                length_pdf_ = i;
-            }
         }
         else
         if (!strcmp(ident, "YMIN")) {
@@ -8551,6 +9483,27 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 Error = NULL == ymax_; if (Error) goto E0;
 
                 ymax_[i] = (FLOAT)atof(pchar);
+
+                pchar = strtok(NULL, "\t"); ++i;
+            }
+
+            if ((length_pdf_ > 0) && (length_pdf_ != i)) {
+                Error = 1; goto E0;
+            }
+            else {
+                length_pdf_ = i;
+            }
+        }
+        else
+        if (!strcmp(ident, "H")) {
+            i = 0;
+
+            while (pchar) {
+                h_ = (FLOAT*)realloc(h_, (i + 1) * sizeof(FLOAT));
+
+                Error = NULL == h_; if (Error) goto E0;
+
+                h_[i] = (FLOAT)atof(pchar);
 
                 pchar = strtok(NULL, "\t"); ++i;
             }
@@ -8644,13 +9597,13 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         }
         else
         if (!strcmp(ident, "EMMAXIMUMITER")) {
-            EM_max_iter_ = isI = (int)atol(pchar);
+            EM_max_iter_ = isI = (INT)atol(pchar);
 
             Error = isI <= 0; if (Error) goto E0;
         }
         else
         if (!strcmp(ident, "EMK")) {
-            EM_K_ = isI = (int)atol(pchar);
+            EM_K_ = isI = (INT)atol(pchar);
 
             Error = isI < 0; if (Error) goto E0;
         }
@@ -8661,6 +9614,12 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             Error = (isF < (FLOAT)1.0) || (isF > (FLOAT)2.0); if (Error) goto E0;
         }
 /// End
+        else
+        if (!strcmp(ident, "YTYPE")) {
+            Y_type_ = isI = (INT)atol(pchar);
+
+            Error = isI < 1; if (Error) goto E0;
+        }
     }
 
 E0: if (fp) fclose(fp);
@@ -8671,82 +9630,79 @@ E0: if (fp) fclose(fp);
 
 // REBMIX algorithm.
 
-int Rebmix::REBMIX()
+INT Rebmix::REBMIX()
 {
-    int  Error = 0;
+    INT  Error = 0;
 
-    switch (Preprocessing_) {
-    case poHistogram:
-        Error = REBMIXH();
+    if (Y_type_ == 0) {
+        switch (Preprocessing_) {
+        case poHistogram:
+            Error = REBMIXH();
+
+            if (Error) goto E0;
+
+            break;
+        case poKDE:
+            Error = REBMIXKDE();
+
+            if (Error) goto E0;
+
+            break;
+        case poKNearestNeighbour:
+            Error = REBMIXKNN();
+
+            if (Error) goto E0;
+        }
+    }
+    else 
+    if (Y_type_ == 1) {
+        Error = REBMIXK();
 
         if (Error) goto E0;
-
-        break;
-    case poKDE:
-        Error = REBMIXKDE();
-
-        if (Error) goto E0;
-
-        break;
-    case poKNearestNeighbour:
-        Error = REBMIXKNN();
-
-        if (Error) goto E0;
+    }
+    else {
+        Error = 1; goto E0;
     }
 
 E0: return Error;
 } // REBMIX
 
-int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
-                int   *cmax,              // Maximum number of components.
-                int   *cmin,              // Minimum number of components.
+INT Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
+                INT   *cmax,              // Maximum number of components.
+                INT   *cmin,              // Minimum number of components.
                 char  **Criterion,        // Information criterion type.
-                int   *d,                 // Number of independent random variables.
+                INT   *d,                 // Number of independent random variables.
                 char  **Variables,        // Types of variables.
-                int   *length_pdf,        // Length of pdf.
+                INT   *length_pdf,        // Length of pdf.
                 char  **pdf,              // Parametric family types.
-                int   *length_Theta,      // Length of Theta.
-                int   *length_theta,      // Length of Theta[i].
+                INT   *length_Theta,      // Length of Theta.
+                INT   *length_theta,      // Length of Theta[i].
                 FLOAT *Theta,             // Component parameters.
-                int   *length_K,          // Length of K.
-                int   *K,                 // Numbers of bins v or numbers of nearest neighbours k.
-                int   *length_y0,         // Length of y0.
-                FLOAT *y0,                // Origins.
-                int   *length_ymin,       // Length of ymin.
+                INT   *length_K,          // Length of K.
+                INT   *K,                 // Numbers of bins v or numbers of nearest neighbours k.
+                INT   *length_ymin,       // Length of ymin.
                 FLOAT *ymin,              // Minimum observations.
-                int   *length_ymax,       // Length of ymax.
+                INT   *length_ymax,       // Length of ymax.
                 FLOAT *ymax,              // Maximum observations.
+                INT   *length_h,         // Length of h.
+                FLOAT *h,                // Sides of the hypersquare.
                 FLOAT *ar,                // Acceleration rate.
                 char  **Restraints,       // Restraints type.
-                int   *n,                 // Number of observations.
+                INT   *n,                 // Number of observations.
                 FLOAT *Y,                 // Dataset.
+                INT   *Y_type,            // Dataset type. 
                 char  **EMStrategy,       // Strategy for EM algorithm.
                 char  **EMVariant,        // EM algorithm variant.
                 char  **EMAcceleration,   // Acceleration for the standard EM algorithm.
                 FLOAT *EMTolerance,       // Tolerance for EM algortihm.
                 FLOAT *EMAccelerationMul, // Acceleration rate for Em algorithm.
-                int   *EMMaxIter,         // Maximum number of iterations in EM algorithm.
-                int   *EMK)               // Number of bins for histogram EM algorithm.
+                INT   *EMMaxIter,         // Maximum number of iterations in EM algorithm.
+                INT   *EMK,               // Number of bins for histogram EM algorithm.
+                FLOAT *W,                 // Component weights.
+                FLOAT *MixTheta)          // Mixture parameters.
 {
-    int  i, j, k, l;
-    int  Error = 0;
-
-    if (Preprocessing) {
-        if (!strcmp(Preprocessing[0], "histogram")) {
-            Preprocessing_ = poHistogram;
-        }
-        else
-        if (!strcmp(Preprocessing[0], "kernel density estimation")) {
-            Preprocessing_ = poKDE;
-        }
-        else
-        if (!strcmp(Preprocessing[0], "k-nearest neighbour")) {
-            Preprocessing_ = poKNearestNeighbour;
-        }
-        else {
-            Error = 1; goto E0;
-        }
-    }
+    INT  i, j, k, l;
+    INT  Error = 0;
 
     if (cmax) cmax_ = *cmax;
 
@@ -8807,6 +9763,8 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
 
     if (d) length_pdf_ = *d;
 
+    if (length_pdf) length_pdf_ = *length_pdf;
+
     if (Variables && d) {
         Variables_ = (VariablesType_e*)malloc(length_pdf_ * sizeof(VariablesType_e));
 
@@ -8830,12 +9788,10 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
 
     Error = NULL == IniTheta_; if (Error) goto E0;
 
-    if (length_pdf) length_pdf_ = *length_pdf;
-
     if (length_Theta && length_pdf && length_theta) {
         length_Theta_ = *length_Theta;
 
-        length_theta_ = (int*)malloc(length_Theta_ * sizeof(int));
+        length_theta_ = (INT*)malloc(length_Theta_ * sizeof(INT));
 
         Error = NULL == length_theta_; if (Error) goto E0;
 
@@ -8848,7 +9804,7 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
         if (Error) goto E0;
     }
 
-    if (pdf && length_Theta && length_pdf && length_theta) {
+    if (pdf && length_pdf) {
         for (i = 0; i < length_pdf_; i++) {
             if (!strcmp(pdf[i], "normal")) {
                 IniTheta_->pdf_[i] = pfNormal;
@@ -8910,27 +9866,12 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
     if (length_K && length_pdf && K) {
         length_K_ = *length_K;
 
-        K_ = (int*)malloc(length_K_ * length_pdf_ * sizeof(int));
+        K_ = (INT*)malloc(length_K_ * length_pdf_ * sizeof(INT));
 
         Error = NULL == K_; if (Error) goto E0;
 
         for (i = 0; i < length_K_ * length_pdf_; i++) {
             K_[i] = K[i];
-        }
-    }
-
-    if (length_y0 && length_pdf && y0) {
-        if (*length_y0 > 0) {
-            y0_ = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
-
-            Error = NULL == y0_; if (Error) goto E0;
-
-            for (i = 0; i < length_pdf_; i++) {
-                y0_[i] = y0[i];
-            }
-        }
-        else {
-            y0_ = NULL;
         }
     }
 
@@ -8961,6 +9902,16 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
         }
         else {
             ymax_ = NULL;
+        }
+    }
+
+    if (length_h && length_pdf && h) {
+        h_ = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
+
+        Error = NULL == h_; if (Error) goto E0;
+
+        for (i = 0; i < length_pdf_; i++) {
+            h_[i] = h[i];
         }
     }
 
@@ -9044,34 +9995,114 @@ int Rebmix::Set(char  **Preprocessing,    // Preprocessing type.
     if (EMK) EM_K_ = *EMK;
 /// End
 
-    if (n) n_ = *n;
+    if (n) n_ = nr_ = *n;
 
-    if (length_pdf && n && Y) {
-        Y_ = (FLOAT**)malloc(length_pdf_ * sizeof(FLOAT*));
+    if (length_pdf && n && Y && Y_type) {
+        Y_type_ = *Y_type;
+
+        if (Y_type_ == 0) {
+            nc_ = length_pdf_;
+
+            if (Preprocessing) {
+                if (!strcmp(Preprocessing[0], "histogram")) {
+                    Preprocessing_ = poHistogram;
+                }
+                else
+                if (!strcmp(Preprocessing[0], "kernel density estimation")) {
+                    Preprocessing_ = poKDE;
+                }
+                else
+                if (!strcmp(Preprocessing[0], "k-nearest neighbour")) {
+                    Preprocessing_ = poKNearestNeighbour;
+                }
+                else {
+                    Error = 1; goto E0;
+                }
+            }
+        }
+        else
+        if (Y_type_ == 1) {
+            nc_ = length_pdf_ + 1;
+        }
+        else {
+            Error = 1; goto E0;
+        }
+
+        Y_ = (FLOAT**)malloc(nc_ * sizeof(FLOAT*));
 
         Error = NULL == Y_; if (Error) goto E0;
 
-        for (i = 0; i < length_pdf_; i++) {
-            Y_[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+        for (i = 0; i < nc_; i++) {
+            Y_[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
             Error = NULL == Y_[i]; if (Error) goto E0;
         }
 
-        X_ = (FLOAT**)malloc(length_pdf_ * sizeof(FLOAT*));
+        X_ = (FLOAT**)malloc(nc_ * sizeof(FLOAT*));
 
         Error = NULL == X_; if (Error) goto E0;
 
-        for (i = 0; i < length_pdf_; i++) {
-            X_[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
+        for (i = 0; i < nc_; i++) {
+            X_[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
             Error = NULL == X_[i]; if (Error) goto E0;
         }
 
         i = 0;
 
-        for (j = 0; j < length_pdf_; j++) {
-            for (l = 0; l < n_; l++) {
+        for (j = 0; j < nc_; j++) {
+            for (l = 0; l < nr_; l++) {
                 Y_[j][l] = Y[i]; i++;
+            }
+        }
+
+        if (Y_type_ == 1) {
+            n_ = 0;
+
+            for (l = 0; l < nr_; l++) {
+                n_ += (INT)Y_[length_pdf_][l];
+            }
+        }
+    }
+
+    if (W) {
+        W_ = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
+
+        Error = NULL == W_; if (Error) goto E0;
+
+        for (i = 0; i < cmax_; i++) W_[i] = W[i];
+    }
+
+    if (MixTheta) {
+        MixTheta_ = new CompnentDistribution*[(unsigned INT)cmax_];
+
+        Error = NULL == MixTheta_; if (Error) goto E0;
+
+        for (i = 0; i < cmax_; i++) {
+            MixTheta_[i] = new CompnentDistribution(this);
+
+            Error = NULL == MixTheta_[i]; if (Error) goto E0;
+
+            Error = MixTheta_[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
+
+            if (Error) goto E0;
+        }
+
+        for (i = 0; i < cmax_; i++) {
+            for (j = 0; j < length_pdf_; j++) {
+                MixTheta_[i]->pdf_[j] = IniTheta_->pdf_[j];
+            }
+        }
+
+        i = 0;
+
+        for (j = 0; j < length_Theta_; j++) if (IniTheta_->Theta_[j]) {
+            for (k = 0; k < cmax_; k++) {
+                for (l = 0; l < length_theta_[j]; l++) {
+                    MixTheta_[k]->Theta_[j][l] = MixTheta[i];
+
+                    i++;
+                }
             }
         }
     }
@@ -9080,33 +10111,33 @@ E0: return Error;
 } // Set
 
 /// Panic Branislav
-int Rebmix::Get(int   *n_iter,         // Number of iterations for optimal case.
-                int   *n_iter_sum,     // Number of iterations in whole run.
+INT Rebmix::Get(INT   *n_iter,         // Number of iterations for optimal case.
+                INT   *n_iter_sum,     // Number of iterations in whole run.
 /// End
-                int   *summary_k,      // Optimal v or optimal k.
+                INT   *summary_k,      // Optimal v or optimal k.
                 FLOAT *summary_h,      // Optimal class widths of length d.
                 FLOAT *summary_y0,     // Optimal origins of length d.
                 FLOAT *summary_ymin,   // Optimal minimum observations of length d.
                 FLOAT *summary_ymax,   // Optimal maximum observations of length d.
                 FLOAT *summary_IC,     // Optimal information criterion.
                 FLOAT *summary_logL,   // Log-likelihood.
-                int   *summary_M,      // Degrees of freedom.
-                int   *summary_c,      // Optimal number of components.
+                INT   *summary_M,      // Degrees of freedom.
+                INT   *summary_c,      // Optimal number of components.
                 FLOAT *W,              // Component weights.
                 FLOAT *theta1,         // Component parameters.
                 FLOAT *theta2,         // Component parameters.
                 FLOAT *theta3,         // Component parameters.
-                int   *opt_length,     // Length of opt_c, opt_IC, opt_logL and opt_D.
-                int   *opt_c,          // Numbers of components for optimal v or for optimal k.
+                INT   *opt_length,     // Length of opt_c, opt_IC, opt_logL and opt_D.
+                INT   *opt_c,          // Numbers of components for optimal v or for optimal k.
                 FLOAT *opt_IC,         // Information criteria for optimal v or for optimal k.
                 FLOAT *opt_logL,       // Log-likelihoods for optimal v or for optimal k.
                 FLOAT *opt_D,          // Totals of positive relative deviations for optimal v or for optimal k.
-                int   *all_length,     // Length of all_K and all_IC.
-                int   *all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.
+                INT   *all_length,     // Length of all_K and all_IC.
+                INT   *all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.
                 FLOAT *all_IC)         // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
 {
-    int  i, j, l;
-    int  Error = 0;
+    INT  i, j, l;
+    INT  Error = 0;
 
     /// Panic Branislav
     if (n_iter) *n_iter = n_iter_;

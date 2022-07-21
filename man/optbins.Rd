@@ -9,7 +9,7 @@ Optimal Numbers of Bins Calculation
 Returns the matrix of size \eqn{n_{\mathrm{D}} \times d} containing optimal numbers of bins \eqn{v_{1}, \ldots, v_{d}} for all processed datasets.
 }
 \usage{
-\S4method{optbins}{list}(Dataset = list(), Rule = "Knuth equal", y0 = numeric(), 
+\S4method{optbins}{list}(Dataset = list(), Rule = "Knuth equal",
         ymin = numeric(), ymax = numeric(), kmin = numeric(),
         kmax = numeric(), ...)
 ## ... and for other signatures
@@ -21,9 +21,6 @@ represents one random variable. Numbers of observations \eqn{n} equal the number
 }
 \item{Rule}{
 a character giving the histogram binning rule. One of \code{"Sturges"}, \code{"Log10"}, \code{"RootN"}, default \code{"Knuth equal"} or \code{"Knuth unequal"}.
-}
-\item{y0}{
-a vector of length \eqn{d} containing origins. The default value is \code{numeric()}.
 }
 \item{ymin}{
 a vector of length \eqn{d} containing minimum observations. The default value is \code{numeric()}.

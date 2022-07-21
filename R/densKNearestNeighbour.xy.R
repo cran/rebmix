@@ -12,7 +12,7 @@
     PACKAGE = "rebmix")
 
   if (output$error == 1) {
-    stop("in densKNearestNeighbour.xy!", call. = FALSE); return(NA)
+    stop("in RdensKNearestNeighbourXY!", call. = FALSE); return(NA)
   }
 
   i <- !duplicated(data.frame(output$x, output$y))

@@ -31,13 +31,13 @@ tolerance value for the EM convergence criteria. The default value is 1.0E-4.
 acceleration.multiplier \eqn{a_{\mathrm{EM}}}, \eqn{1.0 \leq a_{\mathrm{EM}} \leq 2.0}. acceleration.multiplier for the EM step increment. The default value is 1.0.
 }
 \item{\code{maximum.iterations}:}{
-is positive integer containing the maximum allowed number of iterations of the EM algorithm. The default value is 1000.
+a positive integer containing the maximum allowed number of iterations of the EM algorithm. The default value is 1000.
 }
 \item{\code{K}:}{
-is integer containing the number of bins for the histogram based EM algorithm. This option can reduce computational time drastically if the datasets contain a large number of observations \eqn{n} and \code{K} is set to the value \eqn{\ll n}. The default value of 0 means that the EM algorithm runs over all \eqn{n}.
+an integer containing the number of bins for the histogram based EM algorithm. This option can reduce computational time drastically if the datasets contain a large number of observations \eqn{n} and \code{K} is set to the value \eqn{\ll n}. The default value of 0 means that the EM algorithm runs over all \eqn{n}.
 }
 \item{\code{eliminate.zero.components}:}{
-is boolean indicating if the componenets with \eqn{w_{l} = 0} should be eliminated from output. Only used with \code{EMMIX-methods}.
+a logical indicating if the componenets with \eqn{w_{l} = 0} should be eliminated from output. Only used with \code{EMMIX-methods}.
 }
 }
 }
@@ -47,7 +47,7 @@ B. Panic, J. Klemenc, M. Nagode. Improved initialization of the EM algorithm for
 Mathematics, 8(3):373, 2020.
 \doi{10.3390/math8030373}.\cr\cr
 A. P. Dempster et al. Maximum likelihood from incomplete data via the EM algorithm. Journal of the Royal Statistical Society. Series B, 39(1):1-38, 1977.
-\url{https://www.jstor.org/stable/2984875}.\cr\cr
+https://www.jstor.org/stable/2984875.\cr\cr
 G. Celeux and G. Govaert. A classification EM algorithm for clustering and two stochastic versions, Computational Statistics & Data Analysis, 14(3):315:332, 1992.
 \doi{10.1016/0167-9473(92)90042-E}.
 }

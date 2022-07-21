@@ -1,5 +1,15 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.14.1}{ 
+\itemize{
+\item Class \code{"Histogram"} is added.
+\item Methods \code{"chistogram"}, \code{"fhistogram"} and \code{mapclusters} are added.
+\item Argument \code{y0} is removed from \code{REBMIX}, \code{bins}, \code{optbins} methods and from class \code{"REBMIX"}.
+\item The C++ function \code{REBMIXK()} is added. It is called by the \code{REBMIX} method if the argument \code{Dataset} contains objects of type \code{"Histogram"}.
+\item Numerous minor changes and debugging in C++ and R codes required due to the above changes.
+\item Methods \code{"demix"}, \code{"dfmix"}, \code{"pemix"}, \code{"pfmix"} and all information criterion methods are modified for class \code{"Histogram"}.
+}
+}
 \section{Changes in version 2.14.0}{ 
 \itemize{
 \item The package has been extended to three parametric family types.

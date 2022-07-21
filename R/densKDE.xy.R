@@ -11,7 +11,7 @@
     PACKAGE = "rebmix")
 
   if (output$error == 1) {
-    stop("in densKDE.xy!", call. = FALSE); return(NA)
+    stop("in RdensKDEXY!", call. = FALSE); return(NA)
   }
 
   i <- !duplicated(data.frame(output$x, output$y))

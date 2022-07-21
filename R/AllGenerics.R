@@ -18,7 +18,6 @@ setGeneric("REBMIX",
     theta2 = numeric(),
     theta3 = numeric(),
     K = "auto",
-    y0 = numeric(),
     ymin = numeric(),
     ymax = numeric(),
     ar = 0.1,
@@ -112,7 +111,7 @@ setGeneric("boot",
 setGeneric("RCLRMIX",
   function(model = "RCLRMIX",
     x = NULL,
-    Dataset = data.frame(),
+    Dataset = NULL,
     pos = 1,
     Zt = factor(), 
     Rule = character(), ...)
@@ -240,11 +239,15 @@ setGeneric("a.eliminate.zero.components", function(x = NULL) standardGeneric("a.
 setGeneric("a.eliminate.zero.components<-", function(x = NULL, value = numeric()) standardGeneric("a.eliminate.zero.components<-"))
 ### End
 
+setGeneric("a.Y", function(x = NULL) standardGeneric("a.Y"))
+setGeneric("a.Y<-", function(x = NULL, value = numeric()) standardGeneric("a.Y<-"))
+setGeneric("a.h", function(x = NULL) standardGeneric("a.h"))
+setGeneric("a.ns", function(x = NULL) standardGeneric("a.ns"))
+
 ### Panic Branislav & Marko Nagode.
 setGeneric("optbins",
   function(Dataset = list(),
     Rule = "Knuth equal",  
-    y0 = numeric(),
     ymin = numeric(),
     ymax = numeric(), 
     kmin = numeric(),
@@ -254,9 +257,31 @@ setGeneric("optbins",
 setGeneric("bins",
   function(Dataset = list(),
     K = matrix(),
-    y0 = numeric(),
     ymin = numeric(),
     ymax = numeric(), ...)
   standardGeneric("bins"))  
 ### End
+
+setGeneric("fhistogram",
+  function(x = NULL,
+    Dataset = data.frame(),
+    K = numeric(),
+    ymin = numeric(),
+    ymax = numeric(), 
+    shrink = FALSE, ...)
+  standardGeneric("fhistogram"))
+  
+setGeneric("chistogram",
+  function(x = NULL,
+    Dataset = data.frame(),
+    K = numeric(),
+    ymin = numeric(),
+    ymax = numeric(), ...)
+  standardGeneric("chistogram"))
+  
+setGeneric("mapclusters",
+  function(x = NULL,
+    Dataset = data.frame(),
+    s = expression(c), ...)
+  standardGeneric("mapclusters"))  
 

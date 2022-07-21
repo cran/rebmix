@@ -31,21 +31,36 @@ function(model, Theta, ...)
 
   for (i in 1:length(model@Dataset)) {
     Dataset.name <- names(model@Dataset)[i]
+    
+    Dataset <- model@Dataset[[i]]
+    
+    if (as.character(class(Dataset)) == "data.frame") {
+      Y.type <- 0
+    
+      X <- as.matrix(model@Dataset[[i]])
 
-    X <- as.matrix(model@Dataset[[i]])
+      n <- nrow(X)
+      d <- ncol(X)    
+    }
+    else
+    if (as.character(class(Dataset)) == "Histogram") {
+      Y.type <- 1
+    
+      X <- as.matrix(model@Dataset[[i]]@Y)
+
+      n <- nrow(X)
+      d <- ncol(X) - 1 
+    }     
 
     message("Dataset = ", Dataset.name)
 
     flush.console()
 
-    n <- nrow(X)
-
-    d <- ncol(X)
-
     output <- .C(C_REMMIX,
       d = as.integer(d),
       n = as.integer(n),
       Y = as.double(X),
+      Y.type = as.integer(Y.type),
       pdf = as.character(model@pdf),
       c = as.integer(c),
       W = as.double(w),
@@ -209,20 +224,35 @@ function(model, Theta, ...)
   for (i in 1:length(model@Dataset)) {
     Dataset.name <- names(model@Dataset)[i]
 
-    X <- as.matrix(model@Dataset[[i]])
+    Dataset <- model@Dataset[[i]]
+    
+    if (as.character(class(Dataset)) == "data.frame") {
+      Y.type <- 0
+    
+      X <- as.matrix(model@Dataset[[i]])
+
+      n <- nrow(X)
+      d <- ncol(X)    
+    }
+    else
+    if (as.character(class(Dataset)) == "Histogram") {
+      Y.type <- 1
+    
+      X <- as.matrix(model@Dataset[[i]]@Y)
+
+      n <- nrow(X)
+      d <- ncol(X) - 1 
+    }  
 
     message("Dataset = ", Dataset.name)
 
     flush.console()
 
-    n <- nrow(X)
-
-    d <- ncol(X)
-
     output <- .C(C_REMMVNORM,
       d = as.integer(d),
       n = as.integer(n),
       Y = as.double(X),
+      Y.type = as.integer(Y.type),
       pdf = as.character(model@pdf),
       c = as.integer(c),
       W = as.double(w),
@@ -365,7 +395,7 @@ function(model,
     stop(sQuote("Theta"), " must not be empty!", call. = FALSE)
   }
 
-  if (class(Theta) != Theta.model) {
+  if (as.character(class(Theta)) != Theta.model) {
     stop(sQuote("Theta"), " object of class ", Theta.model, " is requested!", call. = FALSE)
   }
 
@@ -385,7 +415,7 @@ function(model,
      pdf = Theta@pdf,
      theta1 = numeric(),
      theta2 = numeric(),
-     theta3 = numeric(),
+     theta3 = rep(NA, Theta@d),
      K = "auto",
      y0 = numeric(),
      ymin = numeric(),

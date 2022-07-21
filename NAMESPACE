@@ -31,7 +31,7 @@ exportMethods("RNGMIX",
               "RCLSMIX",
 ### Panic Branislav.
               "EMMIX",
-### End              
+### End            
               "logL",
               "AIC",
               "AIC3",
@@ -160,5 +160,12 @@ exportMethods("RNGMIX",
               "a.eliminate.zero.components",
               "a.eliminate.zero.components<-",              
               "optbins",
-              "bins")
+              "bins",
 ### End 
+              "a.Y",
+              "a.Y<-",
+              "a.h",
+              "a.ns",
+              "fhistogram",
+              "chistogram",
+              "mapclusters")

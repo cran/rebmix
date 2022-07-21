@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     Rebmix    *rebmix = NULL;
     Rngmvnorm *rngmvnorm = NULL;
     Rebmvnorm *rebmvnorm = NULL;
-    int       Error = 0;
+    INT       Error = 0;
 
     if (argc != 3) goto E0;
 
