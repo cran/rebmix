@@ -740,9 +740,9 @@ void RPreprocessingHMVNORM(double *h,          // Sides of the hypersquare.
     *Error = NULL == rebmvnorm; if (*Error) goto E0;
 
     rebmvnorm->n_ = rebmvnorm->nr_ = *n;
-    rebmvnorm->length_pdf_ = *d;
+    rebmvnorm->nc_ = rebmvnorm->length_pdf_ = *d;
 
-    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT*));
+    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmvnorm->Y_; if (*Error) goto E0;
 
@@ -880,7 +880,7 @@ void RInformationCriterionKNNMVNORM(double *h,            // Sides of the hypers
 
     *Error = NULL == rebmvnorm->IniTheta_; if (*Error) goto E0;
 
-    rebmvnorm->length_pdf_ = *length_pdf;
+    rebmvnorm->nc_ = rebmvnorm->length_pdf_ = *length_pdf;
 
     rebmvnorm->length_Theta_ = *length_Theta;
 
@@ -935,7 +935,7 @@ void RInformationCriterionKNNMVNORM(double *h,            // Sides of the hypers
 
     rebmvnorm->n_ = rebmvnorm->nr_ = *n;
 
-    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT*));
+    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmvnorm->Y_; if (*Error) goto E0;
 
@@ -1089,7 +1089,7 @@ void RInformationCriterionKDEMVNORM(double *h,            // Sides of the hypers
 
     *Error = NULL == rebmvnorm->IniTheta_; if (*Error) goto E0;
 
-    rebmvnorm->length_pdf_ = *length_pdf;
+    rebmvnorm->nc_ = rebmvnorm->length_pdf_ = *length_pdf;
 
     rebmvnorm->length_Theta_ = *length_Theta;
 
@@ -1144,7 +1144,7 @@ void RInformationCriterionKDEMVNORM(double *h,            // Sides of the hypers
 
     rebmvnorm->n_ = rebmvnorm->nr_ = *n;
 
-    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT*));
+    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmvnorm->Y_; if (*Error) goto E0;
 
@@ -1308,7 +1308,7 @@ void RInformationCriterionHMVNORM(double *h,            // Sides of the hypersqu
 
     *Error = NULL == rebmvnorm->IniTheta_; if (*Error) goto E0;
 
-    rebmvnorm->length_pdf_ = *length_pdf;
+    rebmvnorm->nc_ = rebmvnorm->length_pdf_ = *length_pdf;
 
     rebmvnorm->length_Theta_ = *length_Theta;
 
@@ -1363,7 +1363,7 @@ void RInformationCriterionHMVNORM(double *h,            // Sides of the hypersqu
 
     rebmvnorm->n_ = rebmvnorm->nr_ = *n;
 
-    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT*));
+    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmvnorm->Y_; if (*Error) goto E0;
 
@@ -1721,7 +1721,7 @@ void RInformationCriterionMVNORM(char   **Criterion,   // Information criterion 
 
     *Error = NULL == rebmvnorm->IniTheta_; if (*Error) goto E0;
 
-    rebmvnorm->length_pdf_ = *length_pdf;
+    rebmvnorm->nc_ = rebmvnorm->length_pdf_ = *length_pdf;
 
     rebmvnorm->length_Theta_ = *length_Theta;
 
@@ -1776,7 +1776,7 @@ void RInformationCriterionMVNORM(char   **Criterion,   // Information criterion 
 
     rebmvnorm->n_ = rebmvnorm->nr_ = *n;
 
-    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->length_pdf_ * sizeof(FLOAT*));
+    rebmvnorm->Y_ = (FLOAT**)malloc(rebmvnorm->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmvnorm->Y_; if (*Error) goto E0;
 
@@ -1842,39 +1842,41 @@ void RCombineComponentsMVNORM(INT    *c,            // Number of components.
 
     *Error = NULL == rebmvnorm; if (*Error) goto E0;
 
-    rebmvnorm->Set(NULL,         // Preprocessing type.
-                   c,            // Maximum number of components.
-                   NULL,         // Minimum number of components.
-                   NULL,         // Information criterion type.
-                   length_pdf,   // Number of independent random variables.
-                   NULL,         // Types of variables.
-                   length_pdf,   // Length of pdf.
-                   pdf,          // Parametric family types.
-                   length_Theta, // Length of Theta.
-                   length_theta, // Length of Theta[i].
-                   NULL,         // Component parameters.
-                   NULL,         // Length of K.
-                   NULL,         // Numbers of bins v or numbers of nearest neighbours k.
-                   NULL,         // Length of ymin.
-                   NULL,         // Minimum observations.
-                   NULL,         // Length of ymax.
-                   NULL,         // Maximum observations.
-                   NULL,         // Length of h.
-                   NULL,         // Sides of the hypersquare.
-                   NULL,         // Acceleration rate.
-                   NULL,         // Restraints type.
-                   n,            // Number of observations.
-                   Y,            // Dataset.
-                   Y_type,       // Dataset type. 
-                   NULL,         // Strategy for EM algorithm.
-                   NULL,         // EM algorithm variant.
-                   NULL,         // Acceleration for the standard EM algorithm.
-                   NULL,         // Tolerance for EM algortihm.
-                   NULL,         // Acceleration rate for Em algorithm.
-                   NULL,         // Maximum number of iterations in EM algorithm.
-                   NULL,         // Number of bins for histogram EM algorithm.
-                   W,            // Component weights.
-                   MixTheta);    // Mixture parameters.
+    *Error = rebmvnorm->Set(NULL,         // Preprocessing type.
+                            c,            // Maximum number of components.
+                            NULL,         // Minimum number of components.
+                            NULL,         // Information criterion type.
+                            length_pdf,   // Number of independent random variables.
+                            NULL,         // Types of variables.
+                            length_pdf,   // Length of pdf.
+                            pdf,          // Parametric family types.
+                            length_Theta, // Length of Theta.
+                            length_theta, // Length of Theta[i].
+                            NULL,         // Component parameters.
+                            NULL,         // Length of K.
+                            NULL,         // Numbers of bins v or numbers of nearest neighbours k.
+                            NULL,         // Length of ymin.
+                            NULL,         // Minimum observations.
+                            NULL,         // Length of ymax.
+                            NULL,         // Maximum observations.
+                            NULL,         // Length of h.
+                            NULL,         // Sides of the hypersquare.
+                            NULL,         // Acceleration rate.
+                            NULL,         // Restraints type.
+                            n,            // Number of observations.
+                            Y,            // Dataset.
+                            Y_type,       // Dataset type. 
+                            NULL,         // Strategy for EM algorithm.
+                            NULL,         // EM algorithm variant.
+                            NULL,         // Acceleration for the standard EM algorithm.
+                            NULL,         // Tolerance for EM algortihm.
+                            NULL,         // Acceleration rate for Em algorithm.
+                            NULL,         // Maximum number of iterations in EM algorithm.
+                            NULL,         // Number of bins for histogram EM algorithm.
+                            W,            // Component weights.
+                            MixTheta);    // Mixture parameters.
+
+    if (*Error) goto E0;
 
     for (i = 0; i < rebmvnorm->cmax_; i++) {
         *Error = Cholinvdet(rebmvnorm->length_pdf_, rebmvnorm->MixTheta_[i]->Theta_[1], rebmvnorm->MixTheta_[i]->Theta_[2], rebmvnorm->MixTheta_[i]->Theta_[3]);
@@ -2145,6 +2147,8 @@ void REMMVNORM(INT    *d,                 // Number of independent random variab
                            NULL,   // Length of all_K and all_IC.
                            NULL,   // All processed numbers of bins v or all processed numbers of nearest neighbours k.
                            NULL);  // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
+
+    if (error) goto E0;
 
 E0:
     if (rebmvnorm) delete rebmvnorm;

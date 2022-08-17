@@ -30,7 +30,7 @@ function(model, ...)
       
       d <- ncol(X) - 1
       
-      h <- model@Dataset[[i]]@h 
+      h <- model@Dataset[[i]]@h
     }
 
     message("Dataset = ", Dataset.name)
@@ -729,7 +729,7 @@ function(model,
 {
   digits <- getOption("digits"); options(digits = 15)
 
-  message("REBMIX Version 2.14.1")
+  message("REBMIX Version 2.14.2")
 
   flush.console()
 

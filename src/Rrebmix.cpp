@@ -561,7 +561,7 @@ void RdensKXY(INT    *v,     // Total number of bins.
 
         j = i + 1;
 
-        do {
+        if (j < *v) do {
             if ((x[j] < x[i] + rx) && (x[j] > x[i] - rx) && (y[j] < y[i] + ry) && (y[j] > y[i] - ry)) {
                 p[i] += k[j]; (*v)--; 
                 
@@ -779,7 +779,7 @@ void RdensKX(INT    *v,     // Total number of bins.
 
         j = i + 1;
 
-        do {
+        if (j < *v) do {
             if ((x[j] < x[i] + rx) && (x[j] > x[i] - rx)) {
                 p[i] += k[j]; (*v)--;
 
@@ -1372,9 +1372,9 @@ void RPreprocessingHMIX(double *h,          // Sides of the hypersquare.
     *Error = NULL == rebmix; if (*Error) goto E0;
 
     rebmix->n_ = rebmix->nr_ = *n;
-    rebmix->length_pdf_ = *d;
+    rebmix->nc_ = rebmix->length_pdf_ = *d;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -1555,7 +1555,7 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *length_pdf;
+    rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
     rebmix->length_Theta_ = *length_Theta;
 
@@ -1656,7 +1656,7 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -1807,7 +1807,7 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *length_pdf;
+    rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
     rebmix->length_Theta_ = *length_Theta;
 
@@ -1908,7 +1908,7 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -2069,7 +2069,7 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *length_pdf;
+    rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
     rebmix->length_Theta_ = *length_Theta;
 
@@ -2170,7 +2170,7 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -2568,7 +2568,7 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *length_pdf;
+    rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
     rebmix->length_Theta_ = *length_Theta;
 
@@ -2669,7 +2669,7 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -2728,39 +2728,41 @@ void RCombineComponentsMIX(INT    *c,            // Number of components.
 
     *Error = NULL == rebmix; if (*Error) goto E0;
 
-    rebmix->Set(NULL,         // Preprocessing type.
-                c,            // Maximum number of components.
-                NULL,         // Minimum number of components.
-                NULL,         // Information criterion type.
-                length_pdf,   // Number of independent random variables.
-                NULL,         // Types of variables.
-                length_pdf,   // Length of pdf.
-                pdf,          // Parametric family types.
-                length_Theta, // Length of Theta.
-                length_theta, // Length of Theta[i].
-                NULL,         // Component parameters.
-                NULL,         // Length of K.
-                NULL,         // Numbers of bins v or numbers of nearest neighbours k.
-                NULL,         // Length of ymin.
-                NULL,         // Minimum observations.
-                NULL,         // Length of ymax.
-                NULL,         // Maximum observations.
-                NULL,         // Length of h.
-                NULL,         // Sides of the hypersquare.
-                NULL,         // Acceleration rate.
-                NULL,         // Restraints type.
-                n,            // Number of observations.
-                Y,            // Dataset.
-                Y_type,       // Dataset type. 
-                NULL,         // Strategy for EM algorithm.
-                NULL,         // EM algorithm variant.
-                NULL,         // Acceleration for the standard EM algorithm.
-                NULL,         // Tolerance for EM algortihm.
-                NULL,         // Acceleration rate for Em algorithm.
-                NULL,         // Maximum number of iterations in EM algorithm.
-                NULL,         // Number of bins for histogram EM algorithm.
-                W,            // Component weights.
-                MixTheta);    // Mixture parameters.
+    *Error =  rebmix->Set(NULL,         // Preprocessing type.
+                          c,            // Maximum number of components.
+                          NULL,         // Minimum number of components.
+                          NULL,         // Information criterion type.
+                          length_pdf,   // Number of independent random variables.
+                          NULL,         // Types of variables.
+                          length_pdf,   // Length of pdf.
+                          pdf,          // Parametric family types.
+                          length_Theta, // Length of Theta.
+                          length_theta, // Length of Theta[i].
+                          NULL,         // Component parameters.
+                          NULL,         // Length of K.
+                          NULL,         // Numbers of bins v or numbers of nearest neighbours k.
+                          NULL,         // Length of ymin.
+                          NULL,         // Minimum observations.
+                          NULL,         // Length of ymax.
+                          NULL,         // Maximum observations.
+                          NULL,         // Length of h.
+                          NULL,         // Sides of the hypersquare.
+                          NULL,         // Acceleration rate.
+                          NULL,         // Restraints type.
+                          n,            // Number of observations.
+                          Y,            // Dataset.
+                          Y_type,       // Dataset type. 
+                          NULL,         // Strategy for EM algorithm.
+                          NULL,         // EM algorithm variant.
+                          NULL,         // Acceleration for the standard EM algorithm.
+                          NULL,         // Tolerance for EM algortihm.
+                          NULL,         // Acceleration rate for Em algorithm.
+                          NULL,         // Maximum number of iterations in EM algorithm.
+                          NULL,         // Number of bins for histogram EM algorithm.
+                          W,            // Component weights.
+                          MixTheta);    // Mixture parameters.
+
+    if (*Error) goto E0;
 
 /// Panic Branislav
     if (!strcmp(Rule[0], "Entropy")) {
@@ -2913,11 +2915,11 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
     *Error = NULL == rebmix; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *d;
+    rebmix->nc_ = rebmix->length_pdf_ = *d;
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -3252,11 +3254,11 @@ void Rbins(INT    *d,           // Number of independent random variables.
 
     *Error = NULL == rebmix; if (*Error) goto E0;
 
-    rebmix->length_pdf_ = *d;
+    rebmix->nc_ = rebmix->length_pdf_ = *d;
 
     rebmix->n_ = rebmix->nr_ = *n;
 
-    rebmix->Y_ = (FLOAT**)malloc(rebmix->length_pdf_ * sizeof(FLOAT*));
+    rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
     *Error = NULL == rebmix->Y_; if (*Error) goto E0;
 
@@ -3522,6 +3524,9 @@ void REMMIX(INT    *d,                 // Number of independent random variables
                         NULL,     // Length of all_K and all_IC.
                         NULL,     // All processed numbers of bins v or all processed numbers of nearest neighbours k.
                         NULL);    // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
+
+    if (error) goto E0;
+
 E0:
 
     if (rebmix) delete rebmix;
