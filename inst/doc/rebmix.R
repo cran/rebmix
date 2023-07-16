@@ -90,7 +90,7 @@ gamma3est <- REBMIX(Dataset = a.Dataset(gamma3),
 ###################################################
 ### code chunk number 5: gamma3-fig
 ###################################################
-plot(gamma3est, pos = 1, what = c("pdf", "marginal cdf"), ncol = 2, npts = 1000)
+plot(gamma3est, pos = 1, what = c("pdf", "marginal cdf"), ncol = 2, npts = 1000, family = "sans")
 
 
 ###################################################
@@ -194,7 +194,7 @@ poissonest <- REBMIX(Dataset = a.Dataset(poisson),
 ###################################################
 ### code chunk number 11: poisson-fig
 ###################################################
-plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000)
+plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nrow = 2, ncol = 3, npts = 1000, family = "sans")
 
 
 ###################################################
@@ -202,7 +202,7 @@ plot(poissonest, pos = 1, what = c("pdf", "marginal pdf", "IC", "D", "logL"), nr
 ###################################################
 poissonclu <- RCLRMIX(x = poissonest, pos = 1, Zt = a.Zt(poisson))
 
-plot(poissonclu)
+plot(poissonclu, family = "sans")
 
 
 ###################################################
@@ -297,7 +297,7 @@ mvnormest <- REBMIX(model = "REBMVNORM",
 ###################################################
 ### code chunk number 17: mvnorm-fig
 ###################################################
-plot(mvnormest)
+plot(mvnormest, family = "sans")
 
 
 ###################################################
@@ -305,7 +305,7 @@ plot(mvnormest)
 ###################################################
 mvnormclu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest)
 
-plot(mvnormclu)
+plot(mvnormclu, family = "sans")
 
 
 ###################################################
@@ -380,7 +380,7 @@ mvnorm.clu <- RCLRMIX(model = "RCLRMVNORM", x = mvnormest.cem)
 ###################################################
 ### code chunk number 23: mvnorm-clu-fig-cem
 ###################################################
-plot(mvnorm.clu)
+plot(mvnorm.clu, family = "sans")
 
 
 ###################################################
@@ -544,7 +544,7 @@ summary(drivecla)
 ###################################################
 # Plot selected features.
 
-plot(drivecla, nrow = 3, ncol = 2)
+plot(drivecla, nrow = 3, ncol = 2, family = "sans")
 
 
 ###################################################
@@ -654,7 +654,7 @@ summary(adultcla)
 ###################################################
 ## Plot selected chunks.
 
-plot(adultcla, nrow = 5, ncol = 2)
+plot(adultcla, nrow = 5, ncol = 2, family = "sans")
 
 
 ###################################################

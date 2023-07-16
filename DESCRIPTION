@@ -1,5 +1,5 @@
 Package: rebmix
-Version: 2.14.2
+Version: 2.15.0
 Authors@R: c(person("Marko", "Nagode", role = c("aut", "cre"),
                      email = "marko.nagode@fs.uni-lj.si",
                      comment = c(ORCID = "0000-0003-0637-3812")),
@@ -11,7 +11,7 @@ Authors@R: c(person("Marko", "Nagode", role = c("aut", "cre"),
                      comment = c(ORCID = "0000-0001-8213-0818")))
 Title: Finite Mixture Modeling, Clustering & Classification
 Description: Random univariate and multivariate finite mixture model generation, estimation, clustering, latent class analysis and classification. Variables can be continuous, discrete, independent or dependent and may follow normal, lognormal, Weibull, gamma, Gumbel, binomial, Poisson, Dirac, uniform or circular von Mises parametric families.
-Depends: R (>= 2.10.0)
+Depends: R (>= 3.1.0)
 Imports: methods, stats, utils, graphics, grDevices
 License: GPL (>= 2)
 Author: Marko Nagode [aut, cre] (<https://orcid.org/0000-0003-0637-3812>),
@@ -20,6 +20,6 @@ Author: Marko Nagode [aut, cre] (<https://orcid.org/0000-0003-0637-3812>),
   Simon Oman [ctb] (<https://orcid.org/0000-0001-8213-0818>)
 Maintainer: Marko Nagode <marko.nagode@fs.uni-lj.si>
 NeedsCompilation: yes
-Packaged: 2022-08-17 09:30:16 UTC; PCNagodeM
+Packaged: 2023-07-12 09:03:38 UTC; PCNagodeM
 Repository: CRAN
-Date/Publication: 2022-08-17 22:30:02 UTC
+Date/Publication: 2023-07-16 14:50:02 UTC

@@ -25,6 +25,8 @@
 \alias{fhistogram,ANY-method}
 \alias{chistogram,ANY-method}
 \alias{mapclusters,ANY-method}
+\alias{labelmoments,ANY-method}
+\alias{mergelabels,ANY-method}
 
 \alias{a.d}
 \alias{a.theta1<-}
@@ -368,7 +370,7 @@
 \alias{a.n,Histogram-method}
 \alias{a.ns,Histogram-method}
 
-\title{Internal rebmix Functions}
+\title{Internal rebmix Functions, Methods and Classes}
 \description{
 Internal rebmix functions, methods and classes.
 }

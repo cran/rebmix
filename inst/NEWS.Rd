@@ -1,5 +1,13 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.15.0}{ 
+\itemize{
+\item Method \code{"labelmoments"} is added.
+\item Method \code{"mergelabels"} is added.
+\item Adjacency matrix \code{A} slot is added to \code{"RCLRMIX"} class.
+\item Improved C++ functions \code{CombineComponentsEntropy()} and \code{CombineComponentsDemp()}.
+}
+}
 \section{Changes in version 2.14.2}{ 
 \itemize{
 \item Valgrind problems have been resolved.
