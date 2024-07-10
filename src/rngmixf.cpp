@@ -76,13 +76,12 @@ Rngmix::~Rngmix()
 
 INT Rngmix::WriteDataFile()
 {
-    INT  i, j;
     FILE *fp = NULL;
-    INT  Error = 0;
+    INT  i, j, Error = E_OK;
 
-    if ((fp = fopen(curr_, "w")) == NULL) {
-        Error = 1; goto E0;
-    }
+    fp = fopen(curr_, "w");
+
+    E_CHECK(NULL == fp, E_FILE);
 
     for (i = 0; i < n_; i++) {
         fprintf(fp, "%E", Y_[0][i]);
@@ -92,7 +91,9 @@ INT Rngmix::WriteDataFile()
         fprintf(fp, "\t%d\n", Z_[i]);
     }
 
-E0: if (fp) fclose(fp);
+EEXIT:
+
+    if (fp) fclose(fp);
 
     if (Z_) free(Z_);
 
@@ -106,7 +107,7 @@ E0: if (fp) fclose(fp);
         free(Y_); Y_ = NULL;
     }
 
-    return Error;
+    E_RETURN(Error);
 } // WriteDataFile
 #endif
 
@@ -120,7 +121,7 @@ INT Rngmix::WriteParameterFile()
     char ext[FILENAME_MAX];
     char *pchar = NULL;
     FILE *fp = NULL;
-    INT  Error = 0;
+    INT  Error = E_OK;
 
     strcpy(path, save_);
 
@@ -135,29 +136,29 @@ INT Rngmix::WriteParameterFile()
 
     sprintf(line, "%s%s%s", path, "_1", ext);
 
-    if ((fp = fopen(line, "w")) == NULL) {
-        Error = 1; goto E0;
-    }
+    fp = fopen(line, "w");
+
+    E_CHECK(NULL == fp, E_FILE);
 
     fprintf(fp, "%s\n", "rseed");
 
     fprintf(fp, "%d\n", IDum_);
 
-E0: if (fp) fclose(fp);
+EEXIT:
 
-    return Error;
+    if (fp) fclose(fp);
+
+    E_RETURN(Error);
 } // WriteParameterFile
 #endif
 
-INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
+INT Rngmix::ComponentInv(CompnentDistribution *CmpCdf, INT j, FLOAT **Y)
 {
-    FLOAT C[8];
-    FLOAT y, p;
-    INT   i, k;
-    INT   Error = 0;
+    FLOAT C[8], y, p;
+    INT   i, k, Error = E_OK;
 
     for (i = 0; i < length_pdf_; i++) {
-        switch (CmpDist->pdf_[i]) {
+        switch (CmpCdf->pdf_[i]) {
         case pfNormal:
             if (NDevISet == 0) {
                 do {
@@ -177,7 +178,7 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
                 y = NDevVSet; NDevISet = 0;
             }
 
-            Y[i][j] = CmpDist->Theta_[1][i] * y + CmpDist->Theta_[0][i];
+            Y[i][j] = CmpCdf->Theta_[1][i] * y + CmpCdf->Theta_[0][i];
 
             break;
         case pfTNormal:
@@ -201,49 +202,51 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
                 y = LDevVSet; LDevISet = 0;
             }
 
-            Y[i][j] = (FLOAT)exp(CmpDist->Theta_[1][i] * y + CmpDist->Theta_[0][i]);
+            Y[i][j] = (FLOAT)exp(CmpCdf->Theta_[1][i] * y + CmpCdf->Theta_[0][i]);
 
             break;
         case pfWeibull:
-            Y[i][j] = CmpDist->Theta_[0][i] * (FLOAT)exp((FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_))) / CmpDist->Theta_[1][i]);
+            Y[i][j] = CmpCdf->Theta_[0][i] * (FLOAT)exp((FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_))) / CmpCdf->Theta_[1][i]);
 
             break;
         case pfGamma:
-            Error = GammaInv(Ran1(&IDum_), CmpDist->Theta_[0][i], CmpDist->Theta_[1][i], &y);
+            Error = GammaInv(Ran1(&IDum_), CmpCdf->Theta_[0][i], CmpCdf->Theta_[1][i], &y);
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
             Y[i][j] = y;
 
             break;
         case pfGumbel:
-            if (CmpDist->Theta_[2][i] > Eps) {
-                Y[i][j] = CmpDist->Theta_[0][i] + CmpDist->Theta_[1][i] * (FLOAT)log((FLOAT)log((FLOAT)1.0 / ((FLOAT)1.0 - Ran1(&IDum_))));
+            if (CmpCdf->Theta_[2][i] > Eps) {
+                Y[i][j] = CmpCdf->Theta_[0][i] + CmpCdf->Theta_[1][i] * (FLOAT)log((FLOAT)log((FLOAT)1.0 / ((FLOAT)1.0 - Ran1(&IDum_))));
             }
             else {
-                Y[i][j] = CmpDist->Theta_[0][i] - CmpDist->Theta_[1][i] * (FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_)));
+                Y[i][j] = CmpCdf->Theta_[0][i] - CmpCdf->Theta_[1][i] * (FLOAT)log((FLOAT)log((FLOAT)1.0 / Ran1(&IDum_)));
             }
 
             break;
         case pfvonMises:
-            CmpDist->Theta_[0][i] -= Pi2 * INT(CmpDist->Theta_[0][i] / Pi2);
+            CmpCdf->Theta_[0][i] -= Pi2 * INT(CmpCdf->Theta_[0][i] / Pi2);
 
-            Y[i][j] = vonMisesInv(Ran1(&IDum_), CmpDist->Theta_[0][i], CmpDist->Theta_[1][i]);
+            Error = vonMisesInv(Ran1(&IDum_), CmpCdf->Theta_[0][i], CmpCdf->Theta_[1][i], &Y[i][j]);
+
+            E_CHECK(Error != E_OK, Error);
 
             break;
         case pfBinomial:
-            if (CmpDist->Theta_[1][i] < (FLOAT)0.5) {
-                p = CmpDist->Theta_[1][i];
+            if (CmpCdf->Theta_[1][i] < (FLOAT)0.5) {
+                p = CmpCdf->Theta_[1][i];
             }
             else {
-                p = (FLOAT)1.0 - CmpDist->Theta_[1][i];
+                p = (FLOAT)1.0 - CmpCdf->Theta_[1][i];
             }
 
-            C[0] = CmpDist->Theta_[0][i] * p;
-            if ((INT)CmpDist->Theta_[0][i] < 25) {
+            C[0] = CmpCdf->Theta_[0][i] * p;
+            if ((INT)CmpCdf->Theta_[0][i] < 25) {
                 Y[i][j] = (FLOAT)0.0;
 
-                for (k = 0; k < (INT)CmpDist->Theta_[0][i]; k++) {
+                for (k = 0; k < (INT)CmpCdf->Theta_[0][i]; k++) {
                     if (Ran1(&IDum_) < p) ++Y[i][j];
                 }
             }
@@ -251,22 +254,22 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
             if (C[0] < (FLOAT)1.0) {
                 C[1] = (FLOAT)exp(-C[0]); C[2] = (FLOAT)1.0;
 
-                for (k = 0; k < (INT)CmpDist->Theta_[0][i]; k++) {
+                for (k = 0; k < (INT)CmpCdf->Theta_[0][i]; k++) {
                     C[2] *= Ran1(&IDum_); if (C[2] < C[1]) break;
                 }
 
-                if (k > (INT)CmpDist->Theta_[0][i]) {
-                    Y[i][j] = CmpDist->Theta_[0][i];
+                if (k > (INT)CmpCdf->Theta_[0][i]) {
+                    Y[i][j] = CmpCdf->Theta_[0][i];
                 }
                 else {
                     Y[i][j] = k;
                 }
             }
             else {
-                if (CmpDist->Theta_[0][i] != Bn) {
-                    Be = CmpDist->Theta_[0][i];
+                if (CmpCdf->Theta_[0][i] != Bn) {
+                    Be = CmpCdf->Theta_[0][i];
                     Bg = Gammaln(Be + (FLOAT)1.0);
-                    Bn = CmpDist->Theta_[0][i];
+                    Bn = CmpCdf->Theta_[0][i];
                 }
 
                 if (p != Bp) {
@@ -300,17 +303,17 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
                 Y[i][j] = C[6];
             }
 
-            if (p != CmpDist->Theta_[1][i]) {
-                Y[i][j] = CmpDist->Theta_[0][i] - Y[i][j];
+            if (p != CmpCdf->Theta_[1][i]) {
+                Y[i][j] = CmpCdf->Theta_[0][i] - Y[i][j];
             }
 
             break;
         case pfPoisson:
-            if (CmpDist->Theta_[0][i] < (FLOAT)12.0) {
-                if (CmpDist->Theta_[0][i] != PTheta) {
-                    PTheta = CmpDist->Theta_[0][i];
+            if (CmpCdf->Theta_[0][i] < (FLOAT)12.0) {
+                if (CmpCdf->Theta_[0][i] != PTheta) {
+                    PTheta = CmpCdf->Theta_[0][i];
 
-                    Pg = (FLOAT)exp(-CmpDist->Theta_[0][i]);
+                    Pg = (FLOAT)exp(-CmpCdf->Theta_[0][i]);
                 }
 
                 C[0] = -(FLOAT)1.0; C[1] = (FLOAT)1.0;
@@ -320,21 +323,21 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
                 } while (C[1] > Pg);
             }
             else {
-                if (CmpDist->Theta_[0][i] != PTheta) {
-                    PTheta = CmpDist->Theta_[0][i];
+                if (CmpCdf->Theta_[0][i] != PTheta) {
+                    PTheta = CmpCdf->Theta_[0][i];
 
-                    Psq = (FLOAT)sqrt((FLOAT)2.0 * CmpDist->Theta_[0][i]);
+                    Psq = (FLOAT)sqrt((FLOAT)2.0 * CmpCdf->Theta_[0][i]);
 
-                    PalTheta = (FLOAT)log(CmpDist->Theta_[0][i]);
+                    PalTheta = (FLOAT)log(CmpCdf->Theta_[0][i]);
 
-                    Pg = CmpDist->Theta_[0][i] * PalTheta - Gammaln(CmpDist->Theta_[0][i] + (FLOAT)1.0);
+                    Pg = CmpCdf->Theta_[0][i] * PalTheta - Gammaln(CmpCdf->Theta_[0][i] + (FLOAT)1.0);
                 }
 
                 do {
                     do {
                         C[2] = (FLOAT)tan(Pi * Ran1(&IDum_));
 
-                        C[0] = Psq * C[2] + CmpDist->Theta_[0][i];
+                        C[0] = Psq * C[2] + CmpCdf->Theta_[0][i];
                     } while (C[0] < (FLOAT)0.0);
 
                     C[0] = (FLOAT)floor(C[0]);
@@ -347,42 +350,43 @@ INT Rngmix::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
 
             break;
         case pfDirac:
-            Y[i][j] = CmpDist->Theta_[0][i];
+            Y[i][j] = CmpCdf->Theta_[0][i];
 
             break;
         case pfUniform:
-            Y[i][j] = CmpDist->Theta_[0][i] + Ran1(&IDum_) * (CmpDist->Theta_[1][i] - CmpDist->Theta_[0][i]);
+            Y[i][j] = CmpCdf->Theta_[0][i] + Ran1(&IDum_) * (CmpCdf->Theta_[1][i] - CmpCdf->Theta_[0][i]);
 
             break;
         default:;
         }
     }
 
-E0: return Error;
-} // InvComponentDist
+EEXIT:
+
+    E_RETURN(Error);
+} // ComponentInv
 
 // Returns random sample of independent observations.
 
 INT Rngmix::RNGMIX()
 {
-    INT i, j, k;
-    INT Error = 0;
+    INT i, j, k, Error = E_OK;
 
     n_ = 0; for (i = 0; i < c_; i++) n_ += N_[i];
 
     Y_ = (FLOAT**)malloc(length_pdf_ * sizeof(FLOAT*));
 
-    Error = NULL == Y_; if (Error) goto E0;
+    E_CHECK(NULL == Y_, E_MEM);
 
     for (i = 0; i < length_pdf_; i++) {
         Y_[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
 
-        Error = NULL == Y_[i]; if (Error) goto E0;
+        E_CHECK(NULL == Y_[i], E_MEM);
     }
 
     Z_ = (INT*)malloc(n_ * sizeof(INT));
 
-    Error = NULL == Z_; if (Error) goto E0;
+    E_CHECK(NULL == Z_, E_MEM);
 
     k = 0;
 
@@ -390,17 +394,19 @@ INT Rngmix::RNGMIX()
         Trigger_ = 1;
 
         for (j = 0; j < N_[i]; j++) {
-            Error = InvComponentDist(MixTheta_[i], k, Y_);
-
             Z_[k] = i + 1;
 
-            if (Error) goto E0;
+            Error = ComponentInv(MixTheta_[i], k, Y_);
+
+            E_CHECK(Error != E_OK, Error);
 
             k++;
         }
     }
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // RNGMIX
 
 #if (_MAINTAIN_SWITCH)
@@ -408,18 +414,17 @@ E0: return Error;
 
 INT Rngmix::RunTemplateFile(char *file)
 {
-    INT                  i, imin, imax, j, k, isI;
     char                 line[65536], ident[65536], list[65536];
     char                 *pchar = NULL;
     FILE                 *fp = NULL;
     CompnentDistribution **MixTheta = NULL;
-    INT                  Error = 0;
+    INT                  i, imin, imax, isI, j, k, Error = E_OK;
 
-    if ((fp = fopen(file, "r")) == NULL) {
-        Error = 1; goto E0;
-    }
+    fp = fopen(file, "r");
 
-    printf("RNGMIX Version 2.15.0\n");
+    E_CHECK(NULL == fp, E_FILE);
+
+    printf("RNGMIX Version 2.16.0\n");
 
 S0: while (fgets(line, 2048, fp) != NULL) {
         pchar = strtok(line, "\n");
@@ -476,7 +481,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         if (!strcmp(ident, "RUN")) {
             Error = WriteParameterFile();
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
             for (k = 0; k < o_; k++) {
                 curr_ = open_[k];
@@ -485,11 +490,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
                 Error = RNGMIX();
 
-                if (Error) goto E0;
+                E_CHECK(Error != E_OK, Error);
 
                 Error = WriteDataFile();
 
-                if (Error) goto E0;
+                E_CHECK(Error != E_OK, Error);
 
                 IDum_--;
             }
@@ -498,11 +503,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         if (!strcmp(ident, "DATASET")) {
             open_ = (char**)realloc(open_, (o_ + 1) * sizeof(char*));
 
-            Error = NULL == open_; if (Error) goto E0;
+            E_CHECK(NULL == open_, E_MEM);
 
             open_[o_] = (char*)malloc((strlen(pchar) + 1) * sizeof(char));
 
-            Error = NULL == open_[o_]; if (Error) goto E0;
+            E_CHECK(NULL == open_[o_], E_MEM);
 
             strcpy(open_[o_], pchar); o_++;
         }
@@ -510,13 +515,13 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         if (!strcmp(ident, "RSEED")) {
             IDum_ = isI = (INT)atol(pchar);
 
-            Error = isI >= 0; if (Error) goto E0;
+            E_CHECK(isI >= 0, E_ARG);
         }
         else
         if (!strcmp(ident, "LENGTHPDF")) {
             length_pdf_ = isI = (INT)atol(pchar);
 
-            Error = isI < 1; if (Error) goto E0;
+            E_CHECK(isI < 1, E_ARG);
         }
         else
         if (!strcmp(ident, "LENGTHTHETA")) {
@@ -525,11 +530,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
             while (pchar) {
                 length_theta_ = (INT*)realloc(length_theta_, (i + 1) * sizeof(INT));
 
-                Error = NULL == length_theta_; if (Error) goto E0;
+                E_CHECK(NULL == length_theta_, E_MEM);
 
                 length_theta_[i] = isI = (INT)atol(pchar);
 
-                Error = isI == 0; if (Error) goto E0;
+                E_CHECK(isI == 0, E_ARG);
 
                 pchar = strtok(NULL, "\t"); ++i;
             }
@@ -538,11 +543,11 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
             IniTheta_ = new CompnentDistribution(this);
 
-            Error = NULL == IniTheta_; if (Error) goto E0;
+            E_CHECK(NULL == IniTheta_, E_MEM);
 
             Error = IniTheta_->Realloc(length_pdf_, length_Theta_, length_theta_);
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
         }
         else
         if (!strcmp(ident, "PDF")) {
@@ -579,33 +584,31 @@ S0: while (fgets(line, 2048, fp) != NULL) {
                 if (!strcmp(pchar, "UNIFORM"))
                     IniTheta_->pdf_[i] = pfUniform;
                 else {
-                    Error = 1; goto E0;
+                    E_CHECK(1, E_ARG);
                 }
 
                 pchar = strtok(NULL, "\t"); ++i;
             }
 
-            if ((length_pdf_ > 0) && (length_pdf_ != i)) {
-                Error = 1; goto E0;
-            }
+            E_CHECK((length_pdf_ > 0) && (length_pdf_ != i), E_ARG);
         }
         else
         if (!strcmp(ident, "NTHETA")) {
             N_ = (INT*)realloc(N_, (c_ + 1) * sizeof(INT));
 
-            Error = NULL == N_; if (Error) goto E0;
+            E_CHECK(NULL == N_, E_MEM);
 
             N_[c_] = isI = (INT)atol(pchar);
 
-            Error = isI < 1; if (Error) goto E0;
+            E_CHECK(isI < 1, E_ARG);
 
             MixTheta = new CompnentDistribution* [(unsigned INT)(c_ + 1)];
 
-            Error = NULL == MixTheta; if (Error) goto E0;
+            E_CHECK(NULL == MixTheta, E_MEM);
 
             MixTheta[c_] = new CompnentDistribution(this);
 
-            Error = NULL == MixTheta[c_]; if (Error) goto E0;
+            E_CHECK(NULL == MixTheta[c_], E_MEM);
 
             for (i = 0; i < c_; i++) {
                 MixTheta[i] = MixTheta_[i];
@@ -617,7 +620,7 @@ S0: while (fgets(line, 2048, fp) != NULL) {
 
             Error = MixTheta_[c_]->Realloc(length_pdf_, length_Theta_, length_theta_);
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
             for (i = 0; i < length_pdf_; i++) {
                 MixTheta_[c_]->pdf_[i] = IniTheta_->pdf_[i];
@@ -637,14 +640,16 @@ S0: while (fgets(line, 2048, fp) != NULL) {
         if (!strcmp(ident, "SAVE")) {
             save_ = (char*)realloc(save_, (strlen(pchar) + 1) * sizeof(char));
 
-            Error = NULL == save_; if (Error) goto E0;
+            E_CHECK(NULL == save_, E_MEM);
 
             strcpy(save_, pchar);
         }
     }
 
-E0: if (fp) fclose(fp);
+EEXIT:
 
-    return Error;
+    if (fp) fclose(fp);
+
+    E_RETURN(Error);
 } // RunTemplateFile
 #endif

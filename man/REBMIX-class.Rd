@@ -8,9 +8,9 @@
 Objects can be created by calls of the form \code{new("REBMIX", ...)}. Accessor methods for the slots are \code{a.Dataset(x = NULL, pos = 0)},
 \code{a.Preprocessing(x = NULL)}, \code{a.cmax(x = NULL)}, \code{a.cmin(x = NULL)}, \code{a.Criterion(x = NULL)}, \code{a.Variables(x = NULL)},
 \code{a.pdf(x = NULL)}, \code{a.theta1(x = NULL)}, \code{a.theta2(x = NULL)}, \code{a.theta3(x = NULL)}, \code{a.K(x = NULL)}, \code{a.ymin(x = NULL)},
-\code{a.ymax(x = NULL)}, \code{a.ar(x = NULL)}, \code{a.Restraints(x = NULL)}, \code{a.w(x = NULL, pos = 0)}, \code{a.Theta(x = NULL, pos = 0)}, \code{a.summary(x = NULL, col.name = character(), pos = 0)},
+\code{a.ymax(x = NULL)}, \code{a.ar(x = NULL)}, \code{a.Restraints(x = NULL)}, \code{a.Mode(x = NULL)}, \code{a.w(x = NULL, pos = 0)}, \code{a.Theta(x = NULL, pos = 0)}, \code{a.summary(x = NULL, col.name = character(), pos = 0)},
 \code{a.summary.EM(x = NULL, col.name = character(), pos = 0)}, \code{a.pos(x = NULL)},
-\code{a.opt.c(x = NULL)}, \code{a.opt.IC(x = NULL)}, \code{a.opt.logL(x = NULL)}, \code{a.opt.D(x = NULL)}, \code{a.all.K(x = NULL)}, \code{a.all.IC(x = NULL)},
+\code{a.opt.c(x = NULL)}, \code{a.opt.IC(x = NULL)}, \code{a.opt.logL(x = NULL)}, \code{a.opt.Dmin(x = NULL)}, \code{a.opt.D(x = NULL)}, \code{a.all.K(x = NULL)}, \code{a.all.IC(x = NULL)},
 \code{a.theta1.all(x = NULL, pos = 1)}, \code{a.theta2.all(x = NULL, pos = 1)} and \code{a.theta3.all(x = NULL, pos = 1)}, where \code{x}, \code{pos} and \code{col.name} stand for an object of class \code{REBMIX},
 a desired slot item and a desired column name, respectively.
 }
@@ -74,6 +74,11 @@ acceleration rate \eqn{0 < a_{\mathrm{r}} \leq 1}. The default value is \code{0.
 a character giving the restraints type. One of \code{"rigid"} or default \code{"loose"}.
 The rigid restraints are obsolete and applicable for well separated components only.
 }
+\item{\code{Mode}:}{
+a character giving the mode type. One of \code{"all"}, \code{"outliers"} or default \code{"outliersplus"}.The modes are determined in decreasing order of magnitude from all observations if \code{Mode = "all"}.
+If \code{Mode = "outliers"}, the modes are determined in decreasing order of magnitude from outliers only. In the meantime, some outliers are reclassified as inliers. Finally, when all observations are inliers, the procedure is completed.
+If \code{Mode = "outliersplus"}, the modes are determined in decreasing magnitude from the outliers only. In the meantime, some outliers are reclassified as inliers. Finally, if all observations are inliers, they are converted to outliers and the mode determination procedure is continued.
+}
 \item{\code{w}:}{
 a list of vectors of length \eqn{c} containing component weights \eqn{w_{l}} summing to 1.
 }
@@ -85,7 +90,7 @@ Component parameters \code{theta3.l} follow \code{theta2.l}. One of \eqn{\xi_{il
 }
 \item{\code{summary}:}{
 a data frame with additional information about dataset, preprocessing, \eqn{c_{\mathrm{max}}}, \eqn{c_{\mathrm{min}}}, information criterion type,
-\eqn{a_{\mathrm{r}}}, restraints type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, \eqn{y_{i\mathrm{min}}}, \eqn{y_{i\mathrm{max}}}, optimal \eqn{h_{i}},
+\eqn{a_{\mathrm{r}}}, restraints type, mode type, optimal \eqn{c}, optimal \eqn{v} or \eqn{k}, \eqn{K}, \eqn{y_{i0}}, \eqn{y_{i\mathrm{min}}}, \eqn{y_{i\mathrm{max}}}, optimal \eqn{h_{i}},
 information criterion \eqn{\mathrm{IC}}, log likelihood \eqn{\mathrm{log}\, L} and degrees of freedom \eqn{M}.
 }
 \item{\code{summary.EM}:}{
@@ -106,6 +111,10 @@ neighbours \eqn{k} for the \emph{k}-nearest neighbour.
 }
 \item{\code{opt.logL}:}{
 a list of vectors containing log likelihoods for optimal \eqn{v} for the histogram and the kernel density estimation or for optimal number of nearest
+neighbours \eqn{k} for the \emph{k}-nearest neighbour.
+}
+\item{\code{opt.Dmin}:}{
+a list of vectors containing \eqn{D_{\mathrm{min}}} values for optimal \eqn{v} for the histogram and the kernel density estimation or for optimal number of nearest
 neighbours \eqn{k} for the \emph{k}-nearest neighbour.
 }
 \item{\code{opt.D}:}{

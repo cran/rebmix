@@ -1,5 +1,14 @@
 \name{NEWS} \title{News for Package \pkg{rebmix}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 2.16.0}{ 
+\itemize{
+\item Some minor changes and bug fixes in C++ and R codes.
+\item Improved C++ code for handling warnings and errors.
+\item Improved C++ functions \code{RoughEstimationKNN()}, \code{RoughEstimationKDE()} and \code{RoughEstimationH()}.
+\item Additional argument \code{Mode} enters function \code{REBMIX}.
+\item Improved C++ functions \code{GlobalModeKNN()}, \code{GlobalModeKDE()} and \code{GlobalModeH()}.
+}
+}
 \section{Changes in version 2.15.0}{ 
 \itemize{
 \item Method \code{"labelmoments"} is added.

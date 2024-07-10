@@ -10,11 +10,21 @@
     xmax = as.double(xmax),
     hx = as.double(hx),
     px = as.character(px),
-    error = integer(1),
+    error = integer(9),
     PACKAGE = "rebmix")
 
-  if (output$error == 1) {
-    stop("in RdensHistogramX!", call. = FALSE); return(NA)
+  error <- error.to.string(output$error);
+      
+  if (error[1] != "") {
+    stop(error[1], call. = FALSE); return(NA)
+  }
+    
+  if (error[2] != "") {
+    warning(error[2], call. = FALSE, immediate. = TRUE)
+  }  
+    
+  if (error[3] != "") {
+    warning(error[3], call. = FALSE, immediate. = TRUE)
   }
 
   length(output$x) <- output$k

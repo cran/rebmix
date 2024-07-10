@@ -22,6 +22,7 @@ setGeneric("REBMIX",
     ymax = numeric(),
     ar = 0.1,
     Restraints = "loose",
+    Mode = "outliersplus",
 ### Panic Branislav.    
     EMcontrol = NULL, ...)
 ### End    
@@ -170,11 +171,13 @@ setGeneric("a.K<-", function(x = NULL, value = numeric()) standardGeneric("a.K<-
 setGeneric("a.y0", function(x = NULL) standardGeneric("a.y0"))
 setGeneric("a.ar", function(x = NULL) standardGeneric("a.ar"))
 setGeneric("a.Restraints", function(x = NULL) standardGeneric("a.Restraints"))
+setGeneric("a.Mode", function(x = NULL) standardGeneric("a.Mode"))
 setGeneric("a.summary", function(x = NULL, col.name = character(), pos = 0) standardGeneric("a.summary"))
 setGeneric("a.pos", function(x = NULL) standardGeneric("a.pos"))
 setGeneric("a.opt.c", function(x = NULL) standardGeneric("a.opt.c"))
 setGeneric("a.opt.IC", function(x = NULL) standardGeneric("a.opt.IC"))
 setGeneric("a.opt.logL", function(x = NULL) standardGeneric("a.opt.logL"))
+setGeneric("a.opt.Dmin", function(x = NULL) standardGeneric("a.opt.Dmin"))
 setGeneric("a.opt.D", function(x = NULL) standardGeneric("a.opt.D"))
 setGeneric("a.all.K", function(x = NULL) standardGeneric("a.all.K"))
 setGeneric("a.all.IC", function(x = NULL) standardGeneric("a.all.IC"))

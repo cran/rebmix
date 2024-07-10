@@ -77,12 +77,22 @@ function(model, Theta, ...)
       n_iter = integer(1),
       summary.logL = double(1),
       summary.M = integer(1),
-      Error = integer(1),
+      error = integer(9),
       PACKAGE = "rebmix")
 
-    if (output$Error == 1) {
-      stop("in REMMIX!", call. = FALSE); return(NA) #
+    error <- error.to.string(output$error);
+      
+    if (error[1] != "") {
+      stop(error[1], call. = FALSE); return(NA)
     }
+   
+    if (error[2] != "") {
+      warning(error[2], call. = FALSE, immediate. = TRUE)
+    }  
+    
+    if (error[3] != "") {
+      warning(error[3], call. = FALSE, immediate. = TRUE)
+    }  
 
     if (all(output$w == 0.0)) {
       warning("EM did not converge for ", Dataset.name, " dataset!")
@@ -169,6 +179,7 @@ function(model, Theta, ...)
     "Criterion",
     "ar",
     "Restraints",
+    "Mode",
     "c",
     "v/k",
     "K",
@@ -268,11 +279,21 @@ function(model, Theta, ...)
       n_iter = integer(1),
       summary.logL = double(1),
       summary.M = integer(1),
-      Error = integer(1),
+      error = integer(9),
       PACKAGE = "rebmix")
 
-    if (output$Error == 1) {
-      stop("in REMMVNORM!", call. = FALSE); return(NA) #
+    error <- error.to.string(output$error);
+      
+    if (error[1] != "") {
+      stop(error[1], call. = FALSE); return(NA)
+    }
+   
+    if (error[2] != "") {
+      warning(error[2], call. = FALSE, immediate. = TRUE)
+    }  
+    
+    if (error[3] != "") {
+      warning(error[3], call. = FALSE, immediate. = TRUE)
     }
 
     c <- output$c
@@ -354,6 +375,7 @@ function(model, Theta, ...)
     "Criterion",
     "ar",
     "Restraints",
+    "Mode",
     "c",
     "v/k",
     "K",
@@ -422,6 +444,7 @@ function(model,
      ymax = numeric(),
      ar = 0.1,
      Restraints = "loose",
+     Mode = "outliersplus",
      EMcontrol = EMcontrol)
 
   output <- EMMIX(model = model, Theta = Theta, ...)

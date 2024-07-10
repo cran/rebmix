@@ -103,11 +103,13 @@
 \alias{a.y0}
 \alias{a.ar}
 \alias{a.Restraints}
+\alias{a.Mode}
 \alias{a.summary}
 \alias{a.pos}
 \alias{a.opt.c}
 \alias{a.opt.IC}
 \alias{a.opt.logL}
+\alias{a.opt.Dmin}
 \alias{a.opt.D}
 \alias{a.all.K}
 \alias{a.all.IC}
@@ -130,6 +132,7 @@
 \alias{a.ymax,REBMIX-method}
 \alias{a.ar,REBMIX-method}
 \alias{a.Restraints,REBMIX-method}
+\alias{a.Mode,REBMIX-method}
 \alias{a.w,REBMIX-method}
 \alias{a.Theta,REBMIX-method}
 \alias{a.summary,REBMIX-method}
@@ -137,6 +140,7 @@
 \alias{a.opt.c,REBMIX-method}
 \alias{a.opt.IC,REBMIX-method}
 \alias{a.opt.logL,REBMIX-method}
+\alias{a.opt.Dmin,REBMIX-method}
 \alias{a.opt.D,REBMIX-method}
 \alias{a.all.K,REBMIX-method}
 \alias{a.all.IC,REBMIX-method}
@@ -154,6 +158,7 @@
 \alias{a.ymax,REBMVNORM-method}
 \alias{a.ar,REBMVNORM-method}
 \alias{a.Restraints,REBMVNORM-method}
+\alias{a.Mode,REBMVNORM-method}
 \alias{a.w,REBMVNORM-method}
 \alias{a.Theta,REBMVNORM-method}
 \alias{a.summary,REBMVNORM-method}
@@ -161,6 +166,7 @@
 \alias{a.opt.c,REBMVNORM-method}
 \alias{a.opt.IC,REBMVNORM-method}
 \alias{a.opt.logL,REBMVNORM-method}
+\alias{a.opt.Dmin,REBMVNORM-method}
 \alias{a.opt.D,REBMVNORM-method}
 \alias{a.all.K,REBMVNORM-method}
 \alias{a.all.IC,REBMVNORM-method}

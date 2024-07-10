@@ -18,14 +18,16 @@ void RRNGMIX(INT    *IDum,         // Random seed.
              INT    *n,            // Number of observations.
              double *Y,            // Dataset.
              INT    *Z,            // Component membership.
-             INT    *Error)        // Error code.
+             INT    *EList)        // Error list.
 {
     Rngmix *rngmix = NULL;
-    INT    i, j, k, l;
+    INT    i, j, k, l, Error;
+
+    E_BEGIN();
 
     rngmix = new Rngmix;
 
-    *Error = NULL == rngmix; if (*Error) goto E0;
+    E_CHECK(NULL == rngmix, E_MEM);
 
     rngmix->IDum_ = *IDum;
     rngmix->length_pdf_ = *d;
@@ -33,13 +35,13 @@ void RRNGMIX(INT    *IDum,         // Random seed.
 
     rngmix->N_ = (INT*)malloc(rngmix->c_ * sizeof(INT));
 
-    *Error = NULL == rngmix->N_; if (*Error) goto E0;
+    E_CHECK(NULL == rngmix->N_, E_MEM);
 
     for (i = 0; i < rngmix->c_; i++) rngmix->N_[i] = N[i];
 
     rngmix->IniTheta_ = new CompnentDistribution(rngmix);
 
-    *Error = NULL == rngmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rngmix->IniTheta_, E_MEM);
 
     rngmix->length_pdf_ = *length_pdf;
 
@@ -47,11 +49,11 @@ void RRNGMIX(INT    *IDum,         // Random seed.
 
     rngmix->length_theta_ = (INT*)malloc(rngmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rngmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rngmix->length_theta_, E_MEM);
 
-    *Error = rngmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rngmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rngmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -94,22 +96,22 @@ void RRNGMIX(INT    *IDum,         // Random seed.
             rngmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
     rngmix->MixTheta_ = new CompnentDistribution* [(unsigned INT)rngmix->c_];
 
-    *Error = NULL == rngmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rngmix->MixTheta_, E_MEM);
 
     for (i = 0; i < rngmix->c_; i++) {
         rngmix->MixTheta_[i] = new CompnentDistribution(rngmix);
 
-        *Error = NULL == rngmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rngmix->MixTheta_[i], E_MEM);
 
-        *Error = rngmix->MixTheta_[i]->Realloc(rngmix->length_pdf_, rngmix->length_Theta_, rngmix->length_theta_);
+        Error = rngmix->MixTheta_[i]->Realloc(rngmix->length_pdf_, rngmix->length_Theta_, rngmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < rngmix->c_; i++) {
@@ -130,9 +132,9 @@ void RRNGMIX(INT    *IDum,         // Random seed.
         }
     }
 
-    *Error = rngmix->RNGMIX();
+    Error = rngmix->RNGMIX();
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     *n = rngmix->n_; i = 0;
 
@@ -146,7 +148,11 @@ void RRNGMIX(INT    *IDum,         // Random seed.
         Z[i] = rngmix->Z_[i];
     }
 
-E0: if (rngmix) delete rngmix;
+EEXIT:
+
+    if (rngmix) delete rngmix;
+
+    E_LIST(EList);
 } // RRNGMIX
 
 // Runs REBMIX in R.
@@ -172,6 +178,7 @@ void RREBMIX(char   **Preprocessing, // Preprocessing type.
              double *h,              // Sides of the hypersquare.
              double *ar,             // Acceleration rate.
              char   **Restraints,    // Restraints type.
+             char   **Mode,          // Mode type.
              INT    *n,              // Number of observations.
              double *Y,              // Dataset.
              INT    *Y_type,         // Dataset type.
@@ -199,116 +206,126 @@ void RREBMIX(char   **Preprocessing, // Preprocessing type.
              double *theta1,         // Component parameters.
              double *theta2,         // Component parameters.
              double *theta3,         // Component parameters.
-             INT    *opt_length,     // Length of opt_c, opt_IC, opt_logL and opt_D.
+             INT    *opt_length,     // Length of opt_c, opt_IC, opt_logL, opt_Dmin and opt_D.
              INT    *opt_c,          // Numbers of components for optimal v or for optimal k.
              double *opt_IC,         // Information criteria for optimal v or for optimal k.
              double *opt_logL,       // Log-likelihoods for optimal v or for optimal k.
+             double *opt_Dmin,       // Dmin for optimal v or for optimal k.
              double *opt_D,          // Totals of positive relative deviations for optimal v or for optimal k.
              INT    *all_length,     // Length of all_K and all_IC.
              INT    *all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.
              double *all_IC,         // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
-             INT    *Error)          // Error code.
+             INT    *EList)          // Error list.
 {
     Rebmix *rebmix = NULL;
+    INT    Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
-    *Error = rebmix->Set(Preprocessing,     // Preprocessing type.
-                         cmax,              // Maximum number of components.
-                         cmin,              // Minimum number of components.
-                         Criterion,         // Information criterion type.
-                         d,                 // Number of independent random variables.
-                         Variables,         // Types of variables.
-                         length_pdf,        // Length of pdf.
-                         pdf,               // Parametric family types.
-                         length_Theta,      // Length of Theta.
-                         length_theta,      // Length of Theta[i].
-                         Theta,             // Component parameters.
-                         length_K,          // Length of K.
-                         K,                 // Numbers of bins v or numbers of nearest neighbours k.
-                         length_ymin,       // Length of ymin.
-                         ymin,              // Minimum observations.
-                         length_ymax,       // Length of ymax.
-                         ymax,              // Maximum observations.
-                         length_h,          // Length of h.
-                         h,                 // Sides of the hypersquare.
-                         ar,                // Acceleration rate.
-                         Restraints,        // Restraints type.
-                         n,                 // Number of observations.
-                         Y,                 // Dataset.
-                         Y_type,            // Dataset type. 
-                         EMStrategy,        // Strategy for EM algorithm.
-                         EMVariant,         // EM algorithm variant.
-                         EMAcceleration,    // Acceleration for the standard EM algorithm.
-                         EMTolerance,       // Tolerance for EM algortihm.
-                         EMAccelerationMul, // Acceleration rate for Em algorithm.
-                         EMMaxIter,         // Maximum number of iterations in EM algorithm.
-                         EMK,               // Number of bins for histogram EM algorithm.
-                         NULL,              // Component weights.
-                         NULL);             // Mixture parameters.
+    Error = rebmix->Set(Preprocessing,     // Preprocessing type.
+                        cmax,              // Maximum number of components.
+                        cmin,              // Minimum number of components.
+                        Criterion,         // Information criterion type.
+                        d,                 // Number of independent random variables.
+                        Variables,         // Types of variables.
+                        length_pdf,        // Length of pdf.
+                        pdf,               // Parametric family types.
+                        length_Theta,      // Length of Theta.
+                        length_theta,      // Length of Theta[i].
+                        Theta,             // Component parameters.
+                        length_K,          // Length of K.
+                        K,                 // Numbers of bins v or numbers of nearest neighbours k.
+                        length_ymin,       // Length of ymin.
+                        ymin,              // Minimum observations.
+                        length_ymax,       // Length of ymax.
+                        ymax,              // Maximum observations.
+                        length_h,          // Length of h.
+                        h,                 // Sides of the hypersquare.
+                        ar,                // Acceleration rate.
+                        Restraints,        // Restraints type.
+                        Mode,              // Mode type.   
+                        n,                 // Number of observations.
+                        Y,                 // Dataset.
+                        Y_type,            // Dataset type. 
+                        EMStrategy,        // Strategy for EM algorithm.
+                        EMVariant,         // EM algorithm variant.
+                        EMAcceleration,    // Acceleration for the standard EM algorithm.
+                        EMTolerance,       // Tolerance for EM algortihm.
+                        EMAccelerationMul, // Acceleration rate for Em algorithm.
+                        EMMaxIter,         // Maximum number of iterations in EM algorithm.
+                        EMK,               // Number of bins for histogram EM algorithm.
+                        NULL,              // Component weights.
+                        NULL);             // Mixture parameters.
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-    *Error = rebmix->REBMIX();
+    Error = rebmix->REBMIX();
 
-    if (*Error) goto E0;
-
+    E_CHECK(Error != E_OK, Error);
 
 /// Panic Branislav
-    *Error = rebmix->Get(n_iter,         // Number of iterations for optimal case.
-                         n_iter_sum,     // Number of iterations in whole run.
+    Error = rebmix->Get(n_iter,         // Number of iterations for optimal case.
+                        n_iter_sum,     // Number of iterations in whole run.
 /// End
-                         summary_k,      // Optimal v or optimal k.
-                         summary_h,      // Optimal class widths of length d.
-                         summary_y0,     // Optimal origins of length d.
-                         summary_ymin,   // Optimal minimum observations of length d.
-                         summary_ymax,   // Optimal maximum observations of length d.
-                         summary_IC,     // Optimal information criterion.
-                         summary_logL,   // Log-likelihood.
-                         summary_M,      // Degrees of freedom.
-                         summary_c,      // Optimal number of components.
-                         W,              // Component weights.
-                         theta1,         // Component parameters.
-                         theta2,         // Component parameters.
-                         theta3,         // Component parameters.
-                         opt_length,     // Length of opt_c, opt_IC, opt_logL and opt_D.
-                         opt_c,          // Numbers of components for optimal v or for optimal k.
-                         opt_IC,         // Information criteria for optimal v or for optimal k.
-                         opt_logL,       // Log-likelihoods for optimal v or for optimal k.
-                         opt_D,          // Totals of positive relative deviations for optimal v or for optimal k.
-                         all_length,     // Length of all_K and all_IC.
-                         all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.
-                         all_IC);        // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
+                        summary_k,      // Optimal v or optimal k.
+                        summary_h,      // Optimal class widths of length d.
+                        summary_y0,     // Optimal origins of length d.
+                        summary_ymin,   // Optimal minimum observations of length d.
+                        summary_ymax,   // Optimal maximum observations of length d.
+                        summary_IC,     // Optimal information criterion.
+                        summary_logL,   // Log-likelihood.
+                        summary_M,      // Degrees of freedom.
+                        summary_c,      // Optimal number of components.
+                        W,              // Component weights.
+                        theta1,         // Component parameters.
+                        theta2,         // Component parameters.
+                        theta3,         // Component parameters.
+                        opt_length,     // Length of opt_c, opt_IC, opt_logL, opt_Dmin and opt_D.
+                        opt_c,          // Numbers of components for optimal v or for optimal k.
+                        opt_IC,         // Information criteria for optimal v or for optimal k.
+                        opt_logL,       // Log-likelihoods for optimal v or for optimal k.
+                        opt_Dmin,       // Dmin for optimal v or for optimal k.
+                        opt_D,          // Totals of positive relative deviations for optimal v or for optimal k.
+                        all_length,     // Length of all_K and all_IC.
+                        all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.
+                        all_IC);        // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
+    
+    E_CHECK(Error != E_OK, Error);
 
-    if (*Error) goto E0;
+EEXIT:
 
-E0: if (rebmix) delete rebmix;
+    if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RREBMIX
 
 // Returns k-nearest neighbour empirical densities in R.
 
-void RdensKNearestNeighbourXY(INT    *n,     // Total number of independent observations.
-                              double *x,     // Pointer to the input array x.
-                              double *y,     // Pointer to the input array y.
-                              double *p,     // Pointer to the output array p.
-                              INT    *k,     // k-nearest neighbours.
-                              double *hx,    // Normalizing vector.
-                              double *hy,    // Normalizing vector.
-                              INT    *Error) // Error code.
+void RdensKNearestNeighbourXY(INT    *n,      // Total number of independent observations.
+                              double *x,      // Pointer to the input array x.
+                              double *y,      // Pointer to the input array y.
+                              double *p,      // Pointer to the output array p.
+                              INT    *k,      // k-nearest neighbours.
+                              double *hx,     // Normalizing vector.
+                              double *hy,     // Normalizing vector.
+                              INT    *EList)  // Error list.
 {
-    FLOAT *Dk = NULL;
-    FLOAT Dc, R, C;
-    INT   i, j, K, l, m, q;
+    FLOAT C, Dc, *Dk = NULL, R;
+    INT   i, j, K, l, m, q, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     K = *k; if (K > 1) K -= 1; else K = 1;
 
     Dk = (FLOAT*)malloc(K * sizeof(FLOAT));
 
-    *Error = NULL == Dk; if (*Error) goto E0;
+    E_CHECK(NULL == Dk, E_MEM);
 
     C = (*k) / ((*n) * Pi * (*hx) * (*hy));
 
@@ -339,23 +356,29 @@ void RdensKNearestNeighbourXY(INT    *n,     // Total number of independent obse
         p[i] = C / (R * R);
     }
 
-E0: if (Dk) free(Dk);
+EEXIT: 
+    
+    if (Dk) free(Dk);
+
+    E_LIST(EList);
 } // RdensKNearestNeighbourXY
 
 // Returns kernel density estimation empirical densities in R.
 
-void RdensKDEXY(INT    *n,     // Total number of independent observations.
-                double *x,     // Pointer to the input array x.
-                double *y,     // Pointer to the input array y.
-                double *p,     // Pointer to the output array p.
-                double *hx,    // Side of the hypersquare.
-                double *hy,    // Side of the hypersquare.
-                INT    *Error) // Error code.
+void RdensKDEXY(INT    *n,      // Total number of independent observations.
+                double *x,      // Pointer to the input array x.
+                double *y,      // Pointer to the input array y.
+                double *p,      // Pointer to the output array p.
+                double *hx,     // Side of the hypersquare.
+                double *hy,     // Side of the hypersquare.
+                INT    *EList)  // Error list.
 {
-    INT   i, j;
     FLOAT C, rx, ry;
+    INT   i, j, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     C = (FLOAT)1.0 / (*hx) / (*hy) / (*n); rx = (FLOAT)0.5 * (*hx); ry = (FLOAT)0.5 * (*hy);
 
@@ -370,32 +393,38 @@ void RdensKDEXY(INT    *n,     // Total number of independent observations.
             }
         }
     }
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensKDEXY
 
 // Returns histogram empirical densities in R.
 
-void RdensHistogramXY(INT    *k,     // Total number of bins.
-                      INT    *n,     // Total number of independent observations.
-                      double *x,     // Pointer to the input array x.
-                      double *y,     // Pointer to the input array y.
-                      double *p,     // Pointer to the output array p.
-                      double *x0,    // Origin.
-                      double *xmin,  // Minimum observation.
-                      double *xmax,  // Maximim observation.
-                      double *y0,    // Origin.
-                      double *ymin,  // Minimum observation.
-                      double *ymax,  // Maximim observation.
-                      double *hx,    // Side of the hypersquare.
-                      double *hy,    // Side of the hypersquare.
-                      char   **px,   // Parametric family type.
-                      char   **py,   // Parametric family type.
-                      INT    *Error) // Error code.
+void RdensHistogramXY(INT    *k,      // Total number of bins.
+                      INT    *n,      // Total number of independent observations.
+                      double *x,      // Pointer to the input array x.
+                      double *y,      // Pointer to the input array y.
+                      double *p,      // Pointer to the output array p.
+                      double *x0,     // Origin.
+                      double *xmin,   // Minimum observation.
+                      double *xmax,   // Maximim observation.
+                      double *y0,     // Origin.
+                      double *ymin,   // Minimum observation.
+                      double *ymax,   // Maximim observation.
+                      double *hx,     // Side of the hypersquare.
+                      double *hy,     // Side of the hypersquare.
+                      char   **px,    // Parametric family type.
+                      char   **py,    // Parametric family type.
+                      INT    *EList)  // Error list.
 {
-    INT                    i, j;
     ParametricFamilyType_e pdfx, pdfy;
     FLOAT                  C, rx, ry;
+    INT                    i, j, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     if (!strcmp(px[0], "normal")) {
         pdfx = pfNormal;
@@ -437,7 +466,7 @@ void RdensHistogramXY(INT    *k,     // Total number of bins.
         pdfx = pfUniform;
     }
     else {
-      *Error = 1; return;
+        E_CHECK(1, E_ARG);
     }
 
     if (!strcmp(py[0], "normal")) {
@@ -480,7 +509,7 @@ void RdensHistogramXY(INT    *k,     // Total number of bins.
         pdfy = pfUniform;
     }
     else {
-      *Error = 1; return;
+        E_CHECK(1, E_ARG);
     }
 
     C = (FLOAT)1.0 / (*hx) / (*hy) / (*n); rx = (FLOAT)0.5 * (*hx); ry = (FLOAT)0.5 * (*hy);
@@ -534,23 +563,29 @@ S0:;    }
 
         p[*k] = C; (*k)++;
 S1:;}
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensHistogramXY
 
 // Returns histogram input empirical densities in R.
 
-void RdensKXY(INT    *v,     // Total number of bins.
-              double *x,     // Pointer to the input array x.
-              double *y,     // Pointer to the input array y.
-              double *k,     // Pointer to the input array k.
-              double *p,     // Pointer to the output array p.
-              double *hx,    // Side of the hypersquare.
-              double *hy,    // Side of the hypersquare.
-              INT    *Error) // Error code.
+void RdensKXY(INT    *v,      // Total number of bins.
+              double *x,      // Pointer to the input array x.
+              double *y,      // Pointer to the input array y.
+              double *k,      // Pointer to the input array k.
+              double *p,      // Pointer to the output array p.
+              double *hx,     // Side of the hypersquare.
+              double *hy,     // Side of the hypersquare.
+              INT    *EList)  // Error list.
 {
-    INT   i, j, n;
     FLOAT C, rx, ry;
+    INT   i, j, n, Error;
 
-    *Error = *v < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*v < 1, E_ARG);
 
     rx = (FLOAT)0.5 * (*hx); ry = (FLOAT)0.5 * (*hy);
 
@@ -578,28 +613,33 @@ void RdensKXY(INT    *v,     // Total number of bins.
     C = (FLOAT)1.0 / (*hx) / (*hy) / (n);
 
     for (i = 0; i < *v; i++) p[i] *= C;
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensKXY
 
 // Returns k-nearest neighbour empirical densities in R.
 
-void RdensKNearestNeighbourX(INT    *n,     // Total number of independent observations.
-                             double *x,     // Pointer to the input array x.
-                             double *p,     // Pointer to the output array p.
-                             INT    *k,     // k-nearest neighbours.
-                             double *hx,    // Normalizing vector.
-                             INT    *Error) // Error code.
+void RdensKNearestNeighbourX(INT    *n,      // Total number of independent observations.
+                             double *x,      // Pointer to the input array x.
+                             double *p,      // Pointer to the output array p.
+                             INT    *k,      // k-nearest neighbours.
+                             double *hx,     // Normalizing vector.
+                             INT    *EList)  // Error list.
 {
-    FLOAT *Dk = NULL;
-    FLOAT Dc, R, C;
-    INT   i, j, K, l, m, q;
+    FLOAT Dc, *Dk = NULL, R, C;
+    INT   i, j, K, l, m, q, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     K = *k; if (K > 1) K -= 1; else K = 1;
 
     Dk = (FLOAT*)malloc(K * sizeof(FLOAT));
 
-    *Error = NULL == Dk; if (*Error) goto E0;
+    E_CHECK(NULL == Dk, E_MEM);
 
     C = (*k) / ((*n) * (FLOAT)2.0 * (*hx));
 
@@ -629,21 +669,27 @@ void RdensKNearestNeighbourX(INT    *n,     // Total number of independent obser
         p[i] = C / R;
     }
 
-E0: if (Dk) free(Dk);
+EEXIT:  
+    
+    if (Dk) free(Dk);
+
+    E_LIST(EList);
 } // RdensKNearestNeighbourX
 
 // Returns kernel density estimation empirical densities in R.
 
-void RdensKDEX(INT    *n,     // Total number of independent observations.
-               double *x,     // Pointer to the input array x.
-               double *p,     // Pointer to the output array p.
-               double *hx,    // Side of the hypersquare.
-               INT    *Error) // Error code.
+void RdensKDEX(INT    *n,      // Total number of independent observations.
+               double *x,      // Pointer to the input array x.
+               double *p,      // Pointer to the output array p.
+               double *hx,     // Side of the hypersquare.
+               INT    *EList)  // Error list.
 {
-    INT   i, j;
     FLOAT C, rx;
+    INT   i, j, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     C = (FLOAT)1.0 / (*hx) / (*n); rx = (FLOAT)0.5 * (*hx);
 
@@ -658,26 +704,32 @@ void RdensKDEX(INT    *n,     // Total number of independent observations.
             }
         }
     }
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensKDEX
 
 // Returns histogram empirical densities in R.
 
-void RdensHistogramX(INT    *k,     // Total number of bins.
-                     INT    *n,     // Total number of independent observations.
-                     double *x,     // Pointer to the input array x.
-                     double *p,     // Pointer to the output array p.
-                     double *x0,    // Origin.
-                     double *xmin,  // Minimum observation.
-                     double *xmax,  // Maximum observation.
-                     double *hx,    // Side of the hypersquare.
-                     char   **px,   // Parametric family type.
-                     INT    *Error) // Error code.
+void RdensHistogramX(INT    *k,      // Total number of bins.
+                     INT    *n,      // Total number of independent observations.
+                     double *x,      // Pointer to the input array x.
+                     double *p,      // Pointer to the output array p.
+                     double *x0,     // Origin.
+                     double *xmin,   // Minimum observation.
+                     double *xmax,   // Maximum observation.
+                     double *hx,     // Side of the hypersquare.
+                     char   **px,    // Parametric family type.
+                     INT    *EList)  // Error list.
 {
-    INT                    i, j;
     ParametricFamilyType_e pdfx;
     FLOAT                  C, rx;
+    INT                    i, j, Error;
 
-    *Error = *n < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*n < 1, E_ARG);
 
     if (!strcmp(px[0], "normal")) {
         pdfx = pfNormal;
@@ -719,7 +771,7 @@ void RdensHistogramX(INT    *k,     // Total number of bins.
         pdfx = pfUniform;
     }
     else {
-      *Error = 1; return;
+        E_CHECK(1, E_ARG);
     }
 
     C = (FLOAT)1.0 / (*hx) / (*n); rx = (FLOAT)0.5 * (*hx);
@@ -754,21 +806,27 @@ S0:;    }
 
         p[*k] = C; (*k)++;
 S1:;}
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensHistogramX
 
 // Returns histogram input empirical densities in R.
 
-void RdensKX(INT    *v,     // Total number of bins.
-             double *x,     // Pointer to the input array x.
-             double *k,     // Pointer to the input array k.
-             double *p,     // Pointer to the output array p.
-             double *hx,    // Side of the hypersquare.
-             INT    *Error) // Error code.
+void RdensKX(INT    *v,      // Total number of bins.
+             double *x,      // Pointer to the input array x.
+             double *k,      // Pointer to the input array k.
+             double *p,      // Pointer to the output array p.
+             double *hx,     // Side of the hypersquare.
+             INT    *EList)  // Error list.
 {
-    INT   i, j, n;
     FLOAT C, rx;
+    INT   i, j, n, Error;
 
-    *Error = *v < 1; if (*Error) return;
+    E_BEGIN();
+
+    E_CHECK(*v < 1, E_ARG);
 
     rx = (FLOAT)0.5 * (*hx);
 
@@ -796,6 +854,10 @@ void RdensKX(INT    *v,     // Total number of bins.
     C = (FLOAT)1.0 / (*hx) / (n);
 
     for (i = 0; i < *v; i++) p[i] *= C;
+
+EEXIT:
+
+    E_LIST(EList);
 } // RdensKX
 
 // Returns classified observations in R.
@@ -813,31 +875,29 @@ void RCLSMIX(INT    *n,      // Total number of independent observations.
              double *theta3, // Component parameters.
              double *P,      // Prior probabilities.
              INT    *Z,      // Pointer to the output array Z.
-             INT    *Error)  // Error code.
+             INT    *EList)  // Error list.
 {
     Rebmix               *rebmix = NULL;
-    INT                  **C = NULL;
-    INT                  A[3];
-    FLOAT                ***Q = NULL;
-    FLOAT                **Y = NULL;
     CompnentDistribution ****Theta = NULL;
-    FLOAT                CmpDist, MixDist, MaxMixDist;
-    INT                  i, j, k, l, m, dmax = 0;
+    FLOAT                CmpPdf, MixPdf, MaxMixPdf, ***Q = NULL, **Y = NULL;
+    INT                  A[3], **C = NULL, i, j, k, l, m, dmax = 0, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     C = (INT**)malloc(*s * sizeof(INT*));
 
-    *Error = NULL == C; if (*Error) goto E0;
+    E_CHECK(NULL == C, E_MEM);
 
     i = 0;
 
     for (j = 0; j < *s; j++) {
         C[j] = (INT*)malloc(*o * sizeof(INT));
 
-        *Error = NULL == C[j]; if (*Error) goto E0;
+        E_CHECK(NULL == C[j], E_MEM);
 
         for (k = 0; k < *o; k++) {
             C[j][k] = c[i]; i++;
@@ -846,19 +906,19 @@ void RCLSMIX(INT    *n,      // Total number of independent observations.
 
     Q = (FLOAT***)malloc(*s * sizeof(FLOAT**));
 
-    *Error = NULL == Q; if (*Error) goto E0;
+    E_CHECK(NULL == Q, E_MEM);
 
     i = 0;
 
     for (j = 0; j < *s; j++) {
         Q[j] = (FLOAT**)malloc(*o * sizeof(FLOAT*));
 
-        *Error = NULL == Q[j]; if (*Error) goto E0;
+        E_CHECK(NULL == Q[j], E_MEM);
 
         for (k = 0; k < *o; k++) {
             Q[j][k] = (FLOAT*)malloc(C[j][k] * sizeof(FLOAT));
 
-            *Error = NULL == Q[j][k]; if (*Error) goto E0;
+            E_CHECK(NULL == Q[j][k], E_MEM);
 
             for (l = 0; l < C[j][k]; l++) {
                 Q[j][k][l] = W[i]; i++;
@@ -868,30 +928,30 @@ void RCLSMIX(INT    *n,      // Total number of independent observations.
 
     Theta = new CompnentDistribution*** [(unsigned INT)(*s)];
 
-    *Error = NULL == Theta; if (*Error) goto E0;
+    E_CHECK(NULL == Theta, E_MEM);
 
     i = 0;
 
     for (j = 0; j < *s; j++) {
         Theta[j] = new CompnentDistribution** [(unsigned INT)(*o)];
 
-        *Error = NULL == Theta[j]; if (*Error) goto E0;
+        E_CHECK(NULL == Theta[j], E_MEM);
 
         for (k = 0; k < *o; k++) {
             Theta[j][k] = new CompnentDistribution* [(unsigned INT)C[j][k]];
 
-            *Error = NULL == Theta[j][k]; if (*Error) goto E0;
+            E_CHECK(NULL == Theta[j][k], E_MEM);
 
             for (l = 0; l < C[j][k]; l++) {
                 Theta[j][k][l] = new CompnentDistribution(rebmix);
 
-                *Error = NULL == Theta[j][k][l]; if (*Error) goto E0;
+                E_CHECK(NULL == Theta[j][k][l], E_MEM);
 
                 A[0] = A[1] = A[2] = d[k];
 
-                *Error = Theta[j][k][l]->Realloc(d[k], 3, A);
+                Error = Theta[j][k][l]->Realloc(d[k], 3, A);
 
-                if (*Error) goto E0;
+                E_CHECK(Error != E_OK, Error);
 
                 for (m = 0; m < d[k]; m++) {
                     if (!strcmp(pdf[i], "normal")) {
@@ -964,7 +1024,7 @@ void RCLSMIX(INT    *n,      // Total number of independent observations.
                         Theta[j][k][l]->Theta_[1][m] = theta2[i];
                     }
                     else {
-                        *Error = 1; goto E0;
+                        E_CHECK(1, E_ARG);
                     }
 
                     i++;
@@ -977,41 +1037,43 @@ void RCLSMIX(INT    *n,      // Total number of independent observations.
 
     Y = (FLOAT**)malloc(dmax * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < dmax; i++) {
         Y[i] = (FLOAT*)malloc(sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
     for (i = 0; i < *n; i++) {
-        Z[i] = 1; MaxMixDist = (FLOAT)0.0;
+        Z[i] = 1; MaxMixPdf = (FLOAT)0.0;
 
         for (j = 0; j < *s; j++) {
-            k = 0; MixDist = (FLOAT)1.0;
+            k = 0; MixPdf = (FLOAT)1.0;
 
             for (l = 0; l < *o; l++) {
                 for (m = 0; m < d[l]; m++) {
                     Y[m][0] = X[i + (*n) * (m + k)];
                 }
 
-                *Error = rebmix->MixtureDist(0, Y, C[j][l], Q[j][l], Theta[j][l], &CmpDist);
+                Error = rebmix->MixturePdf(0, Y, C[j][l], Q[j][l], Theta[j][l], &CmpPdf);
 
-                if (*Error) goto E0;
+                E_CHECK(Error != E_OK, Error);
 
-                k += d[l]; MixDist *= CmpDist;
+                k += d[l]; MixPdf *= CmpPdf;
             }
 
-            MixDist *= P[j];
+            MixPdf *= P[j];
 
-            if (MixDist > MaxMixDist) {
-                Z[i] = j + 1; MaxMixDist = MixDist;
+            if (MixPdf > MaxMixPdf) {
+                Z[i] = j + 1; MaxMixPdf = MixPdf;
             }
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < dmax; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1060,6 +1122,8 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RCLSMIX
 
 // Returns clustered observations in R.
@@ -1074,37 +1138,37 @@ void RCLRMIX(INT    *n,      // Total number of independent observations.
              double *theta2, // Component parameters.
              double *theta3, // Component parameters.
              INT    *Z,      // Pointer to the output array Z.
-             INT    *Error)  // Error code.
+             INT    *EList)  // Error list.
 {
     Rebmix               *rebmix = NULL;
-    FLOAT                **Y = NULL;
-    INT                  A[3];
     CompnentDistribution **Theta = NULL;
-    FLOAT                CmpDist, MaxCmpDist;
-    INT                  i, j, k;
+    FLOAT                CmpPdf, MaxCmpPdf, **Y = NULL;
+    INT                  A[3], i, j, k, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->length_pdf_ = *d;
 
     Theta = new CompnentDistribution* [(unsigned INT)(*c)];
 
-    *Error = NULL == Theta; if (*Error) goto E0;
+    E_CHECK(NULL == Theta, E_MEM);
 
     i = 0;
 
     for (j = 0; j < *c; j++) {
         Theta[j] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == Theta[j]; if (*Error) goto E0;
+        E_CHECK(NULL == Theta[j], E_MEM);
 
         A[0] = A[1] = A[2] = *d;
 
-        *Error = Theta[j]->Realloc(*d, 3, A);
+        Error = Theta[j]->Realloc(*d, 3, A);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         for (k = 0; k < *d; k++) {
             if (!strcmp(pdf[i], "normal")) {
@@ -1177,7 +1241,7 @@ void RCLRMIX(INT    *n,      // Total number of independent observations.
                 Theta[j]->Theta_[1][k] = theta2[i];
             }
             else {
-                *Error = 1; goto E0;
+                E_CHECK(1, E_ARG);
             }
 
             i++;
@@ -1186,12 +1250,12 @@ void RCLRMIX(INT    *n,      // Total number of independent observations.
 
     Y = (FLOAT**)malloc(*d * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < *d; i++) {
         Y[i] = (FLOAT*)malloc(sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
     for (i = 0; i < *n; i++) {
@@ -1199,22 +1263,24 @@ void RCLRMIX(INT    *n,      // Total number of independent observations.
             Y[j][0] = X[i + (*n) * j];
         }
 
-        Z[i] = 1; MaxCmpDist = (FLOAT)0.0;
+        Z[i] = 1; MaxCmpPdf = (FLOAT)0.0;
 
         for (j = 0; j < *c; j++) {
-            *Error = rebmix->ComponentDist(0, Y, Theta[j], &CmpDist, NULL);
+            Error = rebmix->ComponentPdf(0, Y, Theta[j], &CmpPdf, NULL);
 
-            if (*Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
-            CmpDist *= W[j];
+            CmpPdf *= W[j];
 
-            if (CmpDist > MaxCmpDist) {
-                Z[i] = j + 1; MaxCmpDist = CmpDist;
+            if (CmpPdf > MaxCmpPdf) {
+                Z[i] = j + 1; MaxCmpPdf = CmpPdf;
             }
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < *d; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1231,35 +1297,39 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RCLRMIX
 
-void RPreprocessingKNNMIX(INT    *k,     // k-nearest neighbours.
-                          double *h,     // Normalizing vector.
-                          INT    *n,     // Total number of independent observations.
-                          INT    *d,     // Number of independent random variables.
-                          double *x,     // Pointer to the input array x.
-                          double *y,     // Pointer to the output array y.
-                          INT    *Error) // Error code.
+void RPreprocessingKNNMIX(INT    *k,      // k-nearest neighbours.
+                          double *h,      // Normalizing vector.
+                          INT    *n,      // Total number of independent observations.
+                          INT    *d,      // Number of independent random variables.
+                          double *x,      // Pointer to the input array x.
+                          double *y,      // Pointer to the output array y.
+                          INT    *EList)  // Error list.
 {
     Rebmix *rebmix = NULL;
-    FLOAT  **Y = NULL;
-    INT    i, j, l;
+    FLOAT  Rm, **Y = NULL;
+    INT    i, j, l, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->n_ = rebmix->nr_ = *n;
     rebmix->length_pdf_ = *d;
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 3) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 3; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
     i = 0;
@@ -1270,9 +1340,9 @@ void RPreprocessingKNNMIX(INT    *k,     // k-nearest neighbours.
         }
     }
 
-    *Error = rebmix->PreprocessingKNN(*k, h, Y);
+    Error = rebmix->PreprocessingKNN(*k, h, &Rm, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     i = 0;
 
@@ -1282,7 +1352,9 @@ void RPreprocessingKNNMIX(INT    *k,     // k-nearest neighbours.
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 3; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1291,34 +1363,38 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RPreprocessingKNNMIX
 
-void RPreprocessingKDEMIX(double *h,     // Sides of the hypersquare.
-                          INT    *n,     // Total number of independent observations.
-                          INT    *d,     // Number of independent random variables.
-                          double *x,     // Pointer to the input array x.
-                          double *y,     // Pointer to the output array y.
-                          INT    *Error) // Error code.
+void RPreprocessingKDEMIX(double *h,      // Sides of the hypersquare.
+                          INT    *n,      // Total number of independent observations.
+                          INT    *d,      // Number of independent random variables.
+                          double *x,      // Pointer to the input array x.
+                          double *y,      // Pointer to the output array y.
+                          INT    *EList)  // Error list.
 {
     Rebmix *rebmix = NULL;
     FLOAT  **Y = NULL;
-    INT    i, j, l;
+    INT    i, j, l, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->n_ = rebmix->nr_ = *n;
     rebmix->length_pdf_ = *d;
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 2) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 2; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
     i = 0;
@@ -1329,9 +1405,9 @@ void RPreprocessingKDEMIX(double *h,     // Sides of the hypersquare.
         }
     }
 
-    *Error = rebmix->PreprocessingKDE(h, Y);
+    Error = rebmix->PreprocessingKDE(h, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     i = 0;
 
@@ -1341,7 +1417,9 @@ void RPreprocessingKDEMIX(double *h,     // Sides of the hypersquare.
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 2; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1350,38 +1428,42 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RPreprocessingKDEMIX
 
-void RPreprocessingHMIX(double *h,          // Sides of the hypersquare.
-                        double *y0,         // Origins.
-                        double *ymin,       // Minimum observations.
-                        double *ymax,       // Maximum observations.
-                        INT    *k,          // Total number of bins.
-                        INT    *n,          // Total number of independent observations.
-                        INT    *d,          // Number of independent random variables.
-                        double *x,          // Pointer to the input array x.
-                        double *y,          // Pointer to the output array y.
-                        INT    *Error)      // Error code.
+void RPreprocessingHMIX(double *h,      // Sides of the hypersquare.
+                        double *y0,     // Origins.
+                        double *ymin,   // Minimum observations.
+                        double *ymax,   // Maximum observations.
+                        INT    *k,      // Total number of bins.
+                        INT    *n,      // Total number of independent observations.
+                        INT    *d,      // Number of independent random variables.
+                        double *x,      // Pointer to the input array x.
+                        double *y,      // Pointer to the output array y.
+                        INT    *EList)  // Error list.
 {
     Rebmix *rebmix = NULL;
     FLOAT  **Y = NULL;
-    INT    i, j, l;
+    INT    i, j, l, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->n_ = rebmix->nr_ = *n;
     rebmix->nc_ = rebmix->length_pdf_ = *d;
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -1394,17 +1476,17 @@ void RPreprocessingHMIX(double *h,          // Sides of the hypersquare.
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 1) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
-    *Error = rebmix->PreprocessingH(h, y0, ymin, ymax, k, Y);
+    Error = rebmix->PreprocessingH(h, y0, ymin, ymax, k, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     i = 0;
 
@@ -1414,7 +1496,9 @@ void RPreprocessingHMIX(double *h,          // Sides of the hypersquare.
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1423,19 +1507,21 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RPreprocessingHMIX
 
 void RPreprocessingKMIX(double *h,      // Sides of the hypersquare.
                         INT    *d,      // Number of independent random variables.
                         INT    *n,      // Length of x.
                         double *x,      // Pointer to the array x.
-                        INT    *Error)  // Error code.
+                        INT    *EList)  // Error list.
 {
-    INT i, j, k, l, dn, jn, kn;
+    INT i, j, k, l, dn, jn, kn, Error;
 
-    *Error = *n < 1;
+    E_BEGIN();
 
-    if (*Error) goto E0;
+    E_CHECK(*n < 1, E_ARG);
 
     dn = (*d) * (*n);
 
@@ -1462,7 +1548,10 @@ S1:;
     }
 
     *n = l;
-E0:;
+
+EEXIT:
+
+    E_LIST(EList);
 } // RPreprocessingKMIX
 
 void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersquare.
@@ -1484,15 +1573,17 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
                                  double *logL,         // log-likelihood.
                                  INT    *M,            // Degrees of freedom.
                                  double *D,            // Total of positive relative deviations.
-                                 INT    *Error)        // Error code.
+                                 INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
-    FLOAT  **Y = NULL;
-    INT    i, j, l, m;
+    FLOAT  Rm, **Y = NULL;
+    INT    i, j, l, m, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     if (!strcmp(Criterion[0], "AIC"))
         rebmix->Criterion_ = icAIC;
@@ -1542,18 +1633,18 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
     if (!strcmp(Criterion[0], "SSE"))
         rebmix->Criterion_ = icSSE;
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     rebmix->W_ = (FLOAT*)malloc(*c * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->W_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (i = 0; i < *c; i++) rebmix->W_[i] = W[i];
 
     rebmix->IniTheta_ = new CompnentDistribution(rebmix);
 
-    *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->IniTheta_, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
@@ -1561,11 +1652,11 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     rebmix->length_theta_ = (INT*)malloc(rebmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rebmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->length_theta_, E_MEM);
 
-    *Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -1608,7 +1699,7 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
             rebmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
@@ -1624,16 +1715,16 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     rebmix->MixTheta_ = new CompnentDistribution*[(unsigned INT)(*c)];
 
-    *Error = NULL == rebmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (i = 0; i < *c; i++) {
         rebmix->MixTheta_[i] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == rebmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[i], E_MEM);
 
-        *Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < *c; i++) {
@@ -1658,12 +1749,12 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -1676,37 +1767,39 @@ void RInformationCriterionKNNMIX(double *h,            // Sides of the hypersqua
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 3) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 3; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
 
         if (i < rebmix->length_pdf_) {
             for (j = 0; j < rebmix->nr_; j++) Y[i][j] = rebmix->Y_[i][j];
         }
     }
 
-    *Error = rebmix->PreprocessingKNN(*k, h, Y);
+    Error = rebmix->PreprocessingKNN(*k, h, &Rm, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     rebmix->cmax_ = *c;
 
-    *Error = rebmix->InformationCriterionKNN(*k,
-                                             Y,
-                                             *c,
-                                             rebmix->W_,
-                                             rebmix->MixTheta_,
-                                             IC,
-                                             logL,
-                                             M,
-                                             D);
+    Error = rebmix->InformationCriterionKNN(*k,
+                                            Y,
+                                            *c,
+                                            rebmix->W_,
+                                            rebmix->MixTheta_,
+                                            IC,
+                                            logL,
+                                            M,
+                                            D);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 3; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1715,6 +1808,8 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RInformationCriterionKNNMIX
 
 void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersquare.
@@ -1735,16 +1830,17 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
                                  double *logL,         // log-likelihood.
                                  INT    *M,            // Degrees of freedom.
                                  double *D,            // Total of positive relative deviations.
-                                 INT    *Error)        // Error code.
+                                 INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
-    FLOAT  **Y = NULL;
-    FLOAT  logV;
-    INT    i, j, l, m;
+    FLOAT  logV, **Y = NULL;
+    INT    i, j, l, m, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     if (!strcmp(Criterion[0], "AIC"))
         rebmix->Criterion_ = icAIC;
@@ -1794,18 +1890,18 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
     if (!strcmp(Criterion[0], "SSE"))
         rebmix->Criterion_ = icSSE;
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     rebmix->W_ = (FLOAT*)malloc(*c * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->W_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (i = 0; i < *c; i++) rebmix->W_[i] = W[i];
 
     rebmix->IniTheta_ = new CompnentDistribution(rebmix);
 
-    *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->IniTheta_, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
@@ -1813,11 +1909,11 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     rebmix->length_theta_ = (INT*)malloc(rebmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rebmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->length_theta_, E_MEM);
 
-    *Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -1860,7 +1956,7 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
             rebmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
@@ -1876,16 +1972,16 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     rebmix->MixTheta_ = new CompnentDistribution*[(unsigned INT)(*c)];
 
-    *Error = NULL == rebmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (i = 0; i < *c; i++) {
         rebmix->MixTheta_[i] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == rebmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[i], E_MEM);
 
-        *Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < *c; i++) {
@@ -1910,12 +2006,12 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -1928,21 +2024,21 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 2) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 2; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
 
         if (i < rebmix->length_pdf_) {
             for (j = 0; j < rebmix->nr_; j++) Y[i][j] = rebmix->Y_[i][j];
         }
     }
 
-    *Error = rebmix->PreprocessingKDE(h, Y);
+    Error = rebmix->PreprocessingKDE(h, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     rebmix->cmax_ = *c;
 
@@ -1952,19 +2048,21 @@ void RInformationCriterionKDEMIX(double *h,            // Sides of the hypersqua
         logV += (FLOAT)log(h[i]);
     }
 
-    *Error = rebmix->InformationCriterionKDE(logV,
-                                             Y,
-                                             *c,
-                                             rebmix->W_,
-                                             rebmix->MixTheta_,
-                                             IC,
-                                             logL,
-                                             M,
-                                             D);
+    Error = rebmix->InformationCriterionKDE(logV,
+                                            Y,
+                                            *c,
+                                            rebmix->W_,
+                                            rebmix->MixTheta_,
+                                            IC,
+                                            logL,
+                                            M,
+                                            D);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 2; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -1973,6 +2071,8 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RInformationCriterionKDEMIX
 
 void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare.
@@ -1997,16 +2097,17 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
                                double *logL,         // log-likelihood.
                                INT    *M,            // Degrees of freedom.
                                double *D,            // Total of positive relative deviations.
-                               INT    *Error)        // Error code.
+                               INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
-    FLOAT  **Y = NULL;
-    FLOAT  logV;
-    INT    i, j, l, m;
+    FLOAT  logV, **Y = NULL;
+    INT    i, j, l, m, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     if (!strcmp(Criterion[0], "AIC"))
         rebmix->Criterion_ = icAIC;
@@ -2056,18 +2157,18 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
     if (!strcmp(Criterion[0], "SSE"))
         rebmix->Criterion_ = icSSE;
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     rebmix->W_ = (FLOAT*)malloc(*c * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->W_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (i = 0; i < *c; i++) rebmix->W_[i] = W[i];
 
     rebmix->IniTheta_ = new CompnentDistribution(rebmix);
 
-    *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->IniTheta_, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
@@ -2075,11 +2176,11 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     rebmix->length_theta_ = (INT*)malloc(rebmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rebmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->length_theta_, E_MEM);
 
-    *Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -2122,7 +2223,7 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
             rebmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
@@ -2138,16 +2239,16 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     rebmix->MixTheta_ = new CompnentDistribution* [(unsigned INT)(*c)];
 
-    *Error = NULL == rebmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (i = 0; i < *c; i++) {
         rebmix->MixTheta_[i] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == rebmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[i], E_MEM);
 
-        *Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < *c; i++) {
@@ -2172,12 +2273,12 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -2190,17 +2291,17 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 1) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
-    *Error = rebmix->PreprocessingH(h, y0, ymin, ymax, k, Y);
+    Error = rebmix->PreprocessingH(h, y0, ymin, ymax, k, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     rebmix->cmax_ = *c;
 
@@ -2210,20 +2311,22 @@ void RInformationCriterionHMIX(double *h,            // Sides of the hypersquare
         logV += (FLOAT)log(h[i]);
     }
 
-    *Error = rebmix->InformationCriterionH(logV,
-                                           *k,
-                                           Y,
-                                           *c,
-                                           rebmix->W_,
-                                           rebmix->MixTheta_,
-                                           IC,
-                                           logL,
-                                           M,
-                                           D);
+    Error = rebmix->InformationCriterionH(logV,
+                                          *k,
+                                          Y,
+                                          *c,
+                                          rebmix->W_,
+                                          rebmix->MixTheta_,
+                                          IC,
+                                          logL,
+                                          M,
+                                          D);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -2232,6 +2335,8 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RInformationCriterionHMIX
 
 void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare.
@@ -2252,16 +2357,17 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
                                double *logL,         // log-likelihood.
                                INT    *M,            // Degrees of freedom.
                                double *D,            // Total of positive relative deviations.
-                               INT    *Error)        // Error code.
+                               INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
-    FLOAT  **Y = NULL;
-    FLOAT  logV;
-    INT    i, j, l, m;
+    FLOAT  logV, **Y = NULL;
+    INT    i, j, l, m, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     if (!strcmp(Criterion[0], "AIC"))
         rebmix->Criterion_ = icAIC;
@@ -2311,18 +2417,18 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
     if (!strcmp(Criterion[0], "SSE"))
         rebmix->Criterion_ = icSSE;
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     rebmix->W_ = (FLOAT*)malloc(*c * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->W_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (i = 0; i < *c; i++) rebmix->W_[i] = W[i];
 
     rebmix->IniTheta_ = new CompnentDistribution(rebmix);
 
-    *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->IniTheta_, E_MEM);
 
     rebmix->length_pdf_ = *length_pdf;
 
@@ -2330,11 +2436,11 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
 
     rebmix->length_theta_ = (INT*)malloc(rebmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rebmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->length_theta_, E_MEM);
 
-    *Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -2377,7 +2483,7 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
             rebmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
@@ -2393,16 +2499,16 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
 
     rebmix->MixTheta_ = new CompnentDistribution* [(unsigned INT)(*c)];
 
-    *Error = NULL == rebmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (i = 0; i < *c; i++) {
         rebmix->MixTheta_[i] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == rebmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[i], E_MEM);
 
-        *Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < *c; i++) {
@@ -2427,14 +2533,14 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 1) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     i = 0;
 
     for (j = 0; j < rebmix->length_pdf_ + 1; j++) {
         Y[j] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[j]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[j], E_MEM);
 
         for (l = 0; l < rebmix->nr_; l++) {
             Y[j][l] = x[i]; i++;
@@ -2457,20 +2563,22 @@ void RInformationCriterionKMIX(double *h,            // Sides of the hypersquare
 
     rebmix->Y_type_ = 1;
 
-    *Error = rebmix->InformationCriterionH(logV,
-                                           *n,
-                                           Y,
-                                           *c,
-                                           rebmix->W_,
-                                           rebmix->MixTheta_,
-                                           IC,
-                                           logL,
-                                           M,
-                                           D);
+    Error = rebmix->InformationCriterionH(logV,
+                                          *n,
+                                          Y,
+                                          *c,
+                                          rebmix->W_,
+                                          rebmix->MixTheta_,
+                                          IC,
+                                          logL,
+                                          M,
+                                          D);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -2478,7 +2586,9 @@ E0: if (Y) {
         free(Y);
     }
 
-    if (rebmix) delete rebmix; 
+    if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RInformationCriterionKMIX
 
 void RInformationCriterionMIX(char   **Criterion,   // Information criterion type.
@@ -2498,14 +2608,16 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
                               double *logL,         // log-likelihood.
                               INT    *M,            // Degrees of freedom.
                               double *D,            // Total of positive relative deviations.
-                              INT    *Error)        // Error code.
+                              INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
-    INT    i, j, l, m;
+    INT    i, j, l, m, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     if (!strcmp(Criterion[0], "AIC"))
         rebmix->Criterion_ = icAIC;
@@ -2555,18 +2667,18 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
     if (!strcmp(Criterion[0], "SSE"))
         rebmix->Criterion_ = icSSE;
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     rebmix->W_ = (FLOAT*)malloc(*c * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->W_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (i = 0; i < *c; i++) rebmix->W_[i] = W[i];
 
     rebmix->IniTheta_ = new CompnentDistribution(rebmix);
 
-    *Error = NULL == rebmix->IniTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->IniTheta_, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *length_pdf;
 
@@ -2574,11 +2686,11 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     rebmix->length_theta_ = (INT*)malloc(rebmix->length_Theta_ * sizeof(INT));
 
-    *Error = NULL == rebmix->length_theta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->length_theta_, E_MEM);
 
-    *Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
+    Error = rebmix->IniTheta_->Realloc(*length_pdf, *length_Theta, length_theta);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         if (!strcmp(pdf[i], "normal")) {
@@ -2621,7 +2733,7 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
             rebmix->IniTheta_->pdf_[i] = pfUniform;
         }
         else {
-            *Error = 1; goto E0;
+            E_CHECK(1, E_ARG);
         }
     }
 
@@ -2637,16 +2749,16 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     rebmix->MixTheta_ = new CompnentDistribution* [(unsigned INT)(*c)];
 
-    *Error = NULL == rebmix->MixTheta_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (i = 0; i < *c; i++) {
         rebmix->MixTheta_[i] = new CompnentDistribution(rebmix);
 
-        *Error = NULL == rebmix->MixTheta_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[i], E_MEM);
 
-        *Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[i]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < *c; i++) {
@@ -2671,12 +2783,12 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -2689,17 +2801,21 @@ void RInformationCriterionMIX(char   **Criterion,   // Information criterion typ
 
     rebmix->cmax_ = *c;
 
-    *Error = rebmix->InformationCriterion(*c,
-                                          rebmix->W_,
-                                          rebmix->MixTheta_,
-                                          IC,
-                                          logL,
-                                          M,
-                                          D);
+    Error = rebmix->InformationCriterion(*c,
+                                         rebmix->W_,
+                                         rebmix->MixTheta_,
+                                         IC,
+                                         logL,
+                                         M,
+                                         D);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0: if (rebmix) delete rebmix;
+EEXIT:  
+    
+    if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RInformationCriterionMIX
 
 void RCombineComponentsMIX(INT    *c,            // Number of components.
@@ -2721,53 +2837,57 @@ void RCombineComponentsMIX(INT    *c,            // Number of components.
                            double *EN,           // Entropy.
                            double *ED,           // Entropy decrease.
                            double *PSS,          // Pairwise similarity scores.
-                           INT    *Error)        // Error code.
+                           INT    *EList)        // Error list.
 {
     Rebmix *rebmix = NULL;
+    INT    Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
-    *Error =  rebmix->Set(NULL,         // Preprocessing type.
-                          c,            // Maximum number of components.
-                          NULL,         // Minimum number of components.
-                          NULL,         // Information criterion type.
-                          length_pdf,   // Number of independent random variables.
-                          NULL,         // Types of variables.
-                          length_pdf,   // Length of pdf.
-                          pdf,          // Parametric family types.
-                          length_Theta, // Length of Theta.
-                          length_theta, // Length of Theta[i].
-                          NULL,         // Component parameters.
-                          NULL,         // Length of K.
-                          NULL,         // Numbers of bins v or numbers of nearest neighbours k.
-                          NULL,         // Length of ymin.
-                          NULL,         // Minimum observations.
-                          NULL,         // Length of ymax.
-                          NULL,         // Maximum observations.
-                          NULL,         // Length of h.
-                          NULL,         // Sides of the hypersquare.
-                          NULL,         // Acceleration rate.
-                          NULL,         // Restraints type.
-                          n,            // Number of observations.
-                          Y,            // Dataset.
-                          Y_type,       // Dataset type. 
-                          NULL,         // Strategy for EM algorithm.
-                          NULL,         // EM algorithm variant.
-                          NULL,         // Acceleration for the standard EM algorithm.
-                          NULL,         // Tolerance for EM algortihm.
-                          NULL,         // Acceleration rate for Em algorithm.
-                          NULL,         // Maximum number of iterations in EM algorithm.
-                          NULL,         // Number of bins for histogram EM algorithm.
-                          W,            // Component weights.
-                          MixTheta);    // Mixture parameters.
+    Error =  rebmix->Set(NULL,         // Preprocessing type.
+                         c,            // Maximum number of components.
+                         NULL,         // Minimum number of components.
+                         NULL,         // Information criterion type.
+                         length_pdf,   // Number of independent random variables.
+                         NULL,         // Types of variables.
+                         length_pdf,   // Length of pdf.
+                         pdf,          // Parametric family types.
+                         length_Theta, // Length of Theta.
+                         length_theta, // Length of Theta[i].
+                         NULL,         // Component parameters.
+                         NULL,         // Length of K.
+                         NULL,         // Numbers of bins v or numbers of nearest neighbours k.
+                         NULL,         // Length of ymin.
+                         NULL,         // Minimum observations.
+                         NULL,         // Length of ymax.
+                         NULL,         // Maximum observations.
+                         NULL,         // Length of h.
+                         NULL,         // Sides of the hypersquare.
+                         NULL,         // Acceleration rate.
+                         NULL,         // Restraints type.
+                         NULL,         // Mode type.
+                         n,            // Number of observations.
+                         Y,            // Dataset.
+                         Y_type,       // Dataset type. 
+                         NULL,         // Strategy for EM algorithm.
+                         NULL,         // EM algorithm variant.
+                         NULL,         // Acceleration for the standard EM algorithm.
+                         NULL,         // Tolerance for EM algortihm.
+                         NULL,         // Acceleration rate for Em algorithm.
+                         NULL,         // Maximum number of iterations in EM algorithm.
+                         NULL,         // Number of bins for histogram EM algorithm.
+                         W,            // Component weights.
+                         MixTheta);    // Mixture parameters.
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
 /// Panic Branislav
     if (!strcmp(Rule[0], "Entropy")) {
-        *Error = rebmix->CombineComponentsEntropy(rebmix->cmax_,
+        Error = rebmix->CombineComponentsEntropy(rebmix->cmax_,
             rebmix->W_,
             rebmix->MixTheta_,
             tau,
@@ -2777,11 +2897,11 @@ void RCombineComponentsMIX(INT    *c,            // Number of components.
             ED,
             PSS);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
     else
     if (!strcmp(Rule[0], "Demp")) {
-        *Error = rebmix->CombineComponentsDemp(rebmix->cmax_,
+        Error = rebmix->CombineComponentsDemp(rebmix->cmax_,
             rebmix->W_,
             rebmix->MixTheta_,
             tau,
@@ -2791,14 +2911,18 @@ void RCombineComponentsMIX(INT    *c,            // Number of components.
             ED,
             PSS);
 
-        if (*Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
     else {
-        *Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 /// End
 
-E0: if (rebmix) delete rebmix;
+EEXIT:  
+    
+    if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // RCombineComponentsMIX
 
 void RvonMisesPdf(INT *n, double *y, double *Mean, double *Kappa, double *f)
@@ -2822,10 +2946,12 @@ void RvonMisesPdf(INT *n, double *y, double *Mean, double *Kappa, double *f)
     }
 } // RvonMisesPdf
 
-void RvonMisesCdf(INT *n, double *y, double *Mean, double *Kappa, double *F)
+void RvonMisesCdf(INT *n, double *y, double *Mean, double *Kappa, double *F, INT *EList)
 {
     FLOAT A[3], Io, In, I0, I1;
     INT   i, j, Error;
+
+    E_BEGIN();
 
     I0 = BesselI0(*Kappa); I1 = BesselI1(*Kappa);
 
@@ -2840,11 +2966,12 @@ void RvonMisesCdf(INT *n, double *y, double *Mean, double *Kappa, double *F)
             F[i] = (FLOAT)0.0;
         }
         else {
-            Io = I0; In = I1; j = 1; F[i] = A[0] * y[i]; Error = 1;
-            while ((j <= ItMax) && Error) {
+            j = 1; Error = E_CON; Io = I0; In = I1; F[i] = A[0] * y[i];
+
+            while ((j <= ItMax) && (Error != E_OK)) {
                 F[i] += A[1] * In * ((FLOAT)sin(j * (y[i] - *Mean)) + (FLOAT)sin(j * *Mean)) / j;
 
-                if (In < Eps) Error = 0;
+                if (In < Eps) Error = E_OK;
 
                 A[2] = Io - (FLOAT)2.0 * j * In / *Kappa; Io = In; In = A[2];
 
@@ -2860,6 +2987,8 @@ void RvonMisesCdf(INT *n, double *y, double *Mean, double *Kappa, double *F)
             }
         }
     }
+
+    E_LIST(EList);
 } // RvonMisesCdf
 
 void RGumbelPdf(INT *n, double *y, double *Mean, double *Sigma, double *Xi, double *f)
@@ -2907,16 +3036,17 @@ void Roptbins(INT    *d,           // Number of independent random variables.
               INT    *kmin,        // Minimum number of bins.
               INT    *kmax,        // Maximum number of bins.
               INT    *opt_k,       // Optimal number of bins.
-              INT    *Error)       // Error code.
+              INT    *EList)       // Error list.
 {
     Rebmix *rebmix = NULL;
     FLOAT  **Y = NULL;
-    INT    *opt_k_tmp = NULL;
-    INT    i, j, l;
+    INT    i, j, l, *opt_k_tmp = NULL, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *d;
 
@@ -2924,12 +3054,12 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -2942,7 +3072,7 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
     rebmix->ymin_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->ymin_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->ymin_, E_MEM);
 
     if (*length_ymin > 0) {
         for (i = 0; i < rebmix->length_pdf_; i++) {
@@ -2961,7 +3091,7 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
     rebmix->ymax_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->ymax_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->ymax_, E_MEM);
 
     if (*length_ymax > 0) {
         for (i = 0; i < rebmix->length_pdf_; i++) {
@@ -2980,23 +3110,25 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
     rebmix->y0_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->y0_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->y0_, E_MEM);
 
     rebmix->h_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->h_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->h_, E_MEM);
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 1) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
-    rebmix->Initialize();
+    Error = rebmix->Initialize();
+
+    E_CHECK(Error != E_OK, Error);
 
     if (!strcmp(Rule[0], "Sturges")) {
         opt_k[0] = (INT)ceil((FLOAT)1.0 + (FLOAT)log2((FLOAT)rebmix->n_));
@@ -3035,9 +3167,9 @@ void Roptbins(INT    *d,           // Number of independent random variables.
                 rebmix->y0_[j] = rebmix->ymin_[j] + (FLOAT)0.5 * rebmix->h_[j];
             }
 
-            *Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
+            Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
 
-            if (*Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
             if (k > rebmix->kmax_) {
                 break;
@@ -3076,7 +3208,7 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
         opt_k_tmp = (INT*)malloc(rebmix->length_pdf_ * sizeof(INT));
 
-        *Error = NULL == opt_k_tmp; if (*Error) goto E0;
+        E_CHECK(NULL == opt_k_tmp, E_MEM);
 
         for (j = 0; j < rebmix->length_pdf_; j++) {
             opt_k_tmp[j] = 1;
@@ -3099,9 +3231,9 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
                     rebmix->y0_[j] = rebmix->ymin_[j] + (FLOAT)0.5 * rebmix->h_[j];
 
-                    *Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
+                    Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
 
-                    if (*Error) goto E0;
+                    E_CHECK(Error != E_OK, Error);
 
                     if (k > rebmix->kmax_ && opt_k_tmp[j] != 1) {
                         break;
@@ -3171,7 +3303,7 @@ void Roptbins(INT    *d,           // Number of independent random variables.
 
         lim_broken = 0; M_broken = (FLOAT)0.0;
 
-        if (*kmax == *kmin) goto E0;
+        if (*kmax == *kmin) goto EEXIT;
 
         for (i = 0; i < num_r; i++) {
             for (j = rebmix->length_pdf_ - 1; j >= 0; j--) {
@@ -3198,9 +3330,9 @@ void Roptbins(INT    *d,           // Number of independent random variables.
                 if (M > M_broken) continue;
             }
 
-            *Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
+            Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, &k, Y);
 
-            if (*Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
             if (k > rebmix->kmax_) {
                 lim_broken = 1; M_broken = M; continue;
@@ -3222,7 +3354,9 @@ void Roptbins(INT    *d,           // Number of independent random variables.
         }
     }
 
-E0: if (opt_k_tmp) free(opt_k_tmp);
+EEXIT:  
+    
+    if (opt_k_tmp) free(opt_k_tmp);
     
     if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
@@ -3233,6 +3367,8 @@ E0: if (opt_k_tmp) free(opt_k_tmp);
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // Roptbins
 
 /// Binning of data.
@@ -3247,15 +3383,17 @@ void Rbins(INT    *d,           // Number of independent random variables.
            INT    *k,           // Number of bins.
            INT    *length_y,    // Length of y.
            double *y,           // Binned dataset.
-           INT    *Error)       // Error code.
+           INT    *EList)       // Error list.
 {
     Rebmix *rebmix = NULL;
     FLOAT  **Y = NULL;
-    INT    i, j, l;
+    INT    i, j, l, Error;
+
+    E_BEGIN();
 
     rebmix = new Rebmix;
 
-    *Error = NULL == rebmix; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
     rebmix->nc_ = rebmix->length_pdf_ = *d;
 
@@ -3263,12 +3401,12 @@ void Rbins(INT    *d,           // Number of independent random variables.
 
     rebmix->Y_ = (FLOAT**)malloc(rebmix->nc_ * sizeof(FLOAT*));
 
-    *Error = NULL == rebmix->Y_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->Y_, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_; i++) {
         rebmix->Y_[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == rebmix->Y_[i]; if (*Error) goto E0;
+        E_CHECK(NULL == rebmix->Y_[i], E_MEM);
     }
 
     i = 0;
@@ -3281,7 +3419,7 @@ void Rbins(INT    *d,           // Number of independent random variables.
 
     rebmix->ymin_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->ymin_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->ymin_, E_MEM);
 
     if (*length_ymin > 0) {
         for (i = 0; i < rebmix->length_pdf_; i++) {
@@ -3300,7 +3438,7 @@ void Rbins(INT    *d,           // Number of independent random variables.
 
     rebmix->ymax_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->ymax_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->ymax_, E_MEM);
 
     if (*length_ymax > 0) {
         for (i = 0; i < rebmix->length_pdf_; i++) {
@@ -3319,20 +3457,20 @@ void Rbins(INT    *d,           // Number of independent random variables.
 
     rebmix->y0_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->y0_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->y0_, E_MEM);
 
     rebmix->h_ = (FLOAT*)malloc(rebmix->length_pdf_ * sizeof(FLOAT));
 
-    *Error = NULL == rebmix->h_; if (*Error) goto E0;
+    E_CHECK(NULL == rebmix->h_, E_MEM);
 
     Y = (FLOAT**)malloc((rebmix->length_pdf_ + 1) * sizeof(FLOAT*));
 
-    *Error = NULL == Y; if (*Error) goto E0;
+    E_CHECK(NULL == Y, E_MEM);
 
     for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
         Y[i] = (FLOAT*)malloc(rebmix->nr_ * sizeof(FLOAT));
 
-        *Error = NULL == Y[i]; if (*Error) goto E0;
+        E_CHECK(NULL == Y[i], E_MEM);
     }
 
 
@@ -3342,9 +3480,9 @@ void Rbins(INT    *d,           // Number of independent random variables.
         rebmix->y0_[j] = rebmix->ymin_[j] + (FLOAT)0.5 * rebmix->h_[j];
     }
 
-    *Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, length_y, Y);
+    Error = rebmix->PreprocessingH(rebmix->h_, rebmix->y0_, rebmix->ymin_, rebmix->ymax_, length_y, Y);
 
-    if (*Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     i = 0;
 
@@ -3354,7 +3492,9 @@ void Rbins(INT    *d,           // Number of independent random variables.
         }
     }
 
-E0: if (Y) {
+EEXIT:  
+    
+    if (Y) {
         for (i = 0; i < rebmix->length_pdf_ + 1; i++) {
             if (Y[i]) free(Y[i]);
         }
@@ -3363,6 +3503,8 @@ E0: if (Y) {
     }
 
     if (rebmix) delete rebmix;
+
+    E_LIST(EList);
 } // Rbins
 
 /// Panic Branislav
@@ -3386,21 +3528,20 @@ void REMMIX(INT    *d,                 // Number of independent random variables
             INT    *n_iter,            // Number of iterations for optimal case.
             double *summary_logL,      // Log-likelihood.
             INT    *summary_M,         // Degrees of freedom.
-            INT    *Error)             // Error number.
+            INT    *EList)             // Error list.
 {
-    INT error = 0, i = 0, j = 0, l = 0, length_Theta = 3;
-
-    INT A[3];
-
     Rebmix *rebmix = NULL;
+    INT    A[3], i = 0, j = 0, l = 0, length_Theta = 3, Error;
+
+    E_BEGIN();
 
     A[0] = A[1] = A[2] = *d;
 
     rebmix = new Rebmix;
 
-    error = NULL == rebmix; if (error) goto E0;
+    E_CHECK(NULL == rebmix, E_MEM);
 
-    error = rebmix->Set(NULL,              // Preprocessing type.
+    Error = rebmix->Set(NULL,              // Preprocessing type.
                         c,                 // Maximum number of components.
                         c,                 // Minimum number of components.
                         NULL,              // Information criterion type.
@@ -3421,6 +3562,7 @@ void REMMIX(INT    *d,                 // Number of independent random variables
                         NULL,              // Sides of the hypersquare.
                         NULL,              // Acceleration rate.
                         NULL,              // Restraints type.
+                        NULL,              // Mode type.
                         n,                 // Number of observations.
                         Y,                 // Dataset.
                         Y_type,            // Dataset type.
@@ -3448,16 +3590,16 @@ void REMMIX(INT    *d,                 // Number of independent random variables
 
     rebmix->MixTheta_ = new CompnentDistribution*[(unsigned INT)(rebmix->cmax_)];
 
-    error = NULL == rebmix->MixTheta_; if (error) goto E0;
+    E_CHECK(NULL == rebmix->MixTheta_, E_MEM);
 
     for (l = 0; l < rebmix->cmax_; l++) {
         rebmix->MixTheta_[l] = new CompnentDistribution(rebmix);
 
-        error = NULL == rebmix->MixTheta_[l]; if (error) goto E0;
+        E_CHECK(NULL == rebmix->MixTheta_[l], E_MEM);
 
-        error = rebmix->MixTheta_[l]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
+        Error = rebmix->MixTheta_[l]->Realloc(rebmix->length_pdf_, rebmix->length_Theta_, rebmix->length_theta_);
 
-        if (error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         for (i = 0; i < rebmix->length_pdf_; i++) {
             rebmix->MixTheta_[l]->pdf_[i] = rebmix->IniTheta_->pdf_[i];
@@ -3468,7 +3610,7 @@ void REMMIX(INT    *d,                 // Number of independent random variables
 
     rebmix->W_ = (double*)malloc(rebmix->cmax_ * sizeof(double));
 
-    error = rebmix->W_ == NULL; if (error) goto E0;
+    E_CHECK(NULL == rebmix->W_, E_MEM);
 
     for (l = 0; l < *c; l++) {
         rebmix->W_[l] = W[l];
@@ -3482,29 +3624,29 @@ void REMMIX(INT    *d,                 // Number of independent random variables
         }
     }
 
-    error = rebmix->EMInitialize();
+    Error = rebmix->EMInitialize();
 
-    if (error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     if (*EMMerge) {
         rebmix->EM_->merge_ = merge_naive;
     }
 
-    error = rebmix->EMRun(c, rebmix->W_, rebmix->MixTheta_);
+    Error = rebmix->EMRun(c, rebmix->W_, rebmix->MixTheta_);
 
-    if (error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-    error = rebmix->EM_->LogLikelihood(*c, rebmix->W_, rebmix->MixTheta_, summary_logL);
+    Error = rebmix->EM_->LogLikelihood(*c, rebmix->W_, rebmix->MixTheta_, summary_logL);
 
-    if (error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-    error = rebmix->DegreesOffreedom(*c, rebmix->MixTheta_, summary_M);
+    Error = rebmix->DegreesOffreedom(*c, rebmix->MixTheta_, summary_M);
 
-    if (error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     rebmix->summary_.c = *c;
 
-    error = rebmix->Get(n_iter,   // Number of iterations for optimal case.
+    Error = rebmix->Get(n_iter,   // Number of iterations for optimal case.
                         NULL,     // Number of iterations in whole run.
                         NULL,     // Optimal v or optimal k.
                         NULL,     // Optimal class widths of length d.
@@ -3519,22 +3661,23 @@ void REMMIX(INT    *d,                 // Number of independent random variables
                         Theta1,   // Component parameters.
                         Theta2,   // Component parameters.
                         Theta3,   // Component parameters.
-                        NULL,     // Length of opt_c, opt_IC, opt_logL and opt_D.
+                        NULL,     // Length of opt_c, opt_IC, opt_logL, opt_Dmin and opt_D.
                         NULL,     // Numbers of components for optimal v or for optimal k.
                         NULL,     // Information criteria for optimal v or for optimal k.
                         NULL,     // Log-likelihoods for optimal v or for optimal k.
+                        NULL,     // Dmin for optimal v or for optimal k.
                         NULL,     // Totals of positive relative deviations for optimal v or for optimal k.
                         NULL,     // Length of all_K and all_IC.
                         NULL,     // All processed numbers of bins v or all processed numbers of nearest neighbours k.
                         NULL);    // Information criteria for all processed numbers of bins v or all processed numbers of nearest neighbours k.
 
-    if (error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
-E0:
+EEXIT:
 
     if (rebmix) delete rebmix;
 
-    *Error = error;
+    E_LIST(EList);
 }
 /// End
 
@@ -3549,21 +3692,21 @@ void Rfhistogram(INT    *K,      // Numbers of bins.
                  INT    *ny,     // Length of y.
                  double *y,      // Pointer to the output array y.
                  INT    *shrink, // If 1 the output array is shrinked.
-                 INT    *Error)  // Error code.
+                 INT    *EList)  // Error list.
 {
-    INT   i, j, k, *l = NULL, *m = NULL, dny;
+    INT i, j, k, *l = NULL, *m = NULL, dny, Error;
 
-    *Error = *nx < 1;
+    E_BEGIN();
 
-    if (*Error) goto E0;
+    E_CHECK(*nx < 1, E_ARG);
 
     l = (INT*)malloc(*d * sizeof(INT));
 
-    *Error = NULL == l; if (*Error) goto E0;
+    E_CHECK(NULL == l, E_MEM);
 
     m = (INT*)malloc(*d * sizeof(INT));
 
-    *Error = NULL == m; if (*Error) goto E0;
+    E_CHECK(NULL == m, E_MEM);
 
     dny = (*d) * (*ny); m[*d - 1] = 1;
 
@@ -3601,9 +3744,13 @@ void Rfhistogram(INT    *K,      // Numbers of bins.
         *ny = i;
     }
 
-E0: if (m) free(m);
+EEXIT:  
+    
+    if (m) free(m);
 
     if (l) free(l);
+
+    E_LIST(EList);
 } // Rfhistogram
 
 // Compact histogram calculation.
@@ -3617,13 +3764,13 @@ void Rchistogram(INT    *K,      // Numbers of bins.
                  double *x,      // Pointer to the input array x.
                  INT    *ny,     // Length of y.
                  double *y,      // Pointer to the output array y.
-                 INT    *Error)  // Error code.
+                 INT    *EList)  // Error list.
 {
-    INT   i, j, k, dny, kny;
-    
-    *Error = *nx < 1;
+    INT i, j, k, dny, kny, Error;
 
-    if (*Error) goto E0;
+    E_BEGIN();
+
+    E_CHECK(*nx < 1, E_ARG);
 
     dny = (*d) * (*ny);
 
@@ -3650,7 +3797,10 @@ S0:;
         y[*v + dny] = (FLOAT)1.0; (*v)++;
 S1:;
     }
-E0:;
+
+EEXIT:
+
+    E_LIST(EList);
 } // Rchistogram
 
 }

@@ -9,6 +9,7 @@
 #endif
 
 #include <float.h>
+#include <stdio.h>
 
 #ifndef _MEMORY_LEAK_SWITCH
 #define _MEMORY_LEAK_SWITCH 0
@@ -17,6 +18,35 @@
 #ifndef _MAINTAIN_SWITCH
 #define _MAINTAIN_SWITCH 0
 #endif
+
+#define E_BEGIN() { \
+    Error = E_OK; if (Error) {}; E_begin(); \
+} // E_BEGIN
+
+#define E_CHECK(expression, error) \
+if (expression) { \
+    Print_e_line_(__FILE__, __LINE__, (error)); \
+    Error = (error); goto EEXIT; \
+} // E_CHECK
+
+#define W_CHECK(expression, idx) \
+if (expression) { \
+    Print_w_line_(idx); \
+    Error = E_OK; \
+} // W_CHECK
+
+#define E_RETURN(error)	return (error)
+
+#define E_LIST(elist) { \
+    Print_e_list_(elist); \
+} // E_LIST
+
+#define E_OK   0
+#define E_MEM  1
+#define E_ARG  2
+#define E_CON  3
+#define E_FILE 4
+#define E_NO_SOLUTION 5
 
 #ifndef FLOAT
 #define FLOAT double
@@ -80,6 +110,10 @@
 
 #ifndef Phi
 #define Phi (FLOAT)1.6180339887498948482045868343656
+#endif
+
+#ifndef GoldR
+#define GoldR (FLOAT)0.6180339887498948482045868343656
 #endif
 
 #ifndef Eps
@@ -199,6 +233,12 @@ typedef struct additinalparametertype {
     INT d;       // Golden section constant.
 } AdditionalParameterType;
 
+typedef struct interval {
+    INT   s; // 0 for left side and 1 for right side.
+    FLOAT a; // Infimum.
+    FLOAT b; // Supremum.
+} Interval;
+
 class Base {
 public:
     // Members.
@@ -242,6 +282,14 @@ typedef struct mixtureparametertype {
     INT                  initialized; // Boolean indicator if struct contains mixture model parameters. 
 } MixtureParameterType;
 
+void E_begin();
+
+void Print_e_line_(const char *file, INT line, INT error);
+
+void Print_w_line_(INT idx);
+
+void Print_e_list_(INT *elist);
+
 FLOAT Ran1(INT *IDum);
 
 // Inserts y into ascending list Y of length n. Set n = 0 initially.
@@ -258,13 +306,21 @@ FLOAT Gammaln(FLOAT y);
 
 INT Digamma(FLOAT y, FLOAT *Psi);
 
+// Returns binomial c.d.f. for the specified n and p. See http://www.nr.com/.
+
+FLOAT BinomialCdf(INT y, INT n, FLOAT p);
+
 // Returns the inverse of the binomial c.d.f. for the specified n and p.
 
-FLOAT BinomialInv(FLOAT Fy, FLOAT n, FLOAT p);
+INT BinomialInv(FLOAT Fy, INT n, FLOAT p);
+
+// Returns the Poisson c.d.f. for the specified Theta.
+
+FLOAT PoissonCdf(INT k, FLOAT Theta);
 
 // Returns the inverse of the Poisson c.d.f. for the specified Theta.
 
-FLOAT PoissonInv(FLOAT Fy, FLOAT Theta);
+INT PoissonInv(FLOAT Fy, FLOAT Theta);
 
 // Returns the incomplete gamma function P(a, y) evaluated by its series
 // representation as GamSer. Also returns log(Gamma(a)) as Gamln. See http://www.nr.com/.
@@ -334,12 +390,30 @@ FLOAT BesselI0(FLOAT y);
 
 FLOAT BesselI1(FLOAT y);
 
+// Returns the von Mises c.d.f. for the specified Mean and Kappa.
+
+INT vonMisesCdf(FLOAT y, FLOAT Mean, FLOAT Kappa, FLOAT *Fy);
+
 // Returns the inverse of the von Mises c.d.f. for the specified Mean and Kappa.
 
-FLOAT vonMisesInv(FLOAT Fy, FLOAT Mean, FLOAT Kappa);
+INT vonMisesInv(FLOAT Fy, FLOAT Mean, FLOAT Kappa, FLOAT *y);
 
 // Returns x * log(x).
 
 FLOAT xlogx(FLOAT x);
+
+// Returns merged intervals.
+
+void MergeIntervals(FLOAT    ym,  // Mode position.
+                    INT      *n,  // Total number of intervals.
+                    Interval *X); // Pointer to the intervals.
+
+// Returns the inverse of the normal c.d.f. for the specified Mean and Stdev based on the Beasley-Springer-Moro algorithm.
+
+FLOAT NormalInv(FLOAT Fy, FLOAT Mean, FLOAT Stdev);
+
+// Returns the inverse of the lognormal c.d.f. for the specified Mean and Stdev based on the Beasley-Springer-Moro algorithm.
+
+FLOAT LognormalInv(FLOAT Fy, FLOAT Mean, FLOAT Stdev);
 
 #endif

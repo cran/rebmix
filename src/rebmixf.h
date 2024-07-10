@@ -24,6 +24,12 @@ typedef enum {
 } PestraintsType_e;
 
 typedef enum {
+    mtAll,         // The modes are determined in decreasing magnitude from all observations.
+    mtOutliers,    // The modes are determined in decreasing magnitude from outliers only. Meanwhile, some outliers are reclassified as inliers. Eventually, when all observations are inliers, the procedure is concluded. 
+    mtOutliersPlus // The modes are determined in decreasing magnitude from outliers only. Meanwhile, some outliers are reclassified as inliers. Eventually, when all observations are inliers, they are converted to outliers, and the procedure is repeated.
+} ModeType_e;
+
+typedef enum {
     icAIC,    // AIC - Akaike information criterion Akaike (1973).
     icAIC3,   // AIC3 - Modified Akaike information criterion Smith & Spiegelhalter (1980).
     icAIC4,   // AIC4 - Modified Akaike information criterion Smith & Spiegelhalter (1980).
@@ -48,8 +54,8 @@ typedef struct roughparametertype {
     FLOAT ymean; // Mean position.
     FLOAT ymin;  // Minimum position.
     FLOAT ymax;  // Maximum position.
-    FLOAT flm;   // Component conditional empirical density.
-    FLOAT klm;   // Component conditional total number of observations.
+    FLOAT fm;    // Component conditional empirical density.
+    FLOAT km;    // Component conditional total number of observations.
 } RoughParameterType;
 
 class Rebmix : public Base {
@@ -69,7 +75,6 @@ class Rebmix : public Base {
 public:
     // Input members.
     FLOAT                      p_value_;       // Probability of obtaining a result equal to or "more extreme" than what was actually observed.
-    FLOAT                      min_dist_mul_;  // Minimum distance multiplier.
     FLOAT                      var_mul_;       // Variance multiplier.
     INT                        kmax_;          // Maximum number of nonempty bins.
     FLOAT                      ChiSqr_;        // Critical Chi square value for outlier detection and p = 2.0 * p_value_.
@@ -91,6 +96,7 @@ public:
     FLOAT                      *h_;            // Sides of the hypersquare.
     FLOAT                      ar_;            // Acceleration rate.
     PestraintsType_e           Restraints_;    // Restraints type.
+    ModeType_e                 Mode_;          // Mode type.
 /// Panic Branislav
     Emmix                      *EM_;           // Object of class Emmix.
     FLOAT                      EM_TOL_;        // Tolerance for EM algorithm.
@@ -109,14 +115,16 @@ public:
     FLOAT                      **Y_;           // Dataset.
     INT                        Y_type_;        // Dataset type.
     FLOAT                      **X_;           // Temporary dataset.
+    FLOAT                      **Z_;           // Temporary dataset.
     // Output members.
     FLOAT                      *W_;            // Component weights.
     CompnentDistribution       **MixTheta_;    // Mixture parameters.
     SummaryParameterType       summary_;       // Summary.
-    INT                        opt_length_;    // Length of opt_c_, opt_IC_, opt_logL_ and opt_D_.
+    INT                        opt_length_;    // Length of opt_c_, opt_IC_, opt_logL_, opt_Dmin_ and opt_D_.
     INT                        *opt_c_;        // Numbers of components for optimal v or for optimal k.
     FLOAT                      *opt_IC_;       // Information criteria for optimal v or for optimal k.
     FLOAT                      *opt_logL_;     // Log-likelihoods for optimal v or for optimal k.
+    FLOAT                      *opt_Dmin_;     // Dmin for optimal v or for optimal k.
     FLOAT                      *opt_D_;        // Totals of positive relative deviations for optimal v or for optimal k.
     INT                        all_length_;    // Length of all_K_ and all_IC_.
     INT                        *all_I_;        // Information on processed numbers of bins v or processed numbers of nearest neighbours k. 0 if not processed, 1 if processed, 2 if error.
@@ -133,15 +141,15 @@ public:
     virtual ~Rebmix();
     // Methods.
     virtual INT Initialize();
-    INT PreprocessingKNN(INT k, FLOAT *h, FLOAT **Y);
+    INT PreprocessingKNN(INT k, FLOAT *h, FLOAT *Rm, FLOAT **Y);
     INT PreprocessingKDE(FLOAT *h, FLOAT **Y);
     INT PreprocessingH(FLOAT *h, FLOAT *y0, FLOAT *ymin, FLOAT *ymax, INT *k, FLOAT **Y);
     INT PreprocessingH(FLOAT *h, FLOAT *y0, FLOAT *ymin, FLOAT *ymax, INT *k, FLOAT **Y, INT *State);
-    virtual INT RoughEstimationKNN(FLOAT **Y, INT k, FLOAT *h, FLOAT nl, INT m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
+    virtual INT RoughEstimationKNN(FLOAT **Y, INT k, FLOAT *h, FLOAT Rm, FLOAT nl, INT m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual INT RoughEstimationKDE(FLOAT **Y, FLOAT *h, FLOAT nl, INT m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual INT RoughEstimationH(INT k, FLOAT **Y, FLOAT *h, FLOAT nl, INT m, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
-    virtual INT ComponentDist(INT j, FLOAT **Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist, INT *Outlier);
-    virtual INT LogComponentDist(INT j, FLOAT **Y, CompnentDistribution *CmpTheta, FLOAT *CmpDist, INT *Outlier);
+    virtual INT ComponentPdf(INT j, FLOAT **Y, CompnentDistribution *CmpTheta, FLOAT *CmpPdf, INT *Outlier);
+    virtual INT LogComponentPdf(INT j, FLOAT **Y, CompnentDistribution *CmpTheta, FLOAT *CmpPdf, INT *Outlier);
     virtual INT EnhancedEstimationKNN(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual INT EnhancedEstimationKDE(FLOAT **Y, FLOAT nl, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
     virtual INT EnhancedEstimationH(INT k, FLOAT **Y, FLOAT nl, FLOAT *h, CompnentDistribution *RigidTheta, CompnentDistribution *LooseTheta);
@@ -154,8 +162,8 @@ public:
     virtual INT EMInitialize();
     virtual INT EMRun(INT *c, FLOAT *W, CompnentDistribution **MixTheta);
 /// End 
-    INT MixtureDist(INT j, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixDist);
-    INT MixtureDist(FLOAT logV, INT j, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixDist);
+    INT MixturePdf(INT j, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixPdf);
+    INT MixturePdf(FLOAT logV, INT j, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *MixPdf);
     INT InformationCriterionKNN(INT k, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, INT *M, FLOAT *D);
     INT InformationCriterionKDE(FLOAT logV, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, INT *M, FLOAT *D);
     INT InformationCriterionH(FLOAT logV, INT k, FLOAT **Y, INT c, FLOAT *W, CompnentDistribution **MixTheta, FLOAT *IC, FLOAT *logL, INT *M, FLOAT *D);
@@ -186,6 +194,7 @@ public:
             FLOAT *h,                 // Sides of the hypersquare.
             FLOAT *ar,                // Acceleration rate.
             char  **Restraints,       // Restraints type.
+            char  **Mode,             // Mode type.
             INT   *n,                 // Number of observations.
             FLOAT *Y,                 // Dataset.
             INT   *Y_type,            // Dataset type. 
@@ -220,6 +229,7 @@ public:
             INT   *opt_c,          // Numbers of components for optimal v or for optimal k.
             FLOAT *opt_IC,         // Information criteria for optimal v or for optimal k.
             FLOAT *opt_logL,       // Log-likelihoods for optimal v or for optimal k.
+            FLOAT *opt_Dmin,       // Dmin for optimal v or for optimal k.
             FLOAT *opt_D,          // Totals of positive relative deviations for optimal v or for optimal k.
             INT   *all_length,     // Length of all_K and all_IC.
             INT   *all_K,          // All processed numbers of bins v or all processed numbers of nearest neighbours k.

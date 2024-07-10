@@ -15,47 +15,27 @@
 Emmix::Emmix()
 {
     n_ = 0;
-
     nr_ = 0;
-
     nc_ = 0;
-
     Y_ = NULL;
-
     cmax_ = 0;
-
     TOL_ = (FLOAT)0.0;
-    
     am_ = (FLOAT)0.0;
-
     max_iter_ = 0;
-
     K_ = 0;
-
     strategy_ = strategy_none;
-
     variant_ = varEM;
-
     accel_ = acc_fixed;
-
  /// Panic Branislav
     merge_ = merge_none;
  /// End
-
     n_iter_ = 0;
-
     c_ = 0;
-
     W_ = NULL;
-
     MixTheta_ = NULL;
-
     dW_ = NULL;
-
     dMixTheta_ = NULL;
-    
     memset(&summary_, 0, sizeof(SummaryParameterType));
-
     P_ = NULL;
 } // Emmix
 
@@ -120,23 +100,18 @@ INT Emmix::Initialize(INT                  n,             // Number of observati
                       EmVariantType_e      variant,       // Type of EM variant algorithm.
                       EmAccelerationType_e accel)         // Type of acceleration of standard EM algorithm.
 {
-    INT i, j, Error = 0;
+    INT i, j, Error = E_OK;
     
     n_ = n;
-
     nr_ = nr;
-
     nc_ = nc;
-
     cmax_ = cmax;
-
     length_pdf_ = length_pdf;
-
     length_Theta_ = length_Theta;
 
     length_theta_ = (INT*)malloc(length_Theta_ * sizeof(INT));
 
-    Error = NULL == length_theta_; if (Error) goto E0;
+    E_CHECK(NULL == length_theta_, E_MEM);
 
     for (i = 0; i < length_Theta_; i++) {
         length_theta_[i] = (INT)labs(length_theta[i]);
@@ -144,25 +119,24 @@ INT Emmix::Initialize(INT                  n,             // Number of observati
 
     Y_ = (FLOAT**)malloc((length_pdf_ + 1) * sizeof(FLOAT*));
 
-    Error = NULL == Y_; if (Error) goto E0;
+    E_CHECK(NULL == Y_, E_MEM);
 
     for (i = 0; i < length_pdf_ + 1; i++) {
         Y_[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
-        Error = NULL == Y_[i]; if (Error) goto E0;
+        E_CHECK(NULL == Y_[i], E_MEM);
     }
     
     TOL_ = TOL;
-
     am_ = am;
-
     max_iter_ = max_iter;
-
     K_ = K;
 
     if (nc_ == length_pdf_) {
         if (K_ > 0) {
             Error = Transform(Y);
+
+            E_CHECK(Error != E_OK, Error);
         }
         else {
             for (i = 0; i < n_; i++) {
@@ -183,64 +157,58 @@ INT Emmix::Initialize(INT                  n,             // Number of observati
         }
     }
     else {
-        Error = 1; goto E0;
+        E_CHECK(1, E_ARG);
     }
 
     strategy_ = strategy;
-
     variant_ = variant;
-
     accel_ = accel;
 
     W_ = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
 
-    Error = NULL == W_; if (Error) goto E0;
+    E_CHECK(NULL == W_, E_MEM);
 
     MixTheta_ = new CompnentDistribution* [(unsigned INT)cmax_];
 
-    Error = NULL == MixTheta_; if (Error) goto E0;
+    E_CHECK(NULL == MixTheta_, E_MEM);
 
     for (i = 0; i < cmax_; i++) {
         MixTheta_[i] = new CompnentDistribution(this);
 
-        Error = NULL == MixTheta_[i]; if (Error) goto E0;
+        E_CHECK(NULL == MixTheta_[i], E_MEM);
 
         Error = MixTheta_[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
     
     dW_ = (FLOAT*)malloc(cmax_ * sizeof(FLOAT));
     
-    Error = NULL == dW_; if (Error) goto E0;
+    E_CHECK(NULL == dW_, E_MEM);
 
     dMixTheta_ = new CompnentDistribution* [(unsigned INT)cmax_];
 
-    Error = NULL == dMixTheta_; if (Error) goto E0;
+    E_CHECK(NULL == dMixTheta_, E_MEM);
 
     for (i = 0; i < cmax_; i++) {
         dMixTheta_[i] = new CompnentDistribution(this);
         
-        Error = NULL == dMixTheta_[i]; if (Error) goto E0;
+        E_CHECK(NULL == dMixTheta_[i], E_MEM);
         
         Error = dMixTheta_[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
         
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     P_ = (FLOAT**)malloc(cmax_ * sizeof(FLOAT*));
 
-    Error = P_ == NULL;
-
-    if (Error) goto E0;
+    E_CHECK(NULL == P_, E_MEM);
 
     if (nc_ == length_pdf_) {
         for (i = 0; i < cmax_; i++) {
             P_[i] = (FLOAT*)malloc(n_ * sizeof(FLOAT));
 
-            Error = NULL == P_[i];
-
-            if (Error) goto E0;
+            E_CHECK(NULL == P_[i], E_MEM);
         }
     }
     else
@@ -248,28 +216,27 @@ INT Emmix::Initialize(INT                  n,             // Number of observati
         for (i = 0; i < cmax_; i++) {
             P_[i] = (FLOAT*)malloc(nr_ * sizeof(FLOAT));
 
-            Error = NULL == P_[i];
-
-            if (Error) goto E0;
+            E_CHECK(NULL == P_[i], E_MEM);
         }
     }
+
+EEXIT:
     
-E0: return Error;
+    E_RETURN(Error);
 } // Initialize
 
 INT Emmix::Transform(FLOAT **Y)
 {
-    INT i, j, l, Error = 0;
-
-    FLOAT *y0 = NULL, *ymin = NULL, *ymax = NULL, *h = NULL;
+    FLOAT *h = NULL, *y0 = NULL, *ymax = NULL, *ymin = NULL;
+    INT   i, j, l, Error = E_OK;
 
     y0 = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = NULL == y0; if (Error) goto E0;
+    E_CHECK(NULL == y0, E_MEM);
 
     ymin = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = NULL == ymin; if (Error) goto E0;
+    E_CHECK(NULL == ymin, E_MEM);
 
     for (i = 0; i < length_pdf_; i++) {
         ymin[i] = Y[i][0];
@@ -281,7 +248,7 @@ INT Emmix::Transform(FLOAT **Y)
 
     ymax = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = NULL == ymax; if (Error) goto E0;
+    E_CHECK(NULL == ymax, E_MEM);
 
     for (i = 0; i < length_pdf_; i++) {
         ymax[i] = Y[i][0];
@@ -293,7 +260,7 @@ INT Emmix::Transform(FLOAT **Y)
 
     h = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = NULL == h; if (Error) goto E0;
+    E_CHECK(NULL == h, E_MEM);
 
     for (j = 0; j < length_pdf_; j++) {
         h[j] = (ymax[j] - ymin[j]) / K_;
@@ -322,14 +289,16 @@ INT Emmix::Transform(FLOAT **Y)
             for (l = 0; l < length_pdf_; l++) if ((FLOAT)fabs(Y_[l][j] - Y_[l][nr_]) > (FLOAT)0.5 * h[l]) goto S0;
 
             Y_[length_pdf_][j] += (FLOAT)1.0; goto S1;
-        S0:;
+S0:;
         }
 
         Y_[length_pdf_][nr_] = (FLOAT)1.0; nr_++;
-    S1:;
+S1:;
     }
 
-E0: if (h) free(h);
+EEXIT:
+
+    if (h) free(h);
 
     if (ymax) free(ymax);
 
@@ -337,34 +306,35 @@ E0: if (h) free(h);
 
     if (y0) free(y0);
 
-    return Error;
+    E_RETURN(Error);
 } // Transform
 
 // Returns mixture p.d.f..
 
-INT Emmix::MixtureDist(INT                  j,          // Indey of observation.  
+INT Emmix::MixturePdf(INT                  j,           // Indey of observation.  
                        FLOAT                **Y,        // Pointer to the input array [y0,...,yd-1,...]
                        INT                  c,          // Number of components.
                        FLOAT                *W,         // Component weights.
                        CompnentDistribution **MixTheta, // Mixture parameters.
-                       FLOAT                *MixDist)   // Mixture distribution.
+                       FLOAT                *MixPdf)    // Mixture probability density.
 {
-    FLOAT CmpDist;
-    INT   i;
-    INT   Error = 0;
+    FLOAT CmpPdf;
+    INT   i, Error = E_OK;
 
-    *MixDist = (FLOAT)0.0;
+    *MixPdf = (FLOAT)0.0;
 
     for (i = 0; i < c; i++) {
-        Error = LogComponentDist(j, Y, MixTheta[i], &CmpDist);
+        Error = LogComponentPdf(j, Y, MixTheta[i], &CmpPdf);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
-        *MixDist += W[i] * (FLOAT)exp(CmpDist);
+        *MixPdf += W[i] * (FLOAT)exp(CmpPdf);
     }
 
-E0: return Error;
-} // MixtureDist
+EEXIT:
+
+    E_RETURN(Error);
+} // MixturePdf
 
 // Calculates the log likelihood value of current mixture model parameters. 
 
@@ -373,70 +343,73 @@ INT Emmix::LogLikelihood(INT                  c,          // Number of component
                          CompnentDistribution **MixTheta, // Mixture parameters.    
                          FLOAT                *LogL)      // Value of log likelihood.
 {
-    FLOAT MixDist;
-    INT   i, Error = 0;
+    FLOAT MixPdf;
+    INT   i, Error = E_OK;
 
     *LogL = (FLOAT)0.0;
 
     for (i = 0; i < nr_; i++) {
-        Error = MixtureDist(i, Y_, c, W, MixTheta, &MixDist);
+        Error = MixturePdf(i, Y_, c, W, MixTheta, &MixPdf);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
-        if (MixDist > FLOAT_MIN) {
-            *LogL += Y_[length_pdf_][i] * (FLOAT)log(MixDist);
+        if (MixPdf > FLOAT_MIN) {
+            *LogL += Y_[length_pdf_][i] * (FLOAT)log(MixPdf);
         }
         else {
             *LogL += Y_[length_pdf_][i] * (FLOAT)log(FLOAT_MIN);
         }
     }
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // LogLikelihood
 
 // Calculates posterior probabilities P for all components in mixture model (expectation step of EM algorith). 
 
 INT Emmix::ExpectationStep()
 {
-    FLOAT CmpDist, PostProb;
-    FLOAT *CmpDistArr = NULL;
-    INT   i, j, Error = 0;
+    FLOAT CmpPdf, *CmpPdfArr = NULL, PostProb;
+    INT   i, j, Error = E_OK;
 
-    CmpDistArr = (FLOAT*)malloc(c_ * sizeof(FLOAT));
+    CmpPdfArr = (FLOAT*)malloc(c_ * sizeof(FLOAT));
 
-    Error = CmpDistArr == NULL; if (Error) goto E0;
+    E_CHECK(NULL == CmpPdfArr, E_MEM);
 
     for (i = 0; i < nr_; i++) {
         PostProb = (FLOAT)0.0;
 
         for (j = 0; j < c_; j++) {
-            Error = LogComponentDist(i, Y_, MixTheta_[j], &CmpDist);
+            Error = LogComponentPdf(i, Y_, MixTheta_[j], &CmpPdf);
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
 
-            CmpDist = (FLOAT)exp(CmpDist);
+            CmpPdf = (FLOAT)exp(CmpPdf);
 
-            CmpDistArr[j] = W_[j] * CmpDist;
+            CmpPdfArr[j] = W_[j] * CmpPdf;
 
-            PostProb += CmpDistArr[j];
+            PostProb += CmpPdfArr[j];
         }
 
         for (j = 0; j < c_; j++) {
-            P_[j][i] = CmpDistArr[j] / (PostProb + FLOAT_MIN);
+            P_[j][i] = CmpPdfArr[j] / (PostProb + FLOAT_MIN);
         }
     }
 
-E0: if (CmpDistArr) free(CmpDistArr);
+EEXIT:
 
-    return Error;
+    if (CmpPdfArr) free(CmpPdfArr);
+
+    E_RETURN(Error);
 } // ExpectationStep
 
 // Performs hard clustering (k-means like variant of E-step).
 
 INT Emmix::ConditionalStep()
 {
-    INT   i, j, MaxPos, Error = 0;
     FLOAT TmpVal;
+    INT   i, j, MaxPos, Error = E_OK;
 
     for (i = 0; i < nr_; i++) {
         MaxPos = 0; TmpVal = P_[MaxPos][i]; P_[MaxPos][i] = (FLOAT)0.0;
@@ -452,86 +425,83 @@ INT Emmix::ConditionalStep()
         P_[MaxPos][i] = (FLOAT)1.0;
     }
 
-    return Error;
+    E_RETURN(Error);
 } // ConditionalStep
 
 // Performs golden ration search from minimum value (hardcoded to 1) to maximum value (hardcoded to 1.9) for acceleration constant of mixture parameter update increment.
 
 INT Emmix::GoldenRatioSearch(FLOAT *am_opt) // Optimal acceleration rate.
 {
-    FLOAT                arLowerBracket = (FLOAT)1.0;
-    FLOAT                arUpperBracket = (FLOAT)1.9;
-    FLOAT                arUpdateLower = (FLOAT)0.0;
-    FLOAT                arUpdateUpper = (FLOAT)0.0;
-    FLOAT                GolderRation = (FLOAT)((sqrt(5.0) + 1.0) / 2.0);
-    FLOAT                LogLLower = (FLOAT)0.0;
-    FLOAT                LogLUpper = (FLOAT)0.0;
-    INT                  i, j, max_iter = 100, Error = 0;
-    FLOAT                TOL = (FLOAT)0.01;
-    FLOAT                *W = NULL;
     CompnentDistribution **MixTheta = NULL;
+    FLOAT                arLowerBracket = (FLOAT)1.0, arUpdateLower = (FLOAT)0.0, arUpdateUpper = (FLOAT)0.0, arUpperBracket = (FLOAT)1.9;
+    FLOAT                LogLLower = (FLOAT)0.0, LogLUpper = (FLOAT)0.0, *W = NULL;
+    INT                  i, j, error, Error = E_OK;
 
     W = (FLOAT*)malloc(c_ * sizeof(FLOAT));
 
-    Error = NULL == W; if (Error) goto E0;
+    E_CHECK(NULL == W, E_MEM);
 
     MixTheta = new CompnentDistribution* [(unsigned INT)c_];
 
-    Error = NULL == MixTheta; if (Error) goto E0;
+    E_CHECK(NULL == MixTheta, E_MEM);
 
     for (i = 0; i < c_; i++) {
         W[i] = W_[i];
 
         MixTheta[i] = new CompnentDistribution(this);
 
-        Error = NULL == MixTheta[i]; if (Error) goto E0;
+        E_CHECK(NULL == MixTheta[i], E_MEM);
 
         Error = MixTheta[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         for (j = 0; j < length_pdf_; j++) MixTheta[i]->pdf_[j] = MixTheta_[i]->pdf_[j];
 
-        Error = MixTheta[i]->Memmove(MixTheta_[i]); if (Error) goto E0;
+        Error = MixTheta[i]->Memmove(MixTheta_[i]);
+
+        E_CHECK(Error != E_OK, Error);
     }
 
-    for (i = 0; i < max_iter; i++) {
-        arUpdateLower = (FLOAT)(arUpperBracket - (arUpperBracket - arLowerBracket) / GolderRation);
+    i = 1; Error = E_CON;
 
-        arUpdateUpper = (FLOAT)(arLowerBracket + (arUpperBracket - arLowerBracket) / GolderRation);
+    while ((i <= max_iter_) && (Error != E_OK)) {
+        arUpdateLower = (FLOAT)(arUpperBracket - (arUpperBracket - arLowerBracket) * GoldR);
 
-        if ((FLOAT)fabs(arUpdateUpper - arUpdateLower) < TOL) break;
+        arUpdateUpper = (FLOAT)(arLowerBracket + (arUpperBracket - arLowerBracket) * GoldR);
 
-        Error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, arUpdateLower); 
+        if ((FLOAT)fabs(arUpdateUpper - arUpdateLower) < TOL_) Error = E_OK;
+
+        error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, arUpdateLower); 
         
-        if (Error) goto E0;
+        E_CHECK(error != E_OK, error);
 
-        Error = LogLikelihood(c_, W, MixTheta, &LogLLower); 
+        error = LogLikelihood(c_, W, MixTheta, &LogLLower); 
         
-        if (Error) goto E0;
+        E_CHECK(error != E_OK, error);
 
         for (j = 0; j < c_; j++) {
             W[j] = W_[j];
 
-            Error = MixTheta[j]->Memmove(MixTheta_[j]); 
+            error = MixTheta[j]->Memmove(MixTheta_[j]); 
             
-            if (Error) goto E0;
+            E_CHECK(error != E_OK, error);
         }
 
-        Error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, arUpdateUpper); 
+        error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, arUpdateUpper); 
         
-        if (Error) goto E0;
+        E_CHECK(error != E_OK, error);
 
-        Error = LogLikelihood(c_, W, MixTheta, &LogLUpper); 
+        error = LogLikelihood(c_, W, MixTheta, &LogLUpper); 
         
-        if (Error) goto E0;
+        E_CHECK(error != E_OK, error);
 
         for (j = 0; j < c_; j++) {
             W[j] = W_[j];
 
-            Error = MixTheta[j]->Memmove(MixTheta_[j]); 
+            error = MixTheta[j]->Memmove(MixTheta_[j]); 
             
-            if (Error) goto E0;
+            E_CHECK(error != E_OK, error);
         }
 
         if (LogLLower < LogLUpper) {
@@ -540,13 +510,15 @@ INT Emmix::GoldenRatioSearch(FLOAT *am_opt) // Optimal acceleration rate.
         else {
             arLowerBracket = arUpdateLower;
         }
-    }
 
-    Error = i == max_iter - 1; if (Error) goto E0;
+        i++;
+    }
 
     *am_opt = (FLOAT)((arUpperBracket + arLowerBracket) / (FLOAT)2.0);
 
-E0: if (MixTheta) {
+EEXIT:
+
+    if (MixTheta) {
         for (i = 0; i < c_; i++) {
             if (MixTheta[i]) delete MixTheta[i];
         }
@@ -556,53 +528,50 @@ E0: if (MixTheta) {
 
     if (W) free(W);
 
-    return Error;
+    E_RETURN(Error);
 } // GoldenRatioSearch
 
 // Performs line search from minimum value (hardcoded to 1) to maximum value (hardcoded to 1.9) for acceleration constant of mixture parameter update increment.
 
 INT Emmix::LineSearch(FLOAT *am_opt) // Return value for optimal acceleration rate.
 {
-    INT                  i, j, Error = 0;
-    FLOAT                LogL = (FLOAT)0.0;
-    FLOAT                LogLUpdate = (FLOAT)0.0;
-    FLOAT                am = (FLOAT)1.0;
-    FLOAT                *W = NULL;
     CompnentDistribution **MixTheta = NULL;
+    FLOAT                am = (FLOAT)1.0, LogL = (FLOAT)0.0, LogLUpdate = (FLOAT)0.0, *W = NULL;
+    INT                  i, j, Error = E_OK;
 
     W = (FLOAT*)malloc(c_ * sizeof(FLOAT));
 
-    Error = NULL == W; if (Error) goto E0;
+    E_CHECK(NULL == W, E_MEM);
 
     MixTheta = new CompnentDistribution* [(unsigned INT)c_];
 
-    Error = NULL == MixTheta; if (Error) goto E0;
+    E_CHECK(NULL == MixTheta, E_MEM);
 
     for (i = 0; i < c_; i++) {
         W[i] = W_[i];
 
         MixTheta[i] = new CompnentDistribution(this);
 
-        Error = NULL == MixTheta[i]; if (Error) goto E0;
+        E_CHECK(NULL == MixTheta[i], E_MEM);
 
         Error = MixTheta[i]->Realloc(length_pdf_, length_Theta_, length_theta_);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         for (j = 0; j < length_pdf_; j++) MixTheta[i]->pdf_[j] = MixTheta_[i]->pdf_[j];
 
         Error = MixTheta[i]->Memmove(MixTheta_[i]); 
         
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     Error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, am); 
     
-    if (Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     Error = LogLikelihood(c_, W, MixTheta, &LogL); 
     
-    if (Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     *am_opt = am;
 
@@ -611,7 +580,7 @@ INT Emmix::LineSearch(FLOAT *am_opt) // Return value for optimal acceleration ra
 
         Error = MixTheta[j]->Memmove(MixTheta_[j]); 
         
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     for (i = 0; i < 9; i++) {
@@ -619,18 +588,18 @@ INT Emmix::LineSearch(FLOAT *am_opt) // Return value for optimal acceleration ra
 
         Error = UpdateMixtureParameters(&c_, W, MixTheta, dW_, dMixTheta_, am); 
         
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = LogLikelihood(c_, W, MixTheta, &LogLUpdate); 
         
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         for (j = 0; j < c_; j++) {
             W[j] = W_[j];
 
             Error = MixTheta[j]->Memmove(MixTheta_[j]); 
             
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
         }
 
         if (LogLUpdate > LogL) {
@@ -638,7 +607,9 @@ INT Emmix::LineSearch(FLOAT *am_opt) // Return value for optimal acceleration ra
         }
     }
 
-E0: if (MixTheta) {
+EEXIT:
+
+    if (MixTheta) {
         for (i = 0; i < c_; i++) {
             if (MixTheta[i]) delete MixTheta[i];
         }
@@ -648,34 +619,34 @@ E0: if (MixTheta) {
 
     if (W) free(W);
 
-    return Error;
+    E_RETURN(Error);
 } // LineSearch
 
 // Performs the standard EM algorithm (reference).
 
 INT Emmix::EM()
 {
-    INT   i = 0, Error = 0;
     FLOAT LogLOld = (FLOAT)0.0, LogLNew = (FLOAT)0.0;
+    INT   i, Error = E_OK;
 
     Error = LogLikelihood(c_, W_, MixTheta_, &LogLOld);
 
-    if (Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     LogLOld = LogLOld / (FLOAT)n_;
 
     for (i = 0; i < max_iter_; i++) {
         Error = ExpectationStep();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = MaximizationStep();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = LogLikelihood(c_, W_, MixTheta_, &LogLNew);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         LogLNew = LogLNew / (FLOAT)n_;
 
@@ -686,36 +657,38 @@ INT Emmix::EM()
 
     n_iter_ = i;
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // EM
 
 // Performs the Expectation-Conditional-Maximization algorithm (reference).
 
 INT Emmix::ECM()
 {
-    INT   i, Error = 0;
     FLOAT LogLOld = (FLOAT)0.0, LogLNew = (FLOAT)0.0;
+    INT   i, Error = E_OK;
 
     Error = LogLikelihood(c_, W_, MixTheta_, &LogLOld);
 
-    if (Error) goto E0;
+    E_CHECK(Error != E_OK, Error);
 
     for (i = 0; i < max_iter_; i++) {
         Error = ExpectationStep();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = ConditionalStep();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = MaximizationStep();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         Error = LogLikelihood(c_, W_, MixTheta_, &LogLNew);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         if ((FLOAT)fabs(LogLNew - LogLOld) / (FLOAT)fabs(LogLNew) <= TOL_) break;
 
@@ -724,14 +697,16 @@ INT Emmix::ECM()
 
     n_iter_ = i;
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // ECM
 
 // Runs the EM algorithm or its variant.
 
 INT Emmix::Run(INT *c, FLOAT *W, CompnentDistribution **MixTheta)
 {
-    INT i, Error = 0;
+    INT i, Error = E_OK;
 
     c_ = *c;
 
@@ -740,20 +715,20 @@ INT Emmix::Run(INT *c, FLOAT *W, CompnentDistribution **MixTheta)
 
         Error = MixTheta_[i]->Memmove(MixTheta[i]);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     switch (variant_) {
     case varEM:
         Error = EM();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 
         break;
     case varECM:
         Error = ECM();
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
     *c = c_;
@@ -763,31 +738,32 @@ INT Emmix::Run(INT *c, FLOAT *W, CompnentDistribution **MixTheta)
 
         Error = MixTheta[i]->Memmove(MixTheta_[i]);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
     }
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // Run
 
 // Returns logarithm of component p.d.f..
 
-INT Emmix::LogComponentDist(INT                  j,         // Indey of observation.  
-                            FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
-                            CompnentDistribution *CmpTheta, // Component parameters.
-                            FLOAT                *CmpDist)  // Component distribution value.
+INT Emmix::LogComponentPdf(INT                  j,         // Indey of observation.  
+                           FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
+                           CompnentDistribution *CmpTheta, // Component parameters.
+                           FLOAT                *CmpPdf)   // Logarithm of component probability density.
 {
-    FLOAT y, ypb, p, Theta;
-    INT   i, k, n;
-    INT   Error = 0;
+    FLOAT p, Theta, y, ypb;
+    INT   i, k, n, Error = E_OK;
 
-    *CmpDist = (FLOAT)0.0;
+    *CmpPdf = (FLOAT)0.0;
 
     for (i = 0; i < CmpTheta->length_pdf_; i++) {
         switch (CmpTheta->pdf_[i]) {
         case pfNormal:
             y = (Y[i][j] - CmpTheta->Theta_[0][i]) / (Sqrt2 * CmpTheta->Theta_[1][i]); y *= y;
 
-            *CmpDist += -y - LogSqrtPi2 - (FLOAT)log(CmpTheta->Theta_[1][i]);
+            *CmpPdf += -y - LogSqrtPi2 - (FLOAT)log(CmpTheta->Theta_[1][i]);
 
             break;
         case pfTNormal:
@@ -796,10 +772,10 @@ INT Emmix::LogComponentDist(INT                  j,         // Indey of observat
             if (Y[i][j] > FLOAT_MIN) {
                 y = ((FLOAT)log(Y[i][j]) - CmpTheta->Theta_[0][i]) / (Sqrt2 * CmpTheta->Theta_[1][i]); y *= y;
 
-                *CmpDist += -y - LogSqrtPi2 - (FLOAT)log(CmpTheta->Theta_[1][i]) - (FLOAT)log(Y[i][j]);
+                *CmpPdf += -y - LogSqrtPi2 - (FLOAT)log(CmpTheta->Theta_[1][i]) - (FLOAT)log(Y[i][j]);
             }
             else {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
 
             break;
@@ -807,10 +783,10 @@ INT Emmix::LogComponentDist(INT                  j,         // Indey of observat
             if (Y[i][j] > FLOAT_MIN) {
                 ypb = (FLOAT)exp(CmpTheta->Theta_[1][i] * (FLOAT)log(Y[i][j] / CmpTheta->Theta_[0][i]));
 
-                *CmpDist += (FLOAT)log(CmpTheta->Theta_[1][i]) + (FLOAT)log(ypb) - ypb - (FLOAT)log(Y[i][j]);
+                *CmpPdf += (FLOAT)log(CmpTheta->Theta_[1][i]) + (FLOAT)log(ypb) - ypb - (FLOAT)log(Y[i][j]);
             }
             else {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
 
             break;
@@ -818,25 +794,25 @@ INT Emmix::LogComponentDist(INT                  j,         // Indey of observat
             if (Y[i][j] > FLOAT_MIN) {
                 ypb = Y[i][j] / CmpTheta->Theta_[0][i];
 
-                *CmpDist += CmpTheta->Theta_[1][i] * (FLOAT)log(ypb) - ypb - Gammaln(CmpTheta->Theta_[1][i]) - (FLOAT)log(Y[i][j]);
+                *CmpPdf += CmpTheta->Theta_[1][i] * (FLOAT)log(ypb) - ypb - Gammaln(CmpTheta->Theta_[1][i]) - (FLOAT)log(Y[i][j]);
             }
             else {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
 
             break;
         case pfGumbel:
-            y = CmpTheta->Theta_[2][i] * (Y[i][j] - CmpTheta->Theta_[0][i]) / CmpTheta->Theta_[1][i];
+            ypb = CmpTheta->Theta_[2][i] * (Y[i][j] - CmpTheta->Theta_[0][i]) / CmpTheta->Theta_[1][i];
 
-            *CmpDist += y - (FLOAT)exp(y) - (FLOAT)log(CmpTheta->Theta_[1][i]);
+            *CmpPdf += ypb - (FLOAT)exp(ypb) - (FLOAT)log(CmpTheta->Theta_[1][i]);
 
             break;
         case pfvonMises:
             if ((Y[i][j] < (FLOAT)0.0) || (Y[i][j] > Pi2)) {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
             else {
-                *CmpDist += CmpTheta->Theta_[1][i] * (FLOAT)cos(Y[i][j] - CmpTheta->Theta_[0][i]) - LogPi2 - (FLOAT)log(BesselI0(CmpTheta->Theta_[1][i]));
+                *CmpPdf += CmpTheta->Theta_[1][i] * (FLOAT)cos(Y[i][j] - CmpTheta->Theta_[0][i]) - LogPi2 - (FLOAT)log(BesselI0(CmpTheta->Theta_[1][i]));
             }
 
             break;
@@ -844,50 +820,50 @@ INT Emmix::LogComponentDist(INT                  j,         // Indey of observat
             k = (INT)Y[i][j]; n = (INT)CmpTheta->Theta_[0][i]; p = CmpTheta->Theta_[1][i];
 
             if (k < 0) {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
             else
             if (k == 0)
-                *CmpDist += n * (FLOAT)log((FLOAT)1.0 - p);
+                *CmpPdf += n * (FLOAT)log((FLOAT)1.0 - p);
             else
             if (k == n)
-                *CmpDist += n * (FLOAT)log(p);
+                *CmpPdf += n * (FLOAT)log(p);
             else
             if (k > n) {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
             else
-                *CmpDist += Gammaln(n + (FLOAT)1.0) - Gammaln(k + (FLOAT)1.0) - Gammaln(n - k + (FLOAT)1.0) +
-                            k * (FLOAT)log(p) + (n - k) * (FLOAT)log((FLOAT)1.0 - p);
+               *CmpPdf += Gammaln(n + (FLOAT)1.0) - Gammaln(k + (FLOAT)1.0) - Gammaln(n - k + (FLOAT)1.0) +
+                   k * (FLOAT)log(p) + (n - k) * (FLOAT)log((FLOAT)1.0 - p);
 
             break;
         case pfPoisson:
             k = (INT)Y[i][j]; Theta = CmpTheta->Theta_[0][i];
 
-            *CmpDist += k * (FLOAT)log(Theta) - Theta - Gammaln(k + (FLOAT)1.0);
+            *CmpPdf += k * (FLOAT)log(Theta) - Theta - Gammaln(k + (FLOAT)1.0);
 
             break;
         case pfDirac:
             if ((FLOAT)fabs(Y[i][j] - CmpTheta->Theta_[0][i]) > FLOAT_MIN) {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
             else {
-                *CmpDist += (FLOAT)0.0;
+                *CmpPdf += (FLOAT)0.0;
             }
 
             break;
         case pfUniform:
             if ((Y[i][j] > CmpTheta->Theta_[1][i]) || (Y[i][j] < CmpTheta->Theta_[0][i])) {
-                *CmpDist = -FLOAT_MAX; goto E0;
+                *CmpPdf = -FLOAT_MAX;
             }
             else {
-                *CmpDist -= (FLOAT)log(CmpTheta->Theta_[1][i] - CmpTheta->Theta_[0][i]);
+                *CmpPdf -= (FLOAT)log(CmpTheta->Theta_[1][i] - CmpTheta->Theta_[0][i]);
             }
         }
     }
 
-E0: return Error;
-} // LogComponentDist
+    E_RETURN(Error);
+} // LogComponentPdf
 
 // Updates mixture model parameters with appropriate increment.
 
@@ -898,7 +874,7 @@ INT Emmix::UpdateMixtureParameters(INT                  *c,          // Number o
                                    CompnentDistribution **dMixTheta, // Update increment of mixture model distribution parameter values.
                                    FLOAT                am)          // Acceleration multiplier for EM algorithm.
 {
-    INT i, j, l, Error = 0;
+    INT i, j, l, Error = E_OK;
 
     for (l = 0; l < *c; l++) {
         W[l] += am * dW[l];
@@ -1037,25 +1013,23 @@ INT Emmix::UpdateMixtureParameters(INT                  *c,          // Number o
 S1:;
     }
 
-    return Error;
+    E_RETURN(Error);
 } // UpdateMixtureParameters
 
 // Maximization step of the EM algoritm.
 
 INT Emmix::MaximizationStep()
 {
-    FLOAT dM, dC, A[5], T[2];
-    FLOAT W, am_opt = (FLOAT)1.0;
-    FLOAT *M = NULL, *C = NULL;
-    INT   i, j, k, l, Error = 0;
+    FLOAT A[5], am_opt = (FLOAT)1.0, *C = NULL, dC, dM, *M = NULL, T[2], W;
+    INT   i, j, k, l, error, Error = E_OK;
 
     M = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = M == NULL; if (Error) goto E0;
+    E_CHECK(NULL == M, E_MEM);
 
     C = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = C == NULL; if (Error) goto E0;
+    E_CHECK(NULL == C, E_MEM);
 
     for (l = 0; l < c_; l++) {
         W = (FLOAT)0.0;
@@ -1093,8 +1067,9 @@ INT Emmix::MaximizationStep()
             case pfWeibull:
                 M[i] = MixTheta_[l]->Theta_[1][i];
 
-                j = 1; Error = 1;
-                while ((j <= ItMax) && Error) {
+                j = 1; Error = E_CON;
+
+                while ((j <= ItMax) && (Error != E_OK)) {
                     memset(&A, 0, 5 * sizeof(FLOAT));
 
                     for (k = 0; k < nr_; k++) if (Y_[i][k] > FLOAT_MIN) {
@@ -1115,16 +1090,12 @@ INT Emmix::MaximizationStep()
 
                     M[i] -= dM;
 
-                    if (IsNan(dM) || IsInf(dM)) {
-                        Error = 1; goto E0;
-                    }
+                    E_CHECK(IsNan(dM) || IsInf(dM), E_CON);
 
-                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = 0;
+                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = E_OK;
 
                     j++;
                 }
-
-                if (Error) goto E0;
 
                 dMixTheta_[l]->Theta_[1][i] = M[i] - MixTheta_[l]->Theta_[1][i];
 
@@ -1143,24 +1114,27 @@ INT Emmix::MaximizationStep()
 
                 A[3] = (FLOAT)log(A[1] / A[0]) - A[2] / A[0];
 
-                j = 1; Error = 1;
-                while ((j <= ItMax) && Error) {
-                    if (Digamma(M[i], &T[0]) || Digamma(M[i] + Eps, &T[1])) goto E0;
+                j = 1; Error = E_CON;
+
+                while ((j <= ItMax) && (Error != E_OK)) {
+                    error = Digamma(M[i], &T[0]);
+
+                    E_CHECK(error != E_OK, error);
+                    
+                    error = Digamma(M[i] + Eps, &T[1]);
+
+                    E_CHECK(error != E_OK, error);
 
                     dM = (T[0] + A[3] - (FLOAT)log(M[i])) / ((T[1] - T[0]) / Eps - (FLOAT)1.0 / M[i]);
 
                     M[i] -= dM;
 
-                    if (IsNan(dM) || IsInf(dM)) {
-                        Error = 1; goto E0;
-                    }
+                    E_CHECK(IsNan(dM) || IsInf(dM), E_CON);
 
-                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = 0;
+                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = E_OK;
 
                     j++;
                 }
-
-                if (Error) goto E0;
 
                 dMixTheta_[l]->Theta_[1][i] = M[i] - MixTheta_[l]->Theta_[1][i];
 
@@ -1168,8 +1142,9 @@ INT Emmix::MaximizationStep()
             case pfGumbel:
                 M[i] = MixTheta_[l]->Theta_[1][i];
 
-                j = 1; Error = 1;
-                while ((j <= ItMax) && Error) {
+                j = 1; Error = E_CON;
+
+                while ((j <= ItMax) && (Error != E_OK)) {
                     memset(&A, 0, 5 * sizeof(FLOAT));
 
                     for (k = 0; k < nr_; k++) {
@@ -1189,16 +1164,12 @@ INT Emmix::MaximizationStep()
 
                     M[i] -= dM;
 
-                    if (IsNan(dM) || IsInf(dM)) {
-                        Error = 1; goto E0;
-                    }
+                    E_CHECK(IsNan(dM) || IsInf(dM), E_CON);
 
-                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = 0;
+                    if ((FLOAT)fabs(dM) < Max(Eps * (FLOAT)fabs(M[i]), Eps)) Error = E_OK;
 
                     j++;
                 }
-
-                if (Error) goto E0;
 
                 dMixTheta_[l]->Theta_[1][i] = M[i] - MixTheta_[l]->Theta_[1][i];
 
@@ -1229,7 +1200,7 @@ INT Emmix::MaximizationStep()
                     M[i] = Pi;
                 }
                 else {
-                    Error = 1; goto E0;
+                    E_CHECK(1, E_CON);
                 }
 
                 dMixTheta_[l]->Theta_[0][i] = M[i] - MixTheta_[l]->Theta_[0][i];
@@ -1346,19 +1317,18 @@ INT Emmix::MaximizationStep()
 
                 C[i] = MixTheta_[l]->Theta_[1][i];
 
-                j = 1; Error = 1;
-                while ((j <= ItMax) && Error) {
+                j = 1; Error = E_CON;
+
+                while ((j <= ItMax) && (Error != E_OK)) {
                     A[0] = BesselI0(C[i]); A[1] = BesselI1(C[i]);
 
                     dC = (A[1] - A[2] * A[0]) / (A[0] - (A[2] + (FLOAT)1.0 / C[i]) * A[1]);
 
-                    if (IsNan(dC) || IsInf(dC)) {
-                        Error = 1; goto E0;
-                    }
+                    E_CHECK(IsNan(dC) || IsInf(dC), E_CON);
 
                     C[i] -= dC;
 
-                    if ((FLOAT)fabs(dC) < Max(Eps * (FLOAT)fabs(C[i]), Eps)) Error = 0;
+                    if ((FLOAT)fabs(dC) < Max(Eps * (FLOAT)fabs(C[i]), Eps)) Error = E_OK;
 
                     j++;
                 }
@@ -1395,16 +1365,16 @@ INT Emmix::MaximizationStep()
     if (accel_ == acc_golden) {
         Error = GoldenRatioSearch(&am_opt);
 
-        if (Error) {
-            Error = 0; am_opt = (FLOAT)1.0;
+        if (Error != E_OK) {
+            Error = E_OK; am_opt = (FLOAT)1.0;
         }
     }
     else
     if (accel_ == acc_line) {
         Error = LineSearch(&am_opt);
 
-        if (Error) {
-            Error = 0; am_opt = (FLOAT)1.0;
+        if (Error != E_OK) {
+            Error = E_OK; am_opt = (FLOAT)1.0;
         }
     }
     else
@@ -1417,22 +1387,26 @@ INT Emmix::MaximizationStep()
 
     Error = UpdateMixtureParameters(&c_, W_, MixTheta_, dW_, dMixTheta_, am_opt);
 
-E0: if (C) free(C); 
+    E_CHECK(Error != E_OK, Error);
+
+EEXIT:
+
+    if (C) free(C); 
     
     if (M) free(M);
 
-    return Error;
+    E_RETURN(Error);
 } // MaximizationStep
 
 // Returns logarithm of component p.d.f..
 
-INT Emmvnorm::LogComponentDist(INT                  j,         // Indey of observation.  
-                               FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
-                               CompnentDistribution *CmpTheta, // Component parameters.
-                               FLOAT                *CmpDist)  // Component distribution value.
+INT Emmvnorm::LogComponentPdf(INT                  j,         // Indey of observation.  
+                              FLOAT                **Y,       // Pointer to the input array [y0,...,yd-1,...]
+                              CompnentDistribution *CmpTheta, // Component parameters.
+                              FLOAT                *CmpPdf)   // Logarithm of component probability density.
 {
     FLOAT y, yi, yk;
-    INT   i, k, Error = 0;
+    INT   i, k, Error = E_OK;
 
     y = (FLOAT)0.0;
 
@@ -1444,10 +1418,10 @@ INT Emmvnorm::LogComponentDist(INT                  j,         // Indey of obser
         }
     }
     
-    *CmpDist = -y - CmpTheta->length_pdf_ * LogSqrtPi2 - (FLOAT)0.5 * CmpTheta->Theta_[3][0];
+    *CmpPdf = -y - CmpTheta->length_pdf_ * LogSqrtPi2 - (FLOAT)0.5 * CmpTheta->Theta_[3][0];
 
-    return Error;
-} // LogComponentDist
+    E_RETURN(Error);
+} // LogComponentPdf
 
 // Updates mixture model parameters with appropriate increment.
 
@@ -1458,7 +1432,7 @@ INT Emmvnorm::UpdateMixtureParameters(INT                  *c,          // Numbe
                                       CompnentDistribution **dMixTheta, // Update increment of mixture model distribution parameter values.
                                       FLOAT                am)          // Acceleration multiplier for EM algorithm.
 {
-    INT l, i, ii, j, p, q, Error = 0;
+    INT i, ii, j, l, p, q, Error = E_OK;
     
     for (l = 0; l < *c; l++) {
         W[l] += am * dW[l];
@@ -1530,28 +1504,29 @@ INT Emmvnorm::UpdateMixtureParameters(INT                  *c,          // Numbe
 
         Error = Cholinvdet(length_pdf_, MixTheta[l]->Theta_[1], MixTheta[l]->Theta_[2], MixTheta[l]->Theta_[3]);
 
-        if (Error) goto E0;
+        E_CHECK(Error != E_OK, Error);
 S1:;
-    }    
+    }
 
-E0: return Error;
+EEXIT:
+
+    E_RETURN(Error);
 } // UpdateMixtureParameters
 
 // Maximization step of the EM algoritm.
 
 INT Emmvnorm::MaximizationStep()
 {
-    FLOAT W, am_opt = (FLOAT)1.0;
-    FLOAT *M = NULL, *C = NULL;
-    INT   i, ii, j, l, p, q, Error = 0;
+    FLOAT am_opt = (FLOAT)1.0, *C = NULL, *M = NULL, W;
+    INT   i, ii, j, l, p, q, Error = E_OK;
      
     M = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = M == NULL; if (Error) goto E0;
+    E_CHECK(NULL == M, E_MEM);
     
     C = (FLOAT*)malloc(length_pdf_ * length_pdf_ * sizeof(FLOAT));
     
-    Error = C == NULL; if (Error) goto E0;
+    E_CHECK(NULL == C, E_MEM);
     
     for (l = 0; l < c_; l++) {
         W = (FLOAT)0.0;
@@ -1604,16 +1579,16 @@ INT Emmvnorm::MaximizationStep()
     if (accel_ == acc_golden) {
         Error = GoldenRatioSearch(&am_opt);
 
-        if (Error) {
-            Error = 0; am_opt = (FLOAT)1.0;
+        if (Error != E_OK) {
+            Error = E_OK; am_opt = (FLOAT)1.0;
         }
     } 
     else
     if (accel_ == acc_line) {
         Error = LineSearch(&am_opt);
 
-        if (Error) {
-            Error = 0; am_opt = (FLOAT)1.0;
+        if (Error != E_OK) {
+            Error = E_OK; am_opt = (FLOAT)1.0;
         }
     } 
     else
@@ -1624,11 +1599,15 @@ INT Emmvnorm::MaximizationStep()
         am_opt = (FLOAT)1.0;
     }
 
-    Error = UpdateMixtureParameters(&c_, W_, MixTheta_, dW_, dMixTheta_, am_opt); 
+    Error = UpdateMixtureParameters(&c_, W_, MixTheta_, dW_, dMixTheta_, am_opt);
+
+    E_CHECK(Error != E_OK, Error);
+
+EEXIT:
     
-E0: if (C) free(C); 
+    if (C) free(C); 
     
     if (M) free(M);
 
-    return Error;
+    E_RETURN(Error);
 } // MaximizationStep

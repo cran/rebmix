@@ -1,5 +1,5 @@
 Package: rebmix
-Version: 2.15.0
+Version: 2.16.0
 Authors@R: c(person("Marko", "Nagode", role = c("aut", "cre"),
                      email = "marko.nagode@fs.uni-lj.si",
                      comment = c(ORCID = "0000-0003-0637-3812")),
@@ -20,6 +20,6 @@ Author: Marko Nagode [aut, cre] (<https://orcid.org/0000-0003-0637-3812>),
   Simon Oman [ctb] (<https://orcid.org/0000-0001-8213-0818>)
 Maintainer: Marko Nagode <marko.nagode@fs.uni-lj.si>
 NeedsCompilation: yes
-Packaged: 2023-07-12 09:03:38 UTC; PCNagodeM
+Packaged: 2024-07-10 12:35:02 UTC; PCNagodeM
 Repository: CRAN
-Date/Publication: 2023-07-16 14:50:02 UTC
+Date/Publication: 2024-07-10 14:00:02 UTC

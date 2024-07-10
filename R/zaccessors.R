@@ -1060,6 +1060,7 @@ setMethod("a.ymin", signature(x = "REBMIX"), function(x) x@ymin)
 setMethod("a.ymax", signature(x = "REBMIX"), function(x) x@ymax)
 setMethod("a.ar", signature(x = "REBMIX"), function(x) x@ar)
 setMethod("a.Restraints", signature(x = "REBMIX"), function(x) x@Restraints)
+setMethod("a.Mode", signature(x = "REBMIX"), function(x) x@Mode)
 
 setMethod("a.w",
           signature(x = "REBMIX"),
@@ -1183,6 +1184,7 @@ setMethod("a.pos", signature(x = "REBMIX"), function(x) x@pos)
 setMethod("a.opt.c", signature(x = "REBMIX"), function(x) x@opt.c)
 setMethod("a.opt.IC", signature(x = "REBMIX"), function(x) x@opt.IC)
 setMethod("a.opt.logL", signature(x = "REBMIX"), function(x) x@opt.logL)
+setMethod("a.opt.Dmin", signature(x = "REBMIX"), function(x) x@opt.Dmin)
 setMethod("a.opt.D", signature(x = "REBMIX"), function(x) x@opt.D)
 setMethod("a.all.K", signature(x = "REBMIX"), function(x) x@all.K)
 setMethod("a.all.IC", signature(x = "REBMIX"), function(x) x@all.IC)

@@ -253,7 +253,22 @@ function(x,
         Mean = as.double(mean),
         Sigma = as.double(sigma),
         f = double(n),
+        error = integer(9),
         PACKAGE = "rebmix")
+        
+      error <- error.to.string(output$error);
+      
+      if (error[1] != "") {
+        stop(error[1], call. = FALSE); return(NA)
+      }
+   
+      if (error[2] != "") {
+        warning(error[2], call. = FALSE, immediate. = TRUE)
+      }  
+    
+      if (error[3] != "") {
+        warning(error[3], call. = FALSE, immediate. = TRUE)
+      }        
 
       fi <- output$f        
     }

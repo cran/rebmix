@@ -10,24 +10,24 @@
 static INT   NDevISet = 0;
 static FLOAT NDevVSet = (FLOAT)0.0;
 
-INT Rngmvnorm::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
+INT Rngmvnorm::ComponentInv(CompnentDistribution *CmpCdf, INT j, FLOAT **Y)
 {
     FLOAT C[4];
     FLOAT *y, Sum;
     INT   i, k;
-    INT   Error = 0;
+    INT   Error = E_OK;
 
     y = (FLOAT*)malloc(length_pdf_ * sizeof(FLOAT));
 
-    Error = NULL == y; if (Error) goto E0;
+    E_CHECK(NULL == y, E_MEM);
 
     for (i = 0; i < length_pdf_; i++) {
         if (Trigger_) {
             Trigger_ = 0;
 
-            Error = Choldc(length_pdf_, CmpDist->Theta_[1], CmpDist->Theta_[2]);
+            Error = Choldc(length_pdf_, CmpCdf->Theta_[1], CmpCdf->Theta_[2]);
 
-            if (Error) goto E0;
+            E_CHECK(Error != E_OK, Error);
         }
 
         if (NDevISet == 0) {
@@ -53,13 +53,15 @@ INT Rngmvnorm::InvComponentDist(CompnentDistribution *CmpDist, INT j, FLOAT **Y)
         Sum = (FLOAT)0.0;
 
         for (k = 0; k <= i; k++) {
-            Sum += CmpDist->Theta_[2][i * length_pdf_ + k] * y[k];
+            Sum += CmpCdf->Theta_[2][i * length_pdf_ + k] * y[k];
         }
 
-        Y[i][j] = Sum + CmpDist->Theta_[0][i];
+        Y[i][j] = Sum + CmpCdf->Theta_[0][i];
     }
 
-E0: if (y) free(y);
+EEXIT:
 
-    return Error;
-} // InvComponentDist
+    if (y) free(y);
+
+    E_RETURN(Error);
+} // ComponentInv

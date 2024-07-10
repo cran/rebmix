@@ -6,11 +6,21 @@
     y = double(length(x)),
     k = as.integer(k),
     hx = as.double(hx),
-    error = integer(1),
+    error = integer(9),
     PACKAGE = "rebmix")
 
-  if (output$error == 1) {
-    stop("in RdensKNearestNeighbourX!", call. = FALSE); return(NA)
+  error <- error.to.string(output$error);
+      
+  if (error[1] != "") {
+    stop(error[1], call. = FALSE); return(NA)
+  }
+    
+  if (error[2] != "") {
+    warning(error[2], call. = FALSE, immediate. = TRUE)
+  }  
+    
+  if (error[3] != "") {
+    warning(error[3], call. = FALSE, immediate. = TRUE)
   }
 
   i <- !duplicated(output$x)

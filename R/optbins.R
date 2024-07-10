@@ -141,12 +141,22 @@ function(Dataset, Rule = "Knuth equal", ymin, ymax, kmin, kmax, ...)
       kmin = as.integer(kmin),
       kmax = as.integer(kmax),
       opt.k = integer(d),
-      error = integer(1),
+      error = integer(9),
       PACKAGE = "rebmix")
 
-    if (temp$error == 1) {
-      stop("in Roptbins!", call. = FALSE); return(NA)
+    error <- error.to.string(temp$error);
+      
+    if (error[1] != "") {
+      stop(error[1], call. = FALSE); return(NA)
     }
+   
+    if (error[2] != "") {
+      warning(error[2], call. = FALSE, immediate. = TRUE)
+    }  
+    
+    if (error[3] != "") {
+      warning(error[3], call. = FALSE, immediate. = TRUE)
+    } 
     
     output[i, ] <- temp$opt.k
   }
