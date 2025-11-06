@@ -303,7 +303,7 @@ S1:;
                 Dm -= CmpConPdf * Mode[i].h;
             }
 
-            if (Dm < (FLOAT)0.0) {
+            if (Dm <= (FLOAT)0.0) {
                 if (fmax < Mode[i].fm) {
                     nres += 1; fres += fmax;
                 }
@@ -598,7 +598,7 @@ S1:;
                 Dm -= CmpConPdf * Mode[i].h;
             }
 
-            if (Dm < (FLOAT)0.0) {
+            if (Dm <= (FLOAT)0.0) {
                 if (fmax < Mode[i].fm) {
                     nres += 1; fres += fmax;
                 }
@@ -857,7 +857,7 @@ S0:;
                 Dm -= CmpConPdf * Mode[i].h;
             }
 
-            if (Dm < (FLOAT)0.0) {
+            if (Dm <= (FLOAT)0.0) {
                 if (fmax < Mode[i].fm) {
                     nres += 1; fres += fmax;
                 }
@@ -1522,7 +1522,10 @@ INT Rebmvnorm::EMInitialize()
         EM_K_,
         EM_strategy_,
         EM_variant_,
-        EM_accel_);
+        EM_accel_,
+        EM_accel_eq,
+        EM_loglkest_,
+        EM_toltype_);
 
     E_CHECK(Error != E_OK, Error);
 
