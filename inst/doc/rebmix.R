@@ -823,5 +823,3 @@ plot(adultcla, nrow = 5, ncol = 2, family = "sans")
 ### code chunk number 47: rebmix-code-36
 ###################################################
 rm(list = ls())
-
-
